@@ -9,11 +9,24 @@ interface GenerateReplyParams {
   rating: number
   reviewerName: string
   language: 'hindi' | 'english' | 'hinglish'
-  tone: 'professional' | 'friendly' | 'formal'
+  tone: 'professional' | 'friendly' | 'formal' | 'grateful' | 'concise'
+  toneExamples?: string[]
+  /** ISO 639-1 from review detection; when not English, reply should match customer language. */
+  detectedLanguageIso1?: string
 }
 
 export async function generateReviewReply(params: GenerateReplyParams): Promise<string> {
-  const { businessName, businessCategory, reviewText, rating, reviewerName, language, tone } = params
+  const {
+    businessName,
+    businessCategory,
+    reviewText,
+    rating,
+    reviewerName,
+    language,
+    tone,
+    toneExamples,
+    detectedLanguageIso1,
+  } = params
 
   const languageInstruction = {
     hindi: 'Respond ONLY in Hindi (Devanagari script). Do not use English except for proper nouns.',
@@ -26,6 +39,8 @@ export async function generateReviewReply(params: GenerateReplyParams): Promise<
     professional: 'Maintain a professional, courteous business tone.',
     friendly: "Be warm, friendly, and approachable. Use the reviewer's name.",
     formal: 'Be formal and respectful. Suitable for clinics and legal or financial services.',
+    grateful: 'Lead with sincere gratitude. Sound genuinely thankful without being salesy.',
+    concise: 'Be brief and direct: 2–3 short sentences maximum. No filler.',
   }[tone]
 
   const sentimentContext =
@@ -34,6 +49,16 @@ export async function generateReviewReply(params: GenerateReplyParams): Promise<
       : rating === 3
         ? 'This is a neutral or mixed review. Acknowledge their feedback, address any concern briefly, and invite them to experience improvement.'
         : 'This is a negative review. Apologize sincerely, do not make excuses, offer to resolve offline, and show commitment to improvement.'
+
+  const fewShot =
+    toneExamples && toneExamples.length > 0
+      ? `\n\nHere are examples of how this business owner writes replies. Match their exact style, tone, and language mix:\n\n${toneExamples.slice(0, 10).join('\n---\n')}`
+      : ''
+
+  const sameLanguageNote =
+    detectedLanguageIso1 && detectedLanguageIso1 !== 'en'
+      ? `\n\nIMPORTANT: Write the reply in ${detectedLanguageIso1} language. The customer wrote in that language — always reply in the same language to show respect.`
+      : ''
 
   const prompt = `You are writing a Google review reply on behalf of "${businessName}", a ${businessCategory} in India.
 
@@ -50,7 +75,7 @@ INSTRUCTIONS:
 - Do not start with "Dear".
 - Do not mention competitors.
 - End with a warm closing that fits the business type.
-- Write ONLY the reply text. No preamble, labels, or explanation.`
+- Write ONLY the reply text. No preamble, labels, or explanation.${fewShot}${sameLanguageNote}`
 
   const response = await openai.chat.completions.create({
     model: 'gpt-4o-mini',

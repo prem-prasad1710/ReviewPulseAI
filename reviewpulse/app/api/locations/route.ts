@@ -3,6 +3,9 @@ import { err, ok } from '@/lib/api'
 import { requireAuth } from '@/lib/auth-helpers'
 import { connectDB } from '@/lib/mongodb'
 import { encrypt } from '@/lib/crypto'
+import { defaultAlertKeywordsForCategory } from '@/lib/default-keywords'
+import { effectiveLocationLimit } from '@/lib/plans'
+import type { IUserLean } from '@/types'
 import Location from '@/models/Location'
 
 const bodySchema = z.object({
@@ -12,6 +15,7 @@ const bodySchema = z.object({
   address: z.string().min(1),
   phone: z.string().optional(),
   category: z.string().optional(),
+  googlePlaceId: z.string().optional(),
   accessToken: z.string().min(1),
   refreshToken: z.string().min(1),
   tokenExpiresAt: z.string().datetime(),
@@ -40,6 +44,20 @@ export async function POST(request: Request) {
     const parsed = bodySchema.safeParse(body)
     if (!parsed.success) return err('Invalid input', 400)
 
+    const existing = await Location.findOne({
+      userId: user._id,
+      googleLocationId: parsed.data.googleLocationId,
+    }).select('_id').lean()
+    if (!existing) {
+      const count = await Location.countDocuments({ userId: user._id, isActive: true })
+      const limit = effectiveLocationLimit(user as unknown as IUserLean)
+      if (count >= limit) {
+        return err(`Location limit (${limit}) reached for your plan.`, 403)
+      }
+    }
+
+    const keywordDefaults = defaultAlertKeywordsForCategory(parsed.data.category)
+
     const location = await Location.findOneAndUpdate(
       { userId: user._id, googleLocationId: parsed.data.googleLocationId },
       {
@@ -49,10 +67,15 @@ export async function POST(request: Request) {
           address: parsed.data.address,
           phone: parsed.data.phone,
           category: parsed.data.category,
+          googlePlaceId: parsed.data.googlePlaceId,
           accessToken: encrypt(parsed.data.accessToken),
           refreshToken: encrypt(parsed.data.refreshToken),
           tokenExpiresAt: new Date(parsed.data.tokenExpiresAt),
           isActive: true,
+        },
+        $setOnInsert: {
+          qrScans: 0,
+          ...(keywordDefaults.length ? { alertKeywords: keywordDefaults } : {}),
         },
       },
       { upsert: true, new: true, setDefaultsOnInsert: true }

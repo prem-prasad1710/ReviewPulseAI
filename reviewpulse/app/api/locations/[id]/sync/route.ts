@@ -1,5 +1,6 @@
 import { err, ok } from '@/lib/api'
 import { requireAuth } from '@/lib/auth-helpers'
+import { processReviewAfterSync } from '@/lib/review-post-sync'
 import { connectDB } from '@/lib/mongodb'
 import { analyzeSentiment } from '@/lib/openai'
 import { listLocationReviews, refreshIfNeeded } from '@/lib/gbp'
@@ -49,7 +50,7 @@ export async function POST(_request: Request, { params }: { params: Promise<{ id
       const comment = item.comment || ''
       const sentimentPayload = await analyzeSentiment(comment || 'No text review', rating || 3)
 
-      await Review.findOneAndUpdate(
+      const reviewDoc = await Review.findOneAndUpdate(
         { userId: user._id, googleReviewId: reviewId },
         {
           $set: {
@@ -60,15 +61,18 @@ export async function POST(_request: Request, { params }: { params: Promise<{ id
             reviewerPhoto: item.reviewer?.profilePhotoUrl,
             rating,
             comment,
-            originalLanguage: item.reviewReply?.updateTime,
             sentiment: sentimentPayload.sentiment,
             sentimentScore: sentimentPayload.sentimentScore,
             reviewCreatedAt: item.createTime ? new Date(item.createTime) : new Date(),
             syncedAt: new Date(),
           },
         },
-        { upsert: true, setDefaultsOnInsert: true }
+        { upsert: true, new: true, setDefaultsOnInsert: true }
       )
+
+      if (reviewDoc?._id) {
+        await processReviewAfterSync(reviewDoc._id)
+      }
     }
 
     location.lastSyncedAt = new Date()
@@ -76,11 +80,9 @@ export async function POST(_request: Request, { params }: { params: Promise<{ id
     location.averageRating =
       reviews.length > 0
         ? (reviews as GbpReview[]).reduce(
-            (acc: number, current: GbpReview) =>
-              acc + normalizeRating(current.starRating || undefined),
+            (acc: number, current: GbpReview) => acc + normalizeRating(current.starRating || undefined),
             0
-          ) /
-          reviews.length
+          ) / reviews.length
         : 0
     await location.save()
 

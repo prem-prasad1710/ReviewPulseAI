@@ -4,7 +4,7 @@ export interface ISubscription extends Document {
   userId: mongoose.Types.ObjectId
   razorpaySubscriptionId: string
   razorpayPlanId: string
-  plan: 'starter' | 'growth' | 'scale'
+  plan: 'starter' | 'growth' | 'scale' | 'agency' | 'agency_addon'
   status: 'created' | 'authenticated' | 'active' | 'paused' | 'cancelled' | 'completed' | 'expired'
   currentStart: Date
   currentEnd: Date
@@ -17,7 +17,7 @@ const SubscriptionSchema = new Schema<ISubscription>(
     userId: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
     razorpaySubscriptionId: { type: String, required: true, unique: true, index: true },
     razorpayPlanId: { type: String, required: true },
-    plan: { type: String, enum: ['starter', 'growth', 'scale'], required: true },
+    plan: { type: String, enum: ['starter', 'growth', 'scale', 'agency', 'agency_addon'], required: true },
     status: {
       type: String,
       enum: ['created', 'authenticated', 'active', 'paused', 'cancelled', 'completed', 'expired'],

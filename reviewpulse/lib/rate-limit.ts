@@ -17,3 +17,13 @@ export const generateReplyLimiter = redis
       prefix: 'reviewpulse:generate-reply',
     })
   : null
+
+/** Prevents subscription spam / double-checkout abuse (per user). */
+export const subscriptionCreateLimiter = redis
+  ? new Ratelimit({
+      redis,
+      limiter: Ratelimit.slidingWindow(10, '1 h'),
+      analytics: true,
+      prefix: 'reviewpulse:subscription-create',
+    })
+  : null

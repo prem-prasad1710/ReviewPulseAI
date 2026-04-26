@@ -19,9 +19,13 @@ const PLAN_MAP = {
   starter: process.env.RAZORPAY_PLAN_STARTER,
   growth: process.env.RAZORPAY_PLAN_GROWTH,
   scale: process.env.RAZORPAY_PLAN_SCALE,
+  agency: process.env.RAZORPAY_PLAN_AGENCY,
+  agency_addon: process.env.RAZORPAY_PLAN_AGENCY_ADDON,
 } as const
 
-export function getRazorpayPlanId(plan: keyof typeof PLAN_MAP) {
+export type RazorpayPlanKey = keyof typeof PLAN_MAP
+
+export function getRazorpayPlanId(plan: RazorpayPlanKey) {
   const planId = PLAN_MAP[plan]
   if (!planId) {
     throw new Error(`Missing Razorpay plan id for ${plan}`)

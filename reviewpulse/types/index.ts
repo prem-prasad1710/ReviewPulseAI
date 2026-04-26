@@ -1,6 +1,6 @@
 import type { Types } from 'mongoose'
 
-export type Plan = 'free' | 'starter' | 'growth' | 'scale'
+export type Plan = 'free' | 'starter' | 'growth' | 'scale' | 'agency'
 export type SubscriptionStatus = 'active' | 'inactive' | 'cancelled' | 'past_due'
 
 export interface IUserLean {
@@ -10,6 +10,10 @@ export interface IUserLean {
   name: string
   image?: string
   plan: Plan
+  whatsappNumber?: string
+  agencyId?: Types.ObjectId | string
+  /** Extra location slots purchased via Razorpay add-on (agency plan). */
+  agencyLocationAddons?: number
   razorpayCustomerId?: string
   razorpaySubscriptionId?: string
   subscriptionStatus: SubscriptionStatus

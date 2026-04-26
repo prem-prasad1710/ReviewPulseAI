@@ -18,6 +18,9 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     const { id } = await params
     const review = await Review.findOne({ _id: id, userId: user._id })
     if (!review) return err('Review not found', 404)
+    if (review.status !== 'pending' && review.status !== 'scheduled') {
+      return err('Review is not awaiting a reply', 400)
+    }
 
     const body = await request.json()
     const parsed = bodySchema.safeParse(body)
@@ -49,6 +52,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     review.publishedReply = parsed.data.replyText
     review.status = 'replied'
     review.repliedAt = new Date()
+    review.scheduledAt = undefined
     await review.save()
 
     return ok({ published: true })
