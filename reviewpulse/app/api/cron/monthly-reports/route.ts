@@ -5,6 +5,11 @@ import { generateMonthlyReportForLocation } from '@/lib/reports/generate-monthly
 import Location from '@/models/Location'
 import User from '@/models/User'
 
+/** Vercel Cron invokes with GET; keep POST for manual / external triggers. */
+export async function GET(request: Request) {
+  return POST(request)
+}
+
 export async function POST(request: Request) {
   try {
     const authHeader = request.headers.get('authorization')

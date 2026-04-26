@@ -4,6 +4,11 @@ import { publishReviewReply, refreshIfNeeded } from '@/lib/gbp'
 import Location from '@/models/Location'
 import Review from '@/models/Review'
 
+/** Vercel Cron invokes with GET; keep POST for manual / external triggers. */
+export async function GET(request: Request) {
+  return POST(request)
+}
+
 export async function POST(request: Request) {
   try {
     const authHeader = request.headers.get('authorization')
@@ -19,7 +24,7 @@ export async function POST(request: Request) {
       scheduledAt: { $lte: now },
       aiGeneratedReply: { $exists: true, $ne: '' },
     })
-      .limit(50)
+      .limit(200)
       .lean()
 
     let published = 0

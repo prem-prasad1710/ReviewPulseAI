@@ -6,11 +6,11 @@
     },
     {
       "path": "/api/cron/publish-scheduled-replies",
-      "schedule": "*/2 * * * *"
+      "schedule": "30 3 * * *"
     },
     {
       "path": "/api/cron/monthly-reports",
-      "schedule": "0 2 1 * *"
+      "schedule": "0 4 1 * *"
     }
   ]
 }

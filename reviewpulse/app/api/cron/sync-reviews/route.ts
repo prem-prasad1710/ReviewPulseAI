@@ -2,6 +2,11 @@ import { err, ok } from '@/lib/api'
 import { connectDB } from '@/lib/mongodb'
 import User from '@/models/User'
 
+/** Vercel Cron invokes with GET; keep POST for manual / external triggers. */
+export async function GET(request: Request) {
+  return POST(request)
+}
+
 export async function POST(request: Request) {
   try {
     const authHeader = request.headers.get('authorization')
