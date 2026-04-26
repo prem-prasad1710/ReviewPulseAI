@@ -1,6 +1,18 @@
 import OpenAI from 'openai'
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
+let cachedOpenAI: OpenAI | null = null
+
+/** Lazy client so `next build` does not require OPENAI_API_KEY at module load (e.g. on Vercel). */
+export function getOpenAI(): OpenAI {
+  const apiKey = process.env.OPENAI_API_KEY?.trim()
+  if (!apiKey) {
+    throw new Error('OPENAI_API_KEY is not configured')
+  }
+  if (!cachedOpenAI) {
+    cachedOpenAI = new OpenAI({ apiKey })
+  }
+  return cachedOpenAI
+}
 
 interface GenerateReplyParams {
   businessName: string
@@ -77,7 +89,7 @@ INSTRUCTIONS:
 - End with a warm closing that fits the business type.
 - Write ONLY the reply text. No preamble, labels, or explanation.${fewShot}${sameLanguageNote}`
 
-  const response = await openai.chat.completions.create({
+  const response = await getOpenAI().chat.completions.create({
     model: 'gpt-4o-mini',
     messages: [{ role: 'user', content: prompt }],
     max_tokens: 250,
@@ -90,7 +102,7 @@ INSTRUCTIONS:
 export async function analyzeSentiment(reviewText: string, stars: number) {
   const prompt = `Rate the sentiment of this review on a scale from -1.0 (very negative) to 1.0 (very positive). Reply with ONLY a number.\nReview: "${reviewText}"\nRating: ${stars}/5`
 
-  const response = await openai.chat.completions.create({
+  const response = await getOpenAI().chat.completions.create({
     model: 'gpt-4o-mini',
     messages: [{ role: 'user', content: prompt }],
     max_tokens: 10,
