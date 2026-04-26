@@ -4,6 +4,7 @@ import Review from '@/models/Review'
 import StatsCards from '@/components/dashboard/StatsCards'
 import SentimentChart from '@/components/dashboard/SentimentChart'
 import RecentReviews from '@/components/dashboard/RecentReviews'
+import { Card, CardDescription, CardTitle } from '@/components/ui/card'
 
 export default async function DashboardPage() {
   await connectDB()
@@ -17,6 +18,8 @@ export default async function DashboardPage() {
   const totalReviews = reviews.length
   const pendingReplies = reviews.filter((r) => r.status === 'pending').length
   const repliedThisMonth = reviews.filter((r) => r.status === 'replied').length
+  const positiveReviews = reviews.filter((r) => r.sentiment === 'positive').length
+  const responseRate = totalReviews > 0 ? Math.round((repliedThisMonth / totalReviews) * 100) : 0
   const averageRating =
     reviews.length > 0 ? reviews.reduce((sum, r) => sum + (r.rating || 0), 0) / reviews.length : 0
 
@@ -34,14 +37,34 @@ export default async function DashboardPage() {
     .map(([day, values]) => ({ day, avgRating: Number((values.total / values.count).toFixed(2)) }))
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
+      <Card className="border-none bg-linear-to-r from-blue-600 via-indigo-600 to-violet-600 p-6 text-white shadow-lg shadow-blue-500/20">
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div className="space-y-2">
+            <CardTitle className="text-lg font-semibold text-white/95 md:text-xl">Performance snapshot</CardTitle>
+            <CardDescription className="max-w-xl text-blue-100">
+              Keep an eye on response speed, sentiment momentum, and review quality—all in one place.
+            </CardDescription>
+          </div>
+          <div className="flex flex-wrap gap-2 text-sm">
+            <span className="rounded-full border border-white/25 bg-white/15 px-3 py-1 text-white/90">
+              Response rate: {responseRate}%
+            </span>
+            <span className="rounded-full border border-white/25 bg-white/15 px-3 py-1 text-white/90">
+              Positive sentiment: {positiveReviews}
+            </span>
+          </div>
+        </div>
+      </Card>
+
       <StatsCards
         totalReviews={totalReviews}
         averageRating={averageRating}
         pendingReplies={pendingReplies}
         repliedThisMonth={repliedThisMonth}
       />
-      <div className="grid gap-5 lg:grid-cols-2">
+
+      <div className="grid gap-5 xl:grid-cols-[1.4fr_1fr]">
         <SentimentChart data={trendData} />
         <RecentReviews
           reviews={reviews.slice(0, 5).map((r) => ({
