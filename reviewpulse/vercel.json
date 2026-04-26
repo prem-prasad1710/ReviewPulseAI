@@ -2,15 +2,15 @@
   "crons": [
     {
       "path": "/api/cron/sync-reviews",
-      "schedule": "0 0 * * *"
+      "schedule": "0 2 * * *"
     },
     {
       "path": "/api/cron/publish-scheduled-replies",
-      "schedule": "*/5 * * * *"
+      "schedule": "*/2 * * * *"
     },
     {
       "path": "/api/cron/monthly-reports",
-      "schedule": "0 6 1 * *"
+      "schedule": "0 2 1 * *"
     }
   ]
 }
