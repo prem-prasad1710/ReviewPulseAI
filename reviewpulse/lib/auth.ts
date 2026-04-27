@@ -26,6 +26,16 @@ export const authConfig: NextAuthConfig = {
     }),
   ],
   callbacks: {
+    async redirect({ url, baseUrl }) {
+      if (url.startsWith('/')) return `${baseUrl}${url}`
+      try {
+        const next = new URL(url)
+        if (next.origin === baseUrl) return url
+      } catch {
+        /* ignore */
+      }
+      return `${baseUrl}/dashboard`
+    },
     async signIn({ user, account, profile }) {
       try {
         await connectDB()

@@ -10,15 +10,30 @@ const errorMessages: Record<string, string> = {
   Configuration: 'OAuth configuration issue detected. Verify Google OAuth client settings.',
 }
 
+/** Same-origin path only — prevents open redirects. */
+function safePostLoginPath(raw: string | string[] | undefined): string {
+  const v = Array.isArray(raw) ? raw[0] : raw
+  if (!v || typeof v !== 'string') return '/dashboard'
+  try {
+    const decoded = decodeURIComponent(v.trim())
+    if (!decoded.startsWith('/') || decoded.startsWith('//')) return '/dashboard'
+    if (decoded.includes('://')) return '/dashboard'
+    return decoded || '/dashboard'
+  } catch {
+    return '/dashboard'
+  }
+}
+
 export default async function LoginPage({
   searchParams,
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>
 }) {
   const session = await getAppSession()
-  if (session?.user?.id) redirect('/dashboard')
-
   const params = await searchParams
+  const redirectTo = safePostLoginPath(params?.callbackUrl)
+  if (session?.user?.id) redirect(redirectTo)
+
   const errorParam = params?.error
   const errorCode = Array.isArray(errorParam) ? errorParam[0] : errorParam
   const errorMessage = errorCode ? errorMessages[errorCode] || `Authentication error: ${errorCode}` : null
@@ -60,11 +75,14 @@ export default async function LoginPage({
           ) : null}
 
           <form
-            action={async () => {
+            action={async (formData: FormData) => {
               'use server'
-              await signIn('google', { redirectTo: '/dashboard' })
+              const raw = formData.get('callbackUrl')
+              const to = safePostLoginPath(typeof raw === 'string' ? raw : undefined)
+              await signIn('google', { redirectTo: to })
             }}
           >
+            <input type="hidden" name="callbackUrl" value={redirectTo} />
             <Button type="submit" className="h-11 w-full rounded-xl text-base font-semibold shadow-md shadow-indigo-600/20">
               Continue with Google
             </Button>

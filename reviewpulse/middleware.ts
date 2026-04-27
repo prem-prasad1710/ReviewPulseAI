@@ -1,11 +1,15 @@
 import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
+import { getToken } from 'next-auth/jwt'
 
-/**
- * Optional white-label: set `AGENCY_HOST_MAP=hostname:agencyMongoObjectId`
- * Forwards `x-agency-id` on the *request* so Server Components can read `headers()`.
- */
-export function middleware(request: NextRequest) {
+function requiresDashboardSession(pathname: string): boolean {
+  if (pathname.startsWith('/api/') || pathname === '/login' || pathname === '/') return false
+  if (pathname.startsWith('/join/') || pathname.startsWith('/score/') || pathname.startsWith('/r/')) return false
+  const prefixes = ['/dashboard', '/settings', '/reviews', '/locations', '/analytics', '/agency', '/reports']
+  return prefixes.some((p) => pathname === p || pathname.startsWith(`${p}/`))
+}
+
+function applyAgencyHostHeader(request: NextRequest): NextResponse {
   const host = request.headers.get('host')?.split(':')[0] || ''
   const map = process.env.AGENCY_HOST_MAP || ''
   if (!host || !map) return NextResponse.next()
@@ -29,6 +33,37 @@ export function middleware(request: NextRequest) {
   }
 
   return NextResponse.next()
+}
+
+export async function middleware(request: NextRequest) {
+  const { pathname, search } = request.nextUrl
+
+  const devBypass =
+    process.env.NODE_ENV === 'development' && process.env.ENABLE_AUTH_IN_DEV !== 'true'
+
+  if (!devBypass && requiresDashboardSession(pathname)) {
+    const secret = process.env.NEXTAUTH_SECRET || process.env.AUTH_SECRET
+    if (secret) {
+      try {
+        const base = process.env.NEXTAUTH_URL || request.nextUrl.origin
+        const token = await getToken({
+          req: request,
+          secret,
+          secureCookie: base.startsWith('https://'),
+        })
+        const id = (token as { id?: string } | null)?.id
+        if (!id) {
+          const login = new URL('/login', request.nextUrl.origin)
+          login.searchParams.set('callbackUrl', pathname + search)
+          return NextResponse.redirect(login)
+        }
+      } catch (e) {
+        console.error('middleware getToken:', e)
+      }
+    }
+  }
+
+  return applyAgencyHostHeader(request)
 }
 
 export const config = {
