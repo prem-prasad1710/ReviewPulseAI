@@ -45,6 +45,7 @@ const features = [
 
 const plans = [
   {
+    planKey: 'starter' as const,
     name: 'Starter',
     price: '₹999',
     subtitle: 'Perfect for one location',
@@ -52,6 +53,7 @@ const plans = [
     highlighted: false,
   },
   {
+    planKey: 'growth' as const,
     name: 'Growth',
     price: '₹2,499',
     subtitle: 'For multi-outlet operators',
@@ -59,6 +61,7 @@ const plans = [
     highlighted: true,
   },
   {
+    planKey: 'scale' as const,
     name: 'Scale',
     price: '₹5,999',
     subtitle: 'For serious expansion',
@@ -326,11 +329,16 @@ export default function Home() {
                     ))}
                   </ul>
 
-                  <Link href="/login" className="mt-6 block">
-                    <Button variant={plan.highlighted ? 'default' : 'outline'} className="w-full rounded-xl">
-                      Choose {plan.name}
-                    </Button>
-                  </Link>
+                  <div className="mt-6 space-y-2">
+                    <Link href={`/subscribe?plan=${plan.planKey}`} className="block">
+                      <Button variant={plan.highlighted ? 'default' : 'outline'} className="w-full rounded-xl">
+                        Subscribe — {plan.name}
+                      </Button>
+                    </Link>
+                    <p className="text-center text-[10px] leading-snug text-slate-500 dark:text-slate-400">
+                      Secured by Razorpay · Sign in required · Same checkout as Settings
+                    </p>
+                  </div>
                 </article>
               ))}
             </div>
