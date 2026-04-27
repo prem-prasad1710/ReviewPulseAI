@@ -5,6 +5,8 @@ import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import {
+  ensureRazorpayCheckoutReady,
+  fetchSubscriptionShortUrl,
   loadRazorpayScript,
   openRazorpaySubscriptionModal,
   type RazorpayPrefill,
@@ -52,12 +54,12 @@ export default function PlanCheckoutButtons({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ plan }),
       })
-      const json = await res.json()
+      const json = (await res.json()) as { success?: boolean; error?: string; data?: { subscriptionId?: string; shortUrl?: string } }
       if (!res.ok) {
         toast.error(json?.error || 'Could not create subscription')
         return
       }
-      const subscriptionId = json?.data?.subscriptionId as string | undefined
+      const subscriptionId = json?.data?.subscriptionId
       if (!subscriptionId) {
         toast.error('No subscription id returned')
         return
@@ -65,16 +67,20 @@ export default function PlanCheckoutButtons({
 
       loadToast = toast.loading('Opening Razorpay payment…')
 
-      const shortUrl = json?.data?.shortUrl as string | undefined
+      let shortUrl = json?.data?.shortUrl
+      if (!shortUrl || !String(shortUrl).startsWith('http')) {
+        shortUrl = await fetchSubscriptionShortUrl(subscriptionId)
+      }
       if (shortUrl) {
         toast.dismiss(loadToast)
+        toast.message('Redirecting to Razorpay…')
         window.location.assign(shortUrl)
         return
       }
 
-      await loadRazorpayScript()
+      await ensureRazorpayCheckoutReady()
       toast.dismiss(loadToast)
-      toast.message('Complete payment in the Razorpay window.')
+      toast.message('Complete payment in the Razorpay window (popup overlay).')
       openRazorpaySubscriptionModal({
         key: razorpayKeyId,
         subscriptionId,
@@ -85,7 +91,8 @@ export default function PlanCheckoutButtons({
           toast.success('Payment authorized — your plan will update in a moment.')
           router.refresh()
         },
-        onDismiss: () => toast.message('Checkout closed — resume from Agency billing or Settings when ready.'),
+        onDismiss: () =>
+          toast.message('Checkout closed — if you did not see it, check for overlays or try again.'),
       })
     } catch (e) {
       toast.error(e instanceof Error ? e.message : 'Checkout error')
@@ -98,8 +105,8 @@ export default function PlanCheckoutButtons({
   if (!razorpayKeyId) {
     return (
       <p className="text-xs text-amber-800 dark:text-amber-200/90">
-        Set <code className="rounded bg-slate-100 px-1 dark:bg-slate-800">NEXT_PUBLIC_RAZORPAY_KEY_ID</code> and plan
-        IDs in env to enable checkout.
+        Set <code className="rounded bg-slate-100 px-1 dark:bg-slate-800">NEXT_PUBLIC_RAZORPAY_KEY_ID</code> in Vercel
+        env and redeploy. It must match your Razorpay key mode (test vs live).
       </p>
     )
   }
@@ -110,6 +117,10 @@ export default function PlanCheckoutButtons({
     <div className="space-y-3">
       <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
         Start or change subscription (Razorpay Checkout)
+      </p>
+      <p className="text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">
+        After you pick a plan, Razorpay opens as a <strong className="font-medium text-slate-600 dark:text-slate-300">secure overlay</strong> on this page (not always a new tab). Allow{' '}
+        <code className="rounded bg-slate-100 px-1 dark:bg-slate-800">checkout.razorpay.com</code> if an ad blocker hides it.
       </p>
       <div className="flex flex-wrap gap-2">
         {(['starter', 'growth', 'scale'] as const).map((p) => (

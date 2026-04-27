@@ -12,10 +12,30 @@ export type RazorpayPrefill = {
   contact?: string
 }
 
+/** Only pass contact if it looks like E.164; bad values break Razorpay Checkout. */
+function sanitizePrefill(p?: RazorpayPrefill): RazorpayPrefill | undefined {
+  if (!p) return undefined
+  const email = p.email?.trim() || undefined
+  const name = p.name?.trim() || undefined
+  let contact = p.contact?.trim().replace(/[\s-]/g, '') || undefined
+  if (contact && !/^\+\d{10,14}$/.test(contact)) {
+    contact = undefined
+  }
+  if (!email && !name && !contact) return undefined
+  return { email, name, contact }
+}
+
 export function loadRazorpayScript(): Promise<void> {
   if (typeof window === 'undefined') return Promise.resolve()
   if (window.Razorpay) return Promise.resolve()
   return new Promise((resolve, reject) => {
+    const existing = document.querySelector('script[src="https://checkout.razorpay.com/v1/checkout.js"]')
+    if (existing) {
+      existing.addEventListener('load', () => resolve(), { once: true })
+      existing.addEventListener('error', () => reject(new Error('Failed to load Razorpay')), { once: true })
+      if (window.Razorpay) resolve()
+      return
+    }
     const s = document.createElement('script')
     s.src = 'https://checkout.razorpay.com/v1/checkout.js'
     s.async = true
@@ -23,6 +43,32 @@ export function loadRazorpayScript(): Promise<void> {
     s.onerror = () => reject(new Error('Failed to load Razorpay'))
     document.body.appendChild(s)
   })
+}
+
+/** Script sometimes registers `window.Razorpay` a tick after `onload`. */
+export async function ensureRazorpayCheckoutReady(): Promise<void> {
+  await loadRazorpayScript()
+  const deadline = Date.now() + 8000
+  while (Date.now() < deadline) {
+    if (window.Razorpay) return
+    await new Promise((r) => setTimeout(r, 40))
+  }
+  throw new Error(
+    'Razorpay checkout did not load. Disable ad blockers for this site, allow checkout.razorpay.com, and try again.'
+  )
+}
+
+/** Ask the server for mandate / hosted pay `short_url` when create did not return it. */
+export async function fetchSubscriptionShortUrl(subscriptionId: string): Promise<string | undefined> {
+  const res = await fetch('/api/subscriptions/resume', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ subscriptionId }),
+  })
+  const json = (await res.json()) as { data?: { shortUrl?: string } }
+  if (!res.ok) return undefined
+  const u = json?.data?.shortUrl
+  return typeof u === 'string' && u.startsWith('http') ? u : undefined
 }
 
 export function openRazorpaySubscriptionModal(opts: {
@@ -38,7 +84,7 @@ export function openRazorpaySubscriptionModal(opts: {
     throw new Error('Razorpay is not loaded')
   }
 
-  const prefill = opts.prefill
+  const prefill = sanitizePrefill(opts.prefill)
   const hasPrefill =
     Boolean(prefill?.email?.trim()) || Boolean(prefill?.name?.trim()) || Boolean(prefill?.contact?.trim())
 
@@ -49,12 +95,7 @@ export function openRazorpaySubscriptionModal(opts: {
     description: opts.description,
     handler: opts.onSuccess,
     theme: { color: '#4f46e5' },
-    /** Helps Razorpay pre-bind the payer (email/contact) for smoother authorization. */
     ...(hasPrefill ? { prefill: { email: prefill?.email, name: prefill?.name, contact: prefill?.contact } } : {}),
-    /** Keeps payer aligned with the Razorpay customer created on the server. */
-    ...(prefill?.email?.trim()
-      ? { readonly: { email: true, name: false, contact: false } }
-      : {}),
   }
 
   if (opts.onDismiss) {
@@ -65,6 +106,6 @@ export function openRazorpaySubscriptionModal(opts: {
     const rzp = new window.Razorpay(options)
     rzp.open()
   } catch (e) {
-    throw e instanceof Error ? e : new Error('Razorpay Checkout could not open — check your key and try again.')
+    throw e instanceof Error ? e : new Error('Razorpay Checkout could not open — check NEXT_PUBLIC_RAZORPAY_KEY_ID matches your Razorpay mode (test vs live).')
   }
 }
