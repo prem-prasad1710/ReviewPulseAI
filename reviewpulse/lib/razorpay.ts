@@ -1,7 +1,7 @@
 import Razorpay from 'razorpay'
 import crypto from 'crypto'
 
-/** Server-side keys only. For checkout in the browser, also set NEXT_PUBLIC_RAZORPAY_KEY_ID (same key id value). */
+/** Server-side keys only. Test (rzp_test_…) or Live (rzp_live_…) — must match plan mode. Browser checkout needs NEXT_PUBLIC_RAZORPAY_KEY_ID with the same Key ID string. */
 export function getRazorpayClient() {
   const keyId = process.env.RAZORPAY_KEY_ID?.trim()
   const keySecret = process.env.RAZORPAY_KEY_SECRET?.trim()

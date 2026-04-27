@@ -126,7 +126,7 @@ export async function POST(request: Request) {
     if (error instanceof Error && error.message === 'USER_NOT_FOUND') return err('Account not found', 404)
     if (error instanceof Error && error.message.startsWith('Missing Razorpay credentials')) {
       return err(
-        'Razorpay is not configured on the server. In your host (e.g. Vercel → Settings → Environment Variables) set RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET (live keys for production). Set NEXT_PUBLIC_RAZORPAY_KEY_ID to the same key id for Checkout. Add RAZORPAY_PLAN_* for each plan and RAZORPAY_WEBHOOK_SECRET for webhooks. Redeploy after saving.',
+        'Razorpay is not configured on the server. In your host (e.g. Vercel → Environment Variables) add RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET from Razorpay Dashboard → API Keys (Test mode is fine—use rzp_test_… + test secret until you go live). Set NEXT_PUBLIC_RAZORPAY_KEY_ID to the same Key ID for Checkout. Add RAZORPAY_PLAN_* plan ids from Test mode plans, RAZORPAY_WEBHOOK_SECRET if you use webhooks, then redeploy.',
         500
       )
     }

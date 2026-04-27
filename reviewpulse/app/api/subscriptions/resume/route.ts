@@ -44,7 +44,7 @@ export async function POST(request: Request) {
     if (error instanceof Error && error.message === 'UNAUTHORIZED') return err('Unauthorized', 401)
     if (error instanceof Error && error.message.startsWith('Missing Razorpay credentials')) {
       return err(
-        'Razorpay is not configured on the server. Set RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET on your deployment, plus NEXT_PUBLIC_RAZORPAY_KEY_ID for checkout, then redeploy.',
+        'Razorpay is not configured on the server. Add RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET (Test keys rzp_test_… are OK), and NEXT_PUBLIC_RAZORPAY_KEY_ID on your host, then redeploy.',
         500
       )
     }
