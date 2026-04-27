@@ -1,4 +1,5 @@
 import OpenAI from 'openai'
+import { getCurrentFestival } from '@/lib/festivals'
 
 let cachedOpenAI: OpenAI | null = null
 
@@ -25,6 +26,8 @@ interface GenerateReplyParams {
   toneExamples?: string[]
   /** ISO 639-1 from review detection; when not English, reply should match customer language. */
   detectedLanguageIso1?: string
+  /** Z3: when false, skip festive greeting injection. */
+  festiveAutoMode?: boolean
 }
 
 export async function generateReviewReply(params: GenerateReplyParams): Promise<string> {
@@ -38,6 +41,7 @@ export async function generateReviewReply(params: GenerateReplyParams): Promise<
     tone,
     toneExamples,
     detectedLanguageIso1,
+    festiveAutoMode = true,
   } = params
 
   const languageInstruction = {
@@ -72,6 +76,12 @@ export async function generateReviewReply(params: GenerateReplyParams): Promise<
       ? `\n\nIMPORTANT: Write the reply in ${detectedLanguageIso1} language. The customer wrote in that language — always reply in the same language to show respect.`
       : ''
 
+  const festival = festiveAutoMode && rating >= 3 ? getCurrentFestival() : null
+  const festiveNote =
+    festival && rating >= 3
+      ? `\n\nToday is ${festival.name} in India. If it feels natural and appropriate, you may weave a brief ${festival.greeting} greeting into the reply. Skip it entirely for complaints or very short reviews.`
+      : ''
+
   const prompt = `You are writing a Google review reply on behalf of "${businessName}", a ${businessCategory} in India.
 
 REVIEWER: ${reviewerName}
@@ -87,7 +97,7 @@ INSTRUCTIONS:
 - Do not start with "Dear".
 - Do not mention competitors.
 - End with a warm closing that fits the business type.
-- Write ONLY the reply text. No preamble, labels, or explanation.${fewShot}${sameLanguageNote}`
+- Write ONLY the reply text. No preamble, labels, or explanation.${fewShot}${sameLanguageNote}${festiveNote}`
 
   const response = await getOpenAI().chat.completions.create({
     model: 'gpt-4o-mini',
@@ -115,4 +125,177 @@ export async function analyzeSentiment(reviewText: string, stars: number) {
   const sentiment = safeScore > 0.2 ? 'positive' : safeScore < -0.2 ? 'negative' : 'neutral'
 
   return { sentiment, sentimentScore: safeScore }
+}
+
+export interface ReviewAutopsyResult {
+  rootCause: string
+  suggestedFix: string
+}
+
+export async function runReviewAutopsy(params: {
+  businessName: string
+  businessCategory: string
+  negativeReviewLines: string[]
+}): Promise<ReviewAutopsyResult | null> {
+  const lines = params.negativeReviewLines.join('\n')
+  if (!lines.trim()) return null
+
+  const prompt = `You are a sharp operations consultant for Indian small businesses.
+Given these negative customer reviews for a ${params.businessCategory} called '${params.businessName}':
+
+${lines}
+
+Identify:
+1. ROOT_CAUSE: The single most common underlying operational problem (1 sentence, specific, not generic)
+2. FIX: A concrete action the owner can take THIS WEEK to address it (1–2 sentences)
+
+Return JSON only: {"rootCause": string, "suggestedFix": string}`
+
+  const response = await getOpenAI().chat.completions.create({
+    model: 'gpt-4o-mini',
+    messages: [{ role: 'user', content: prompt }],
+    max_tokens: 150,
+    temperature: 0.3,
+  })
+
+  const raw = response.choices[0]?.message?.content?.trim() ?? ''
+  try {
+    const parsed = JSON.parse(raw) as { rootCause?: string; suggestedFix?: string }
+    if (!parsed.rootCause || !parsed.suggestedFix) return null
+    return { rootCause: parsed.rootCause, suggestedFix: parsed.suggestedFix }
+  } catch {
+    return null
+  }
+}
+
+export interface StaffMentionExtracted {
+  name: string
+  sentiment: 'positive' | 'negative' | 'neutral'
+  quote: string
+}
+
+export async function extractStaffMentionsFromReview(reviewText: string): Promise<StaffMentionExtracted[]> {
+  if (!reviewText.trim()) return []
+
+  const prompt = `Extract all staff/employee names mentioned in this customer review.
+For each name, determine if the mention is positive, negative, or neutral.
+Extract a short quote (max 10 words) showing the context.
+Review: '${reviewText.replace(/'/g, "\\'")}'
+Return JSON array only: [{"name": string, "sentiment": "positive"|"negative"|"neutral", "quote": string}]
+If no staff names found, return [].`
+
+  const response = await getOpenAI().chat.completions.create({
+    model: 'gpt-4o-mini',
+    messages: [{ role: 'user', content: prompt }],
+    max_tokens: 300,
+    temperature: 0.2,
+  })
+
+  const raw = response.choices[0]?.message?.content?.trim() ?? ''
+  try {
+    const arr = JSON.parse(raw) as Array<{ name?: string; sentiment?: string; quote?: string }>
+    if (!Array.isArray(arr)) return []
+    return arr
+      .filter((x) => x.name && x.sentiment && x.quote)
+      .map((x) => ({
+        name: toTitleCase(String(x.name).trim()),
+        sentiment: (['positive', 'negative', 'neutral'].includes(String(x.sentiment))
+          ? x.sentiment
+          : 'neutral') as StaffMentionExtracted['sentiment'],
+        quote: String(x.quote).slice(0, 200),
+      }))
+  } catch {
+    return []
+  }
+}
+
+function toTitleCase(s: string): string {
+  return s
+    .split(/\s+/)
+    .map((w) => (w ? w.charAt(0).toUpperCase() + w.slice(1).toLowerCase() : ''))
+    .join(' ')
+    .trim()
+}
+
+export interface SocialFormatsResult {
+  instagram: string
+  whatsapp: string
+  googlePost: string
+}
+
+export async function generateSocialFormats(params: {
+  businessName: string
+  businessCategory: string
+  reviewText: string
+  language: string
+}): Promise<SocialFormatsResult | null> {
+  const prompt = `A customer left this review for ${params.businessName} (${params.businessCategory}): '${params.reviewText.replace(/'/g, "\\'")}'
+
+Generate social media content to celebrate this positive feedback:
+
+1. INSTAGRAM: 3–4 lines, warm and celebratory, ends with 5 relevant hashtags. In ${params.language}.
+2. WHATSAPP: 1–2 lines max. Very short, emoji-friendly tone (no actual emoji — use text). In ${params.language}.
+3. GOOGLE_POST: 2–3 professional sentences with a clear CTA to visit. In ${params.language}.
+
+Return JSON only: {"instagram": string, "whatsapp": string, "googlePost": string}`
+
+  const response = await getOpenAI().chat.completions.create({
+    model: 'gpt-4o-mini',
+    messages: [{ role: 'user', content: prompt }],
+    max_tokens: 500,
+    temperature: 0.6,
+  })
+
+  const raw = response.choices[0]?.message?.content?.trim() ?? ''
+  try {
+    const parsed = JSON.parse(raw) as Partial<SocialFormatsResult>
+    if (!parsed.instagram || !parsed.whatsapp || !parsed.googlePost) return null
+    return {
+      instagram: parsed.instagram,
+      whatsapp: parsed.whatsapp,
+      googlePost: parsed.googlePost,
+    }
+  } catch {
+    return null
+  }
+}
+
+export interface MenuInsightBatchItem {
+  name: string
+  positiveCount: number
+  negativeCount: number
+  sampleQuote: string
+}
+
+export async function extractMenuInsightsFromBatch(params: {
+  consultantLabel: 'restaurant' | 'salon'
+  itemLabel: 'food item' | 'service'
+  reviewsBatch: string
+}): Promise<MenuInsightBatchItem[]> {
+  const prompt = `You are a ${params.consultantLabel} consultant. From these customer reviews, extract every ${params.itemLabel} mentioned.
+For each, count how many times it's mentioned positively vs negatively.
+Include a sample quote for context.
+Reviews batch: ${params.reviewsBatch}
+Return JSON only: {"items": [{"name": string, "positiveCount": number, "negativeCount": number, "sampleQuote": string}]}`
+
+  const response = await getOpenAI().chat.completions.create({
+    model: 'gpt-4o-mini',
+    messages: [{ role: 'user', content: prompt }],
+    max_tokens: 2000,
+    temperature: 0.3,
+  })
+
+  const raw = response.choices[0]?.message?.content?.trim() ?? ''
+  try {
+    const parsed = JSON.parse(raw) as { items?: MenuInsightBatchItem[] }
+    if (!parsed.items || !Array.isArray(parsed.items)) return []
+    return parsed.items.map((i) => ({
+      name: String(i.name || '').trim(),
+      positiveCount: Math.max(0, Number(i.positiveCount) || 0),
+      negativeCount: Math.max(0, Number(i.negativeCount) || 0),
+      sampleQuote: String(i.sampleQuote || '').slice(0, 300),
+    }))
+  } catch {
+    return []
+  }
 }

@@ -8,6 +8,7 @@ import Location from '@/models/Location'
 import Review from '@/models/Review'
 import ReviewAlert from '@/models/ReviewAlert'
 import User from '@/models/User'
+import { enqueueZeroOneAfterSync } from '@/lib/review-zero-one'
 
 const MAX_WHATSAPP_ALERTS_PER_DAY = 10
 
@@ -125,4 +126,6 @@ ${base}/reviews`
       }
     }
   }
+
+  enqueueZeroOneAfterSync(review._id as Types.ObjectId)
 }

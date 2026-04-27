@@ -87,6 +87,10 @@ export default async function LocationsPage() {
                     ['Booster', 'booster'],
                     ['Keywords', 'keywords'],
                     ['Reply schedule', 'settings'],
+                    ['Staff tracker', 'staff-tracker'],
+                    ['Heatmap', 'heatmap'],
+                    ['Menu insights', 'menu-insights'],
+                    ['Offline bridge', 'offline-bridge'],
                   ].map(([label, path]) => (
                     <Link
                       key={path}

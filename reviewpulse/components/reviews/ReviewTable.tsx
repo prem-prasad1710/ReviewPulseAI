@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { AlertTriangle } from 'lucide-react'
 import { Table, TD, TH } from '@/components/ui/table'
 import SentimentBadge from '@/components/reviews/SentimentBadge'
 import { Badge } from '@/components/ui/badge'
@@ -17,6 +18,30 @@ interface ReviewRow {
   status: 'pending' | 'replied' | 'ignored' | 'scheduled'
   detectedLanguage?: string
   translatedText?: string
+  fakeScore?: number
+  fakeSignals?: string[]
+}
+
+function TrustBadge({ review }: { review: ReviewRow }) {
+  const score = review.fakeScore
+  if (typeof score !== 'number' || score < 40) return <span className="text-xs text-slate-400">—</span>
+  const high = score >= 70
+  const label = high ? 'Suspicious' : 'Unusual'
+  const title = (review.fakeSignals?.length ? review.fakeSignals.join(' · ') + '\n\n' : '') +
+    'This is an AI estimate. Always use your own judgment before reporting.'
+  return (
+    <span
+      title={title}
+      className={`inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+        high
+          ? 'bg-red-100 text-red-900 dark:bg-red-950/50 dark:text-red-200'
+          : 'bg-amber-100 text-amber-900 dark:bg-amber-950/50 dark:text-amber-200'
+      }`}
+    >
+      <AlertTriangle className="h-3 w-3" />
+      {label}
+    </span>
+  )
 }
 
 function StatusBadge({ status }: { status: ReviewRow['status'] }) {
@@ -99,6 +124,7 @@ export default function ReviewTable({
               <TH>Rating</TH>
               <TH>Review</TH>
               <TH>Sentiment</TH>
+              <TH>Trust</TH>
               <TH>Status</TH>
               <TH className="text-right">Action</TH>
             </tr>
@@ -120,6 +146,9 @@ export default function ReviewTable({
                 </TD>
                 <TD>
                   <SentimentBadge sentiment={review.sentiment} />
+                </TD>
+                <TD>
+                  <TrustBadge review={review} />
                 </TD>
                 <TD>
                   <StatusBadge status={review.status} />

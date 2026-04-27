@@ -1,5 +1,11 @@
 import mongoose, { Document, Model, Schema, model, models } from 'mongoose'
 
+export interface ReviewAutopsy {
+  rootCause: string
+  suggestedFix: string
+  generatedAt: Date
+}
+
 export interface IReview extends Document {
   locationId: mongoose.Types.ObjectId
   userId: mongoose.Types.ObjectId
@@ -19,6 +25,13 @@ export interface IReview extends Document {
   repliedAt?: Date
   scheduledAt?: Date
   lowRatingWhatsAppNotified?: boolean
+  /** Z1 Review Autopsy AI (Growth/Scale, once per review). */
+  autopsy?: ReviewAutopsy
+  /** Z4 Potentially inauthentic pattern score 0–100. */
+  fakeScore?: number
+  fakeSignals?: string[]
+  /** Z2 Staff extraction completed for this review. */
+  staffMentionsExtracted?: boolean
   reviewCreatedAt: Date
   syncedAt: Date
   createdAt: Date
@@ -49,6 +62,18 @@ const ReviewSchema = new Schema<IReview>(
     repliedAt: Date,
     scheduledAt: Date,
     lowRatingWhatsAppNotified: { type: Boolean, default: false },
+    autopsy: {
+      type: {
+        rootCause: String,
+        suggestedFix: String,
+        generatedAt: Date,
+      },
+      required: false,
+      _id: false,
+    },
+    fakeScore: { type: Number, min: 0, max: 100 },
+    fakeSignals: [{ type: String }],
+    staffMentionsExtracted: { type: Boolean, default: false },
     reviewCreatedAt: { type: Date, required: true, index: true },
     syncedAt: { type: Date, required: true },
   },

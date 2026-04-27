@@ -39,3 +39,31 @@ export function competitorLimitForPlan(plan: string): number {
 export function isPaidPlan(plan: string): boolean {
   return plan !== 'free'
 }
+
+export function planAllowsReviewAutopsy(plan: string): boolean {
+  return plan === 'growth' || plan === 'scale'
+}
+
+export function planAllowsStaffTracker(plan: string): boolean {
+  return plan === 'growth' || plan === 'scale'
+}
+
+export function planAllowsFakeScore(plan: string): boolean {
+  return isPaidPlan(plan)
+}
+
+export function planAllowsMoodHeatmap(plan: string): boolean {
+  return plan === 'growth' || plan === 'scale'
+}
+
+export function planAllowsSocialPostFull(plan: string): boolean {
+  return plan === 'growth' || plan === 'scale'
+}
+
+export function planAllowsMenuInsights(plan: string): boolean {
+  return plan === 'scale'
+}
+
+export function planAllowsOfflineBridge(plan: string): boolean {
+  return isPaidPlan(plan)
+}

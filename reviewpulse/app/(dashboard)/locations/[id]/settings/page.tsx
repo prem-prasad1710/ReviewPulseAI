@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { toast } from 'sonner'
-import { ArrowLeft, Clock } from 'lucide-react'
+import { ArrowLeft, Clock, Sparkles } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardDescription, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -21,6 +21,7 @@ export default function LocationReplySchedulePage() {
   const [endHour, setEndHour] = useState(18)
   const [workingDays, setWorkingDays] = useState<number[]>([1, 2, 3, 4, 5, 6])
   const [timezone, setTimezone] = useState('Asia/Kolkata')
+  const [festiveAutoMode, setFestiveAutoMode] = useState(true)
 
   useEffect(() => {
     const run = async () => {
@@ -35,6 +36,10 @@ export default function LocationReplySchedulePage() {
         setWorkingDays(Array.isArray(rs.workingDays) ? rs.workingDays : [1, 2, 3, 4, 5, 6])
         setTimezone(rs.timezone || 'Asia/Kolkata')
       }
+      const locRes = await fetch(`/api/locations/${id}`)
+      const locJson = await locRes.json()
+      const festive = locJson?.data?.festiveAutoMode
+      setFestiveAutoMode(festive !== false)
       setLoading(false)
     }
     run()
@@ -52,6 +57,20 @@ export default function LocationReplySchedulePage() {
       return
     }
     toast.success('Reply schedule saved')
+  }
+
+  const saveFestive = async () => {
+    const res = await fetch(`/api/locations/${id}/meta`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ festiveAutoMode }),
+    })
+    const json = await res.json()
+    if (!res.ok) {
+      toast.error(json?.error || 'Save failed')
+      return
+    }
+    toast.success('Reply settings saved')
   }
 
   const toggleDay = (d: number) => {
@@ -90,6 +109,23 @@ export default function LocationReplySchedulePage() {
           <CardDescription>Reply scheduling is not available on Free or Starter.</CardDescription>
         </Card>
       ) : null}
+
+      <Card className="space-y-4 p-6 dark:border-slate-700 dark:bg-slate-900/60">
+        <div className="flex items-center gap-2">
+          <Sparkles className="h-5 w-5 text-indigo-600" />
+          <CardTitle className="text-base">Reply settings — Festive autopilot</CardTitle>
+        </div>
+        <CardDescription>
+          During Indian festivals, positive replies may include a brief culturally appropriate greeting when it fits naturally.
+        </CardDescription>
+        <label className="flex items-center gap-2 text-sm font-medium">
+          <input type="checkbox" checked={festiveAutoMode} onChange={(e) => setFestiveAutoMode(e.target.checked)} />
+          Enable festive tone for 3★+ replies
+        </label>
+        <Button className="rounded-xl" variant="secondary" onClick={() => void saveFestive()}>
+          Save festive setting
+        </Button>
+      </Card>
 
       <Card className="space-y-4 p-6 dark:border-slate-700 dark:bg-slate-900/60">
         <label className="flex items-center gap-2 text-sm font-medium">

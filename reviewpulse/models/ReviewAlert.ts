@@ -5,7 +5,9 @@ export interface IReviewAlert extends Document {
   reviewId: mongoose.Types.ObjectId
   userId: mongoose.Types.ObjectId
   keyword: string
-  type: 'crisis' | 'positive'
+  type: 'crisis' | 'positive' | 'fake_suspected'
+  fakeScore?: number
+  fakeSignals?: string[]
   notifiedAt: Date
   createdAt: Date
   updatedAt: Date
@@ -17,7 +19,9 @@ const ReviewAlertSchema = new Schema<IReviewAlert>(
     reviewId: { type: Schema.Types.ObjectId, ref: 'Review', required: true, index: true },
     userId: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
     keyword: { type: String, required: true },
-    type: { type: String, enum: ['crisis', 'positive'], required: true },
+    type: { type: String, enum: ['crisis', 'positive', 'fake_suspected'], required: true },
+    fakeScore: Number,
+    fakeSignals: [{ type: String }],
     notifiedAt: { type: Date, required: true, default: () => new Date() },
   },
   { timestamps: true, strict: true }

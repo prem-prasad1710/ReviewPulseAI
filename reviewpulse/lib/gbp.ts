@@ -107,3 +107,35 @@ export async function publishReviewReply(params: {
     throw new Error(`Failed to publish reply: ${response.status}`)
   }
 }
+
+/** Google Business Profile local post (Z5). */
+export async function createGoogleLocalPost(params: {
+  accountId: string
+  locationId: string
+  accessToken: string
+  summary: string
+  languageCode?: string
+}) {
+  const parent = `${params.accountId}/locations/${params.locationId}`
+  const url = `https://mybusiness.googleapis.com/v4/${parent}/localPosts`
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${params.accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      languageCode: params.languageCode || 'en',
+      summary: params.summary,
+      topicType: 'STANDARD',
+    }),
+  })
+
+  if (!response.ok) {
+    const text = await response.text().catch(() => '')
+    throw new Error(`Failed to create local post: ${response.status} ${text}`)
+  }
+
+  return response.json() as Promise<Record<string, unknown>>
+}

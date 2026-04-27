@@ -31,6 +31,24 @@ const ReportEntrySchema = new Schema(
   { _id: false }
 )
 
+const MenuInsightItemSchema = new Schema(
+  {
+    name: { type: String, required: true },
+    positiveCount: { type: Number, default: 0 },
+    negativeCount: { type: Number, default: 0 },
+    sampleQuote: { type: String, default: '' },
+  },
+  { _id: false }
+)
+
+const MenuInsightsSchema = new Schema(
+  {
+    items: { type: [MenuInsightItemSchema], default: [] },
+    lastRunAt: Date,
+  },
+  { _id: false }
+)
+
 export interface ILocation extends Document {
   userId: mongoose.Types.ObjectId
   googleLocationId: string
@@ -66,6 +84,16 @@ export interface ILocation extends Document {
   }
   reports: Array<{ month: string; url: string; generatedAt: Date }>
   lastPdfReportAt?: Date
+  /** Z3 Festive reply tone (default on). */
+  festiveAutoMode?: boolean
+  /** Z8 Offline bridge landing visits. */
+  bridgeVisits?: number
+  /** Z7 Menu/service AI insights (Scale). */
+  menuInsights?: { items: Array<{ name: string; positiveCount: number; negativeCount: number; sampleQuote: string }>; lastRunAt?: Date }
+  /** Z7 Manual refresh rate limit anchor. */
+  menuInsightsManualAt?: Date
+  /** Z5 Social content generations count. */
+  socialPostsGenerated?: number
   createdAt: Date
   updatedAt: Date
 }
@@ -99,6 +127,11 @@ const LocationSchema = new Schema<ILocation>(
     replySchedule: { type: ReplyScheduleSchema, default: () => ({}) },
     reports: { type: [ReportEntrySchema], default: [] },
     lastPdfReportAt: Date,
+    festiveAutoMode: { type: Boolean, default: true },
+    bridgeVisits: { type: Number, default: 0 },
+    menuInsights: { type: MenuInsightsSchema },
+    menuInsightsManualAt: Date,
+    socialPostsGenerated: { type: Number, default: 0 },
   },
   { timestamps: true, strict: true }
 )

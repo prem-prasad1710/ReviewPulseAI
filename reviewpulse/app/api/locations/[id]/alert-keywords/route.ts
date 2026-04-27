@@ -31,6 +31,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
       locationId: new mongoose.Types.ObjectId(id),
       userId: user._id,
       createdAt: { $gte: since },
+      type: { $in: ['crisis', 'positive'] },
     })
       .sort({ createdAt: -1 })
       .limit(50)

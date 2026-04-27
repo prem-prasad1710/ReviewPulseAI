@@ -15,6 +15,8 @@ interface ReviewItem {
   status: 'pending' | 'replied' | 'ignored' | 'scheduled'
   detectedLanguage?: string
   translatedText?: string
+  fakeScore?: number
+  fakeSignals?: string[]
 }
 
 export default function ReviewsPage() {

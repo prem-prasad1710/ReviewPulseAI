@@ -108,6 +108,7 @@ export async function POST(request: Request) {
       tone: parsed.data.tone,
       toneExamples,
       detectedLanguageIso1: review.detectedLanguage || undefined,
+      festiveAutoMode: location.festiveAutoMode !== false,
     })
 
     const schedule = mergeReplySchedule(

@@ -4,7 +4,14 @@ import { getToken } from 'next-auth/jwt'
 
 function requiresDashboardSession(pathname: string): boolean {
   if (pathname.startsWith('/api/') || pathname === '/login' || pathname === '/') return false
-  if (pathname.startsWith('/join/') || pathname.startsWith('/score/') || pathname.startsWith('/r/')) return false
+  if (
+    pathname.startsWith('/join/') ||
+    pathname.startsWith('/score/') ||
+    pathname.startsWith('/r/') ||
+    pathname.startsWith('/visit/')
+  ) {
+    return false
+  }
   const prefixes = [
     '/dashboard',
     '/settings',
