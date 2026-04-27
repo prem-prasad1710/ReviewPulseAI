@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { toast } from 'sonner'
-import { ArrowLeft, ChefHat, RefreshCw } from 'lucide-react'
+import { ArrowLeft, ChefHat, Download, RefreshCw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardDescription, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -42,6 +42,23 @@ export default function MenuInsightsPage() {
       void load()
     })
   }, [id])
+
+  const exportCsv = async () => {
+    const res = await fetch(`/api/locations/${id}/menu-insights/export`)
+    if (!res.ok) {
+      const j = await res.json().catch(() => ({}))
+      toast.error(j?.error || 'Export failed')
+      return
+    }
+    const blob = await res.blob()
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'menu-insights.csv'
+    a.click()
+    URL.revokeObjectURL(url)
+    toast.success('CSV downloaded')
+  }
 
   const refresh = async () => {
     setRefreshing(true)
@@ -104,10 +121,16 @@ export default function MenuInsightsPage() {
             <p className="mt-2 text-xs text-slate-500">Last analyzed: {new Date(lastRun).toLocaleString('en-IN')}</p>
           ) : null}
         </div>
-        <Button className="rounded-xl" variant="secondary" disabled={refreshing} onClick={() => void refresh()}>
-          <RefreshCw className={`mr-2 h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
-          Refresh now
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button className="rounded-xl" variant="outline" onClick={() => void exportCsv()}>
+            <Download className="mr-2 h-4 w-4" />
+            Export CSV
+          </Button>
+          <Button className="rounded-xl" variant="secondary" disabled={refreshing} onClick={() => void refresh()}>
+            <RefreshCw className={`mr-2 h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+            Refresh now
+          </Button>
+        </div>
       </div>
 
       <Card className="overflow-hidden p-0 dark:border-slate-700 dark:bg-slate-900/60">

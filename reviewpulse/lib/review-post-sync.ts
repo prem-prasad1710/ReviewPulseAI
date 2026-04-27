@@ -87,7 +87,9 @@ export async function processReviewAfterSync(reviewDbId: Types.ObjectId): Promis
         kw.type === 'crisis'
           ? `🚨 Crisis alert: "${kw.keyword}" mentioned in a new review — ${location.name}`
           : `✨ "${kw.keyword}" in a new review — ${location.name}`
-      const html = `<p>Keyword <strong>${kw.keyword}</strong> matched a new review (${review.rating}★).</p><p><a href="${process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_APP_URL || ''}/reviews">Open inbox</a></p>`
+      const base = (process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_APP_URL || '').replace(/\/$/, '')
+      const reviewUrl = `${base}/reviews?review=${String(review._id)}&openReply=1`
+      const html = `<p>Keyword <strong>${kw.keyword}</strong> matched a new review (${review.rating}★).</p><p><a href="${reviewUrl}">Open inbox</a></p>`
       try {
         await sendEmailAlert(user.email, subject, html)
       } catch (e) {
@@ -96,7 +98,7 @@ export async function processReviewAfterSync(reviewDbId: Types.ObjectId): Promis
       if (planAllowsWhatsApp(plan) && user.whatsappNumber) {
         const allow = await incrementWhatsAppDailyCount(user._id as Types.ObjectId)
         if (allow) {
-          const body = `${subject}\n\n"${comment.slice(0, 200)}"\n— ${review.reviewerName}`
+          const body = `${subject}\n\n"${comment.slice(0, 200)}"\n— ${review.reviewerName}\n\nOpen: ${reviewUrl}`
           await sendWhatsAppMessage(user.whatsappNumber, body)
         }
       }
@@ -112,14 +114,15 @@ export async function processReviewAfterSync(reviewDbId: Types.ObjectId): Promis
   ) {
     const allow = await incrementWhatsAppDailyCount(user._id as Types.ObjectId)
     if (allow) {
-      const base = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_APP_URL || ''
+      const base = (process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_APP_URL || '').replace(/\/$/, '')
+      const reviewUrl = `${base}/reviews?review=${String(review._id)}&openReply=1`
       const msg = `🔴 New ${review.rating}⭐ review on ${location.name}
 
 "${comment.slice(0, 200)}"
 — ${review.reviewerName}
 
 AI reply is ready. Tap to review & publish:
-${base}/reviews`
+${reviewUrl}`
       const result = await sendWhatsAppMessage(user.whatsappNumber, msg)
       if (!result.error) {
         await Review.findByIdAndUpdate(review._id, { $set: { lowRatingWhatsAppNotified: true } })

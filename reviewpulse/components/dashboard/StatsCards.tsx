@@ -1,6 +1,6 @@
 import { Card, CardDescription, CardTitle } from '@/components/ui/card'
 import { cn, formatCurrencyINR } from '@/lib/utils'
-import { AlertCircle, IndianRupee, MessageSquareReply, QrCode, Star } from 'lucide-react'
+import { AlertCircle, IndianRupee, MessageSquareReply, QrCode, Radio, Star } from 'lucide-react'
 
 export default function StatsCards({
   totalReviews,
@@ -8,12 +8,15 @@ export default function StatsCards({
   pendingReplies,
   repliedThisMonth,
   qrScansTotal,
+  bridgeVisitsTotal,
 }: {
   totalReviews: number
   averageRating: number
   pendingReplies: number
   repliedThisMonth: number
   qrScansTotal?: number
+  /** Offline bridge landing page visits (sum across locations). */
+  bridgeVisitsTotal?: number
 }) {
   const stats = [
     {
@@ -65,11 +68,26 @@ export default function StatsCards({
           },
         ]
       : []),
+    ...(typeof bridgeVisitsTotal === 'number'
+      ? [
+          {
+            label: 'Bridge visits',
+            value: bridgeVisitsTotal.toLocaleString('en-IN'),
+            helper: 'NFC / QR “visit” starter page opens',
+            icon: Radio,
+            accent: 'from-cyan-500/15 to-cyan-600/5',
+            iconClass:
+              'text-cyan-700 bg-cyan-50 ring-cyan-100 dark:text-cyan-200 dark:bg-cyan-950/45 dark:ring-cyan-800/80',
+          },
+        ]
+      : []),
   ]
 
   return (
     <div
-      className={`grid gap-4 sm:grid-cols-2 ${stats.length > 4 ? 'xl:grid-cols-5' : 'xl:grid-cols-4'}`}
+      className={`grid gap-4 sm:grid-cols-2 ${
+        stats.length > 5 ? 'xl:grid-cols-6' : stats.length > 4 ? 'xl:grid-cols-5' : 'xl:grid-cols-4'
+      }`}
     >
       {stats.map((stat, i) => {
         const Icon = stat.icon

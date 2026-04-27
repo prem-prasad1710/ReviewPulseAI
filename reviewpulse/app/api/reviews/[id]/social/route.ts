@@ -4,6 +4,8 @@ import { requireAuth } from '@/lib/auth-helpers'
 import { connectDB } from '@/lib/mongodb'
 import { generateSocialFormats } from '@/lib/openai'
 import { planAllowsSocialPostFull, isPaidPlan } from '@/lib/plan-access'
+import { socialPostLimiter } from '@/lib/rate-limit'
+import { serverErr } from '@/lib/production-error'
 import Location from '@/models/Location'
 import Review from '@/models/Review'
 import SocialPost from '@/models/SocialPost'
@@ -20,6 +22,11 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     const plan = String(user.plan || '')
     if (!isPaidPlan(plan)) {
       return err('Upgrade your plan to use social content.', 403)
+    }
+
+    if (socialPostLimiter) {
+      const { success } = await socialPostLimiter.limit(`u:${String(user._id)}`)
+      if (!success) return err('Too many social generations. Try again in an hour.', 429)
     }
 
     const review = await Review.findOne({ _id: id, userId: user._id })
@@ -67,8 +74,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       canPostToGoogle: planAllowsSocialPostFull(plan),
     })
   } catch (error) {
-    console.error('POST /api/reviews/[id]/social failed:', error)
     if (error instanceof Error && error.message === 'UNAUTHORIZED') return err('Unauthorized', 401)
-    return err('Failed to generate social content', 500)
+    return serverErr('reviews/social', error)
   }
 }

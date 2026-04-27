@@ -27,3 +27,33 @@ export const subscriptionCreateLimiter = redis
       prefix: 'reviewpulse:subscription-create',
     })
   : null
+
+/** Social content generation (paid) — per user. */
+export const socialPostLimiter = redis
+  ? new Ratelimit({
+      redis,
+      limiter: Ratelimit.slidingWindow(20, '1 h'),
+      analytics: true,
+      prefix: 'reviewpulse:social-post',
+    })
+  : null
+
+/** Public bridge track — per slug + IP to reduce abuse. */
+export const bridgeTrackLimiter = redis
+  ? new Ratelimit({
+      redis,
+      limiter: Ratelimit.slidingWindow(120, '1 h'),
+      analytics: true,
+      prefix: 'reviewpulse:bridge-track',
+    })
+  : null
+
+/** Sync all locations — avoid hammering GBP / OpenAI. */
+export const syncAllLimiter = redis
+  ? new Ratelimit({
+      redis,
+      limiter: Ratelimit.slidingWindow(8, '1 h'),
+      analytics: true,
+      prefix: 'reviewpulse:sync-all',
+    })
+  : null

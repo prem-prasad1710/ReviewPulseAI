@@ -1,6 +1,9 @@
 import { z } from 'zod'
 import { err, ok } from '@/lib/api'
+import { getClientIp } from '@/lib/client-ip'
 import { connectDB } from '@/lib/mongodb'
+import { bridgeTrackLimiter } from '@/lib/rate-limit'
+import { serverErr } from '@/lib/production-error'
 import Location from '@/models/Location'
 
 const bodySchema = z.object({
@@ -15,6 +18,12 @@ export async function POST(request: Request) {
     const parsed = bodySchema.safeParse(body)
     if (!parsed.success) return err('Invalid input', 400)
 
+    if (bridgeTrackLimiter) {
+      const ip = getClientIp(request)
+      const { success } = await bridgeTrackLimiter.limit(`slug:${parsed.data.locationSlug}:ip:${ip}`)
+      if (!success) return err('Too many requests. Try again later.', 429)
+    }
+
     await connectDB()
     const loc = await Location.findOne({ locationSlug: parsed.data.locationSlug }).select('_id').lean()
     if (!loc) return err('Not found', 404)
@@ -23,7 +32,6 @@ export async function POST(request: Request) {
 
     return ok({ tracked: true })
   } catch (error) {
-    console.error('POST /api/bridge/track failed:', error)
-    return err('Track failed', 500)
+    return serverErr('bridge/track', error)
   }
 }

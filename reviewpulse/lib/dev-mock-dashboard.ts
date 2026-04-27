@@ -193,6 +193,7 @@ export const MOCK_LOCATIONS = [
     category: 'Restaurant',
     locationSlug: 'namma-biryani-koramangala',
     qrScans: 128,
+    bridgeVisits: 42,
   },
   {
     _id: '64f0a1b2c3d4e5f6a7b8c9e2',
@@ -203,6 +204,7 @@ export const MOCK_LOCATIONS = [
     category: 'Restaurant',
     locationSlug: 'namma-biryani-indiranagar',
     qrScans: 64,
+    bridgeVisits: 18,
   },
   {
     _id: '64f0a1b2c3d4e5f6a7b8c9e3',
@@ -213,5 +215,6 @@ export const MOCK_LOCATIONS = [
     category: 'Medical clinic',
     locationSlug: 'clinicnova-skin-hair',
     qrScans: 41,
+    bridgeVisits: 9,
   },
 ]

@@ -1,11 +1,13 @@
 import Link from 'next/link'
-import { ExternalLink, MapPin, RefreshCw } from 'lucide-react'
+import { ExternalLink, LayoutGrid, MapPin } from 'lucide-react'
 import { MOCK_LOCATIONS, shouldUseDashboardMocks } from '@/lib/dev-mock-dashboard'
 import { getAppSession } from '@/lib/auth-helpers'
+import { hrefForLocationHubSegment, LOCATION_HUB_LINKS } from '@/lib/location-hub-features'
 import { connectDB } from '@/lib/mongodb'
 import Location from '@/models/Location'
-import { Button } from '@/components/ui/button'
-import { Card, CardDescription, CardTitle } from '@/components/ui/card'
+import LocationSyncButton from '@/components/locations/LocationSyncButton'
+import LocationsToolbar from '@/components/locations/LocationsToolbar'
+import { Card, CardDescription } from '@/components/ui/card'
 
 export default async function LocationsPage() {
   await connectDB()
@@ -26,94 +28,98 @@ export default async function LocationsPage() {
             Connected locations
           </h2>
           <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-            Sync hours, reply SLAs, and ratings are tracked per outlet.
+            Sync pulls Google reviews for every outlet, then powers inbox, AI, heatmaps, staff shoutouts, and alerts.
           </p>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <Button className="rounded-xl shadow-sm">Add location</Button>
-          <Button variant="outline" className="rounded-xl border-slate-200 dark:border-slate-600 dark:bg-slate-800">
-            <RefreshCw className="mr-2 h-4 w-4" />
-            Sync all
-          </Button>
-        </div>
+        <LocationsToolbar useMocks={useMocks} />
       </div>
 
       {locations.length === 0 ? (
         <Card className="dark:bg-slate-900/70">
           <CardDescription className="dark:text-slate-400">
-            No locations connected yet. Add your Google Business Profile to start syncing reviews.
+            No locations connected yet. Sign in with Google (Business Profile scope), then add outlets from the same
+            account. Use <strong>Add location</strong> above to re-authenticate if you need more listings.
           </CardDescription>
         </Card>
       ) : (
         <div className="grid gap-4 md:grid-cols-2">
-          {locations.map((location) => (
-            <Card
-              key={String((location as { _id: { toString(): string } | string })._id)}
-              className="transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg dark:bg-slate-900/70"
-            >
-              <div className="mb-3 flex items-start justify-between gap-2">
-                <div className="flex items-center gap-2">
-                  <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-indigo-100 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-200">
-                    <MapPin className="h-4 w-4" />
-                  </span>
-                  <CardTitle className="text-lg dark:text-slate-100">{location.name}</CardTitle>
-                </div>
-                <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300">
-                  Live
-                </span>
-              </div>
-              <CardDescription className="mt-1 dark:text-slate-400">{location.address}</CardDescription>
-              <div className="mt-4 flex flex-wrap gap-4 text-sm">
-                <div>
-                  <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">Reviews</p>
-                  <p className="font-semibold text-slate-900 dark:text-slate-100">{location.totalReviews}</p>
-                </div>
-                <div>
-                  <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">Avg</p>
-                  <p className="font-semibold text-slate-900 dark:text-slate-100">{location.averageRating.toFixed(1)} / 5</p>
-                </div>
-                {'category' in location && location.category ? (
-                  <div>
-                    <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">Category</p>
-                    <p className="font-semibold text-slate-900 dark:text-slate-100">{location.category}</p>
+          {locations.map((location) => {
+            const id = String((location as { _id: { toString(): string } })._id)
+            const slug = (location as { locationSlug?: string }).locationSlug
+            const lastSyncedAt = (location as { lastSyncedAt?: Date }).lastSyncedAt
+            const last = lastSyncedAt ? new Date(lastSyncedAt).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }) : 'Never'
+            return (
+              <Card
+                key={id}
+                className="transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg dark:bg-slate-900/70"
+              >
+                <div className="mb-3 flex flex-wrap items-start justify-between gap-2">
+                  <div className="flex min-w-0 items-center gap-2">
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-indigo-100 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-200">
+                      <MapPin className="h-4 w-4" />
+                    </span>
+                    <div className="min-w-0">
+                      <Link
+                        href={`/locations/${id}`}
+                        className="font-heading block truncate text-lg font-bold text-slate-900 hover:text-indigo-700 dark:text-slate-100 dark:hover:text-indigo-300"
+                      >
+                        {location.name}
+                      </Link>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400">Synced {last}</p>
+                    </div>
                   </div>
-                ) : null}
-              </div>
-              {'_id' in location ? (
-                <div className="mt-4 flex flex-wrap gap-2 border-t border-slate-100 pt-4 dark:border-slate-700/80">
-                  {[
-                    ['Tone trainer', 'tone-trainer'],
-                    ['Competitors', 'competitors'],
-                    ['Booster', 'booster'],
-                    ['Keywords', 'keywords'],
-                    ['Reply schedule', 'settings'],
-                    ['Staff tracker', 'staff-tracker'],
-                    ['Heatmap', 'heatmap'],
-                    ['Menu insights', 'menu-insights'],
-                    ['Offline bridge', 'offline-bridge'],
-                  ].map(([label, path]) => (
-                    <Link
-                      key={path}
-                      href={`/locations/${String((location as { _id: { toString(): string } })._id)}/${path}`}
-                      className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-medium text-slate-700 transition hover:border-indigo-200 hover:bg-white hover:text-indigo-700 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-indigo-500/40 dark:hover:bg-slate-900"
-                    >
-                      {label}
-                      <ExternalLink className="h-3 w-3 opacity-60" aria-hidden />
-                    </Link>
-                  ))}
-                  {'locationSlug' in location && (location as { locationSlug?: string }).locationSlug ? (
-                    <Link
-                      href={`/score/${(location as { locationSlug?: string }).locationSlug}`}
-                      className="inline-flex items-center gap-1 rounded-lg border border-indigo-200 bg-indigo-50 px-2.5 py-1 text-xs font-medium text-indigo-800 hover:bg-indigo-100 dark:border-indigo-500/30 dark:bg-indigo-950/40 dark:text-indigo-200"
-                    >
-                      Public score
-                      <ExternalLink className="h-3 w-3 opacity-60" aria-hidden />
-                    </Link>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300">
+                      Live
+                    </span>
+                    <LocationSyncButton locationId={id} label="Sync" disabled={useMocks} />
+                  </div>
+                </div>
+                <CardDescription className="mt-1 dark:text-slate-400">{location.address}</CardDescription>
+                <div className="mt-4 flex flex-wrap gap-4 text-sm">
+                  <div>
+                    <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">Reviews</p>
+                    <p className="font-semibold text-slate-900 dark:text-slate-100">{location.totalReviews}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">Avg</p>
+                    <p className="font-semibold text-slate-900 dark:text-slate-100">{Number(location.averageRating).toFixed(1)} / 5</p>
+                  </div>
+                  {'category' in location && location.category ? (
+                    <div>
+                      <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">Category</p>
+                      <p className="font-semibold text-slate-900 dark:text-slate-100">{location.category}</p>
+                    </div>
                   ) : null}
                 </div>
-              ) : null}
-            </Card>
-          ))}
+
+                <div className="mt-4 border-t border-slate-100 pt-4 dark:border-slate-700/80">
+                  <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Features</p>
+                    <Link
+                      href={`/locations/${id}`}
+                      className="inline-flex h-8 items-center justify-center gap-1.5 rounded-lg bg-[#2563EB] px-3 text-xs font-medium text-white shadow-sm transition hover:bg-[#1f56c8] active:scale-[0.98]"
+                    >
+                      <LayoutGrid className="h-3.5 w-3.5" />
+                      Open hub
+                    </Link>
+                  </div>
+                  <div className="flex max-h-[7.5rem] flex-wrap gap-1.5 overflow-y-auto pr-1 md:max-h-none">
+                    {LOCATION_HUB_LINKS.map((item) => (
+                      <Link
+                        key={item.segment}
+                        href={hrefForLocationHubSegment(item.segment, id, slug)}
+                        className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 px-2 py-1 text-[11px] font-medium text-slate-700 transition hover:border-indigo-200 hover:bg-white hover:text-indigo-700 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-indigo-500/40 dark:hover:bg-slate-900"
+                      >
+                        {item.label}
+                        <ExternalLink className="h-2.5 w-2.5 opacity-60" aria-hidden />
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              </Card>
+            )
+          })}
         </div>
       )}
     </div>

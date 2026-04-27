@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import type { CSSProperties } from 'react'
 import { AlertTriangle } from 'lucide-react'
 import { Table, TD, TH } from '@/components/ui/table'
 import SentimentBadge from '@/components/reviews/SentimentBadge'
@@ -98,9 +99,12 @@ function ReviewTextCell({ review }: { review: ReviewRow }) {
 
 export default function ReviewTable({
   reviews,
+  highlightReviewId,
   onGenerate,
 }: {
   reviews: ReviewRow[]
+  /** Deep link from alerts (WhatsApp, email): scroll + ring matching row. */
+  highlightReviewId?: string | null
   onGenerate: (reviewId: string) => void
 }) {
   if (reviews.length === 0) {
@@ -130,10 +134,19 @@ export default function ReviewTable({
             </tr>
           </thead>
           <tbody>
-            {reviews.map((review) => (
+            {reviews.map((review) => {
+              const highlighted = highlightReviewId === review._id
+              const rowStyle: CSSProperties | undefined = highlighted
+                ? { boxShadow: 'inset 0 0 0 2px rgba(37, 99, 235, 0.55)' }
+                : undefined
+              return (
               <tr
                 key={review._id}
-                className="transition-colors hover:bg-slate-50/90 dark:hover:bg-slate-800/40"
+                id={`review-row-${review._id}`}
+                style={rowStyle}
+                className={`transition-colors hover:bg-slate-50/90 dark:hover:bg-slate-800/40 ${
+                  highlighted ? 'bg-indigo-50/50 dark:bg-indigo-950/25' : ''
+                }`}
               >
                 <TD className="font-medium text-slate-900 dark:text-slate-100">{review.reviewerName}</TD>
                 <TD>
@@ -164,7 +177,8 @@ export default function ReviewTable({
                   </Button>
                 </TD>
               </tr>
-            ))}
+              )
+            })}
           </tbody>
         </Table>
       </div>

@@ -32,11 +32,17 @@ export default async function DashboardPage() {
       ? await Review.find({ userId }).sort({ reviewCreatedAt: -1 }).limit(50).lean()
       : []
 
-  const qrScansTotal = useMocks
-    ? MOCK_LOCATIONS.reduce((s, l) => s + ((l as { qrScans?: number }).qrScans ?? 0), 0)
+  const locMetrics = useMocks
+    ? MOCK_LOCATIONS.map((l) => ({
+        qrScans: (l as { qrScans?: number }).qrScans ?? 0,
+        bridgeVisits: (l as { bridgeVisits?: number }).bridgeVisits ?? 0,
+      }))
     : userId
-      ? (await Location.find({ userId }).select('qrScans').lean()).reduce((s, l) => s + (l.qrScans || 0), 0)
-      : 0
+      ? await Location.find({ userId }).select('qrScans bridgeVisits').lean()
+      : []
+
+  const qrScansTotal = locMetrics.reduce((s, l) => s + (l.qrScans || 0), 0)
+  const bridgeVisitsTotal = locMetrics.reduce((s, l) => s + ((l as { bridgeVisits?: number }).bridgeVisits || 0), 0)
 
   const totalReviews = reviews.length
   const pendingReplies = reviews.filter((r) => r.status === 'pending' || r.status === 'scheduled').length
@@ -150,6 +156,7 @@ export default async function DashboardPage() {
         pendingReplies={pendingReplies}
         repliedThisMonth={repliedThisMonth}
         qrScansTotal={qrScansTotal}
+        bridgeVisitsTotal={bridgeVisitsTotal}
       />
       </Reveal>
 
