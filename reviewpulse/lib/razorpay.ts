@@ -1,12 +1,17 @@
 import Razorpay from 'razorpay'
 import crypto from 'crypto'
 
+/** Server-side keys only. For checkout in the browser, also set NEXT_PUBLIC_RAZORPAY_KEY_ID (same key id value). */
 export function getRazorpayClient() {
-  const keyId = process.env.RAZORPAY_KEY_ID
-  const keySecret = process.env.RAZORPAY_KEY_SECRET
+  const keyId = process.env.RAZORPAY_KEY_ID?.trim()
+  const keySecret = process.env.RAZORPAY_KEY_SECRET?.trim()
 
   if (!keyId || !keySecret) {
-    throw new Error('Missing Razorpay credentials')
+    const missing = [
+      !keyId && 'RAZORPAY_KEY_ID',
+      !keySecret && 'RAZORPAY_KEY_SECRET',
+    ].filter(Boolean) as string[]
+    throw new Error(`Missing Razorpay credentials: ${missing.join(', ')}`)
   }
 
   return new Razorpay({

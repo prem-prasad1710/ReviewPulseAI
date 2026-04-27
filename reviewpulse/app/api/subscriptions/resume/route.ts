@@ -42,8 +42,11 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error('POST /api/subscriptions/resume failed:', error)
     if (error instanceof Error && error.message === 'UNAUTHORIZED') return err('Unauthorized', 401)
-    if (error instanceof Error && error.message === 'Missing Razorpay credentials') {
-      return err('Razorpay is not configured', 500)
+    if (error instanceof Error && error.message.startsWith('Missing Razorpay credentials')) {
+      return err(
+        'Razorpay is not configured on the server. Set RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET on your deployment, plus NEXT_PUBLIC_RAZORPAY_KEY_ID for checkout, then redeploy.',
+        500
+      )
     }
     return err('Failed to resume checkout', 500)
   }
