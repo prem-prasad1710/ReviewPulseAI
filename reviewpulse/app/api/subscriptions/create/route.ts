@@ -128,7 +128,7 @@ export async function POST(request: Request) {
       return err('Razorpay is not configured', 500)
     }
     if (error instanceof Error && error.message.startsWith('Missing Razorpay plan id')) {
-      return err(error.message, 500)
+      return err(error.message, 503)
     }
     return err('Failed to create subscription', 500)
   }

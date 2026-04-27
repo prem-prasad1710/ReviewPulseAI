@@ -15,20 +15,27 @@ export function getRazorpayClient() {
   })
 }
 
-const PLAN_MAP = {
-  starter: process.env.RAZORPAY_PLAN_STARTER,
-  growth: process.env.RAZORPAY_PLAN_GROWTH,
-  scale: process.env.RAZORPAY_PLAN_SCALE,
-  agency: process.env.RAZORPAY_PLAN_AGENCY,
-  agency_addon: process.env.RAZORPAY_PLAN_AGENCY_ADDON,
+const PLAN_ENV_VARS: Record<
+  'starter' | 'growth' | 'scale' | 'agency' | 'agency_addon',
+  string
+> = {
+  starter: 'RAZORPAY_PLAN_STARTER',
+  growth: 'RAZORPAY_PLAN_GROWTH',
+  scale: 'RAZORPAY_PLAN_SCALE',
+  agency: 'RAZORPAY_PLAN_AGENCY',
+  agency_addon: 'RAZORPAY_PLAN_AGENCY_ADDON',
 } as const
 
-export type RazorpayPlanKey = keyof typeof PLAN_MAP
+export type RazorpayPlanKey = keyof typeof PLAN_ENV_VARS
 
 export function getRazorpayPlanId(plan: RazorpayPlanKey) {
-  const planId = PLAN_MAP[plan]
+  const envName = PLAN_ENV_VARS[plan]
+  const raw = process.env[envName]
+  const planId = typeof raw === 'string' ? raw.trim() : ''
   if (!planId) {
-    throw new Error(`Missing Razorpay plan id for ${plan}`)
+    throw new Error(
+      `Missing Razorpay plan id for "${plan}". Set ${envName} to the Subscription Plan ID from Razorpay Dashboard → Plans (format plan_xxxxxxxx).`
+    )
   }
   return planId
 }
