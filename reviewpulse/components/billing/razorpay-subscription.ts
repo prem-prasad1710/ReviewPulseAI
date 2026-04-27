@@ -58,19 +58,6 @@ export async function ensureRazorpayCheckoutReady(): Promise<void> {
   )
 }
 
-/** Ask the server for mandate / hosted pay `short_url` when create did not return it. */
-export async function fetchSubscriptionShortUrl(subscriptionId: string): Promise<string | undefined> {
-  const res = await fetch('/api/subscriptions/resume', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ subscriptionId }),
-  })
-  const json = (await res.json()) as { data?: { shortUrl?: string } }
-  if (!res.ok) return undefined
-  const u = json?.data?.shortUrl
-  return typeof u === 'string' && u.startsWith('http') ? u : undefined
-}
-
 export function openRazorpaySubscriptionModal(opts: {
   key: string
   subscriptionId: string

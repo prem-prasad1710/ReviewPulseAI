@@ -6,7 +6,6 @@ import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import {
   ensureRazorpayCheckoutReady,
-  fetchSubscriptionShortUrl,
   loadRazorpayScript,
   openRazorpaySubscriptionModal,
   type RazorpayPrefill,
@@ -54,7 +53,7 @@ export default function PlanCheckoutButtons({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ plan }),
       })
-      const json = (await res.json()) as { success?: boolean; error?: string; data?: { subscriptionId?: string; shortUrl?: string } }
+      const json = (await res.json()) as { success?: boolean; error?: string; data?: { subscriptionId?: string } }
       if (!res.ok) {
         toast.error(json?.error || 'Could not create subscription')
         return
@@ -67,17 +66,8 @@ export default function PlanCheckoutButtons({
 
       loadToast = toast.loading('Opening Razorpay payment…')
 
-      let shortUrl = json?.data?.shortUrl
-      if (!shortUrl || !String(shortUrl).startsWith('http')) {
-        shortUrl = await fetchSubscriptionShortUrl(subscriptionId)
-      }
-      if (shortUrl) {
-        toast.dismiss(loadToast)
-        toast.message('Redirecting to Razorpay…')
-        window.location.assign(shortUrl)
-        return
-      }
-
+      /* Do not redirect to api.razorpay.com/v1/t/subscriptions/… — Razorpay often returns
+       * "Hosted page is not available" for that URL. Subscription auth is done via Checkout modal. */
       await ensureRazorpayCheckoutReady()
       toast.dismiss(loadToast)
       toast.message('Complete payment in the Razorpay window (popup overlay).')

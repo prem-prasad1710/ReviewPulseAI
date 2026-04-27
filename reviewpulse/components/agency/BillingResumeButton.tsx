@@ -51,14 +51,7 @@ export default function BillingResumeButton({
       }
       loadToast = toast.loading('Opening Razorpay payment…')
       const sid = (json?.data?.subscriptionId as string | undefined) || subscriptionId
-      const rawUrl = json?.data?.shortUrl as string | undefined
-      const shortUrl = rawUrl && String(rawUrl).startsWith('http') ? rawUrl : undefined
-      if (shortUrl) {
-        toast.dismiss(loadToast)
-        toast.message('Redirecting to Razorpay…')
-        window.location.assign(shortUrl)
-        return
-      }
+      /* Avoid redirect to hosted /t/subscriptions/… — use Checkout modal (see PlanCheckoutButtons). */
       await ensureRazorpayCheckoutReady()
       toast.dismiss(loadToast)
       toast.message('Complete payment in the Razorpay window (overlay).')
