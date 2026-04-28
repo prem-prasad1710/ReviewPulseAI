@@ -10,7 +10,7 @@ export default function Sidebar({ agencyBrand }: { agencyBrand?: AgencyBrand | n
   const subtitle = branded ? 'Partner workspace' : 'Review intelligence'
 
   return (
-    <aside className="relative z-[1] flex w-full min-h-0 flex-col border-b border-slate-200/70 bg-white/90 p-4 shadow-sm backdrop-blur-xl dark:border-slate-700/70 dark:bg-slate-900/95 dark:shadow-black/25 lg:min-h-[100dvh] lg:w-64 lg:shrink-0 lg:self-stretch lg:border-b-0 lg:border-r lg:border-slate-200/70 lg:shadow-none dark:lg:border-slate-700/70">
+    <aside className="relative z-[1] flex w-full min-h-0 flex-col border-b border-slate-200/70 bg-gradient-to-b from-white/95 to-slate-50/90 p-4 shadow-[0_1px_0_rgba(15,23,42,0.04)] backdrop-blur-xl dark:border-slate-700/70 dark:from-slate-900/98 dark:to-slate-950/95 dark:shadow-black/30 lg:min-h-[100dvh] lg:w-64 lg:shrink-0 lg:self-stretch lg:border-b-0 lg:border-r lg:border-slate-200/70 lg:shadow-[inset_-1px_0_0_rgba(99,102,241,0.06)] dark:lg:border-slate-700/70">
       <div className="pointer-events-none absolute inset-y-0 right-0 hidden w-px bg-gradient-to-b from-indigo-200/0 via-indigo-200/40 to-indigo-200/0 dark:from-indigo-500/0 dark:via-indigo-400/25 dark:to-indigo-500/0 lg:block" aria-hidden />
       <Link
         href="/dashboard"

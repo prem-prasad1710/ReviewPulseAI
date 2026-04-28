@@ -15,6 +15,8 @@ export interface IUser extends Document {
   repliesUsedThisMonth: number
   repliesResetAt: Date
   whatsappNumber?: string
+  /** Master switch for Twilio WhatsApp alerts (low-star + keyword). Default on when unset. */
+  whatsappAlertsEnabled?: boolean
   whatsappAlertsDayKey?: string
   whatsappAlertsSent?: number
   agencyId?: mongoose.Types.ObjectId
@@ -41,6 +43,7 @@ const UserSchema = new Schema<IUser>(
     repliesUsedThisMonth: { type: Number, default: 0 },
     repliesResetAt: { type: Date, default: () => new Date() },
     whatsappNumber: String,
+    whatsappAlertsEnabled: { type: Boolean, default: true },
     whatsappAlertsDayKey: String,
     whatsappAlertsSent: { type: Number, default: 0 },
     agencyId: { type: Schema.Types.ObjectId, ref: 'Agency' },

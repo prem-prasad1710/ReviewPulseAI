@@ -1,4 +1,5 @@
 import { google } from 'googleapis'
+import type { mybusinessbusinessinformation_v1 } from 'googleapis'
 import { decrypt, encrypt } from '@/lib/crypto'
 
 export interface GbpReview {
@@ -51,13 +52,33 @@ export async function refreshIfNeeded(
   }
 }
 
+/** GBP / Account Management: list `accounts/{id}` the user can manage. */
+export async function listGoogleBusinessAccounts(accessToken: string, refreshToken: string) {
+  const auth = getOAuthClient(accessToken, refreshToken)
+  const api = google.mybusinessaccountmanagement({ version: 'v1', auth })
+  const accounts: Array<{ name?: string | null }> = []
+  let pageToken: string | undefined
+  do {
+    const res = await api.accounts.list({ pageSize: 100, pageToken })
+    accounts.push(...(res.data.accounts || []))
+    pageToken = res.data.nextPageToken || undefined
+  } while (pageToken)
+  return accounts
+}
+
 export async function listGoogleLocations(accountId: string, accessToken: string, refreshToken: string) {
   const auth = getOAuthClient(accessToken, refreshToken)
   const business = google.mybusinessbusinessinformation({ version: 'v1', auth })
 
   const parent = accountId
-  const res = await business.accounts.locations.list({ parent, pageSize: 100 })
-  return res.data.locations || []
+  const locations: mybusinessbusinessinformation_v1.Schema$Location[] = []
+  let pageToken: string | undefined
+  do {
+    const res = await business.accounts.locations.list({ parent, pageSize: 100, pageToken })
+    locations.push(...(res.data.locations || []))
+    pageToken = res.data.nextPageToken || undefined
+  } while (pageToken)
+  return locations
 }
 
 export async function listLocationReviews(

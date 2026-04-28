@@ -95,7 +95,11 @@ export async function processReviewAfterSync(reviewDbId: Types.ObjectId): Promis
       } catch (e) {
         console.error('Keyword alert email failed:', e)
       }
-      if (planAllowsWhatsApp(plan) && user.whatsappNumber) {
+      if (
+        planAllowsWhatsApp(plan) &&
+        user.whatsappNumber &&
+        user.whatsappAlertsEnabled !== false
+      ) {
         const allow = await incrementWhatsAppDailyCount(user._id as Types.ObjectId)
         if (allow) {
           const body = `${subject}\n\n"${comment.slice(0, 200)}"\n— ${review.reviewerName}\n\nOpen: ${reviewUrl}`
@@ -108,6 +112,7 @@ export async function processReviewAfterSync(reviewDbId: Types.ObjectId): Promis
   if (
     planAllowsWhatsApp(plan) &&
     user.whatsappNumber &&
+    user.whatsappAlertsEnabled !== false &&
     review.rating <= 2 &&
     review.status === 'pending' &&
     !review.lowRatingWhatsAppNotified

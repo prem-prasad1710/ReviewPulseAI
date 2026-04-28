@@ -11,6 +11,7 @@ export interface IUserLean {
   image?: string
   plan: Plan
   whatsappNumber?: string
+  whatsappAlertsEnabled?: boolean
   agencyId?: Types.ObjectId | string
   /** Extra location slots purchased via Razorpay add-on (agency plan). */
   agencyLocationAddons?: number

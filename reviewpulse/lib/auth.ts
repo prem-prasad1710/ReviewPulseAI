@@ -1,6 +1,7 @@
 import NextAuth, { type NextAuthConfig } from 'next-auth'
 import Google from 'next-auth/providers/google'
 import { connectDB } from '@/lib/mongodb'
+import { provisionLocationsFromGoogleOAuth } from '@/lib/provision-google-locations'
 import User from '@/models/User'
 
 if (process.env.NODE_ENV !== 'production' && process.env.ALLOW_INSECURE_TLS_FOR_DEV === 'true') {
@@ -42,7 +43,7 @@ export const authConfig: NextAuthConfig = {
         if (!user.email || !account || !profile) return false
 
         const googleId = account.providerAccountId
-        await User.findOneAndUpdate(
+        const dbUser = await User.findOneAndUpdate(
           { email: user.email },
           {
             $set: {
@@ -60,6 +61,31 @@ export const authConfig: NextAuthConfig = {
           },
           { upsert: true, new: true, setDefaultsOnInsert: true }
         )
+
+        if (
+          account.provider === 'google' &&
+          dbUser?._id &&
+          typeof account.access_token === 'string' &&
+          account.access_token &&
+          typeof account.refresh_token === 'string' &&
+          account.refresh_token
+        ) {
+          const raw = account.expires_at
+          const expiresAtMs =
+            typeof raw === 'number' && raw > 0 ? (raw < 1e12 ? raw * 1000 : raw) : Date.now() + 3600 * 1000
+          try {
+            const { upserted, error } = await provisionLocationsFromGoogleOAuth({
+              userId: dbUser._id,
+              accessToken: account.access_token,
+              refreshToken: account.refresh_token,
+              expiresAtMs,
+            })
+            if (error) console.error('GBP location import:', error)
+            else if (upserted > 0) console.info(`GBP: upserted ${upserted} location(s) for ${user.email}`)
+          } catch (e) {
+            console.error('GBP location import failed:', e)
+          }
+        }
 
         return true
       } catch (error) {

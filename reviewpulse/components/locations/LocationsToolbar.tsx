@@ -45,11 +45,12 @@ export default function LocationsToolbar({ useMocks }: { useMocks: boolean }) {
         </span>
       ) : (
         <Link
-          href="/login?callbackUrl=/locations"
+          href="/api/auth/signin/google?callbackUrl=/locations"
           className="inline-flex h-10 items-center justify-center rounded-xl bg-[#2563EB] px-4 text-sm font-medium text-white shadow-sm transition hover:bg-[#1f56c8] active:scale-[0.98] dark:shadow-indigo-950/30"
+          title="Re-authorize with Google to import Business Profile locations into ReviewPulse"
         >
           <MapPin className="mr-2 h-4 w-4" />
-          Add location
+          Add locations
         </Link>
       )}
       <button

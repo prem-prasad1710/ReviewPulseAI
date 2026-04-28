@@ -2,6 +2,7 @@ import type { Types } from 'mongoose'
 import { put } from '@vercel/blob'
 import { buildMonthlyReportBuffer } from '@/lib/monthly-report-pdf'
 import { planAllowsMonthlyPdfAuto } from '@/lib/plan-access'
+import { REPORT_URL_EMAIL_ONLY } from '@/lib/reports/constants'
 import { computeReputationScore, letterGrade } from '@/lib/score-compute'
 import Location from '@/models/Location'
 import Review from '@/models/Review'
@@ -9,37 +10,45 @@ import User from '@/models/User'
 
 export type GenerateReportMode = 'manual' | 'cron'
 
-export interface GenerateMonthlyReportResult {
-  url: string
-  monthKey: string
-  locationName: string
-  pdfBuffer: Buffer
-}
+export type GenerateMonthlyReportFailureCode = 'not_found' | 'rate_limited' | 'cron_already_this_month'
+
+export type GenerateMonthlyReportOutcome =
+  | {
+      ok: true
+      monthKey: string
+      locationName: string
+      pdfBuffer: Buffer
+      /** Public Blob URL when uploaded; omitted when user downloads PDF directly (no Blob token). */
+      url?: string
+    }
+  | { ok: false; code: GenerateMonthlyReportFailureCode }
 
 /**
- * Build PDF, upload to Blob, append to location.reports.
- * - manual: enforces lastPdfReportAt (1/day) for same user flows.
- * - cron: skips daily limit; skips if reports already contains current YYYY-MM.
+ * Build PDF, optionally upload to Vercel Blob, append to `location.reports` when a public URL exists.
+ * - manual + Blob: upload + list entry + lastPdfReportAt.
+ * - manual + no Blob: PDF only, lastPdfReportAt (rate limit); no list row.
+ * - cron + Blob: upload + list; skip if month already in reports.
+ * - cron + no Blob: list row with REPORT_URL_EMAIL_ONLY for dedup; email uses pdfBuffer.
  */
 export async function generateMonthlyReportForLocation(
   locationId: Types.ObjectId,
   userId: Types.ObjectId,
   mode: GenerateReportMode
-): Promise<GenerateMonthlyReportResult | null> {
+): Promise<GenerateMonthlyReportOutcome> {
   const location = await Location.findOne({ _id: locationId, userId })
-  if (!location) return null
+  if (!location) return { ok: false, code: 'not_found' }
 
   const user = await User.findById(userId).select('plan').lean()
-  if (!user) return null
+  if (!user) return { ok: false, code: 'not_found' }
 
   const monthKey = new Date().toISOString().slice(0, 7)
 
   if (mode === 'cron') {
     const hasMonth = (location.reports || []).some((r) => r.month === monthKey)
-    if (hasMonth) return null
+    if (hasMonth) return { ok: false, code: 'cron_already_this_month' }
   } else {
     const last = location.lastPdfReportAt?.getTime() ?? 0
-    if (last && Date.now() - last < 86_400_000) return null
+    if (last && Date.now() - last < 86_400_000) return { ok: false, code: 'rate_limited' }
   }
 
   const reviews = await Review.find({ locationId: location._id, userId }).lean()
@@ -82,18 +91,35 @@ export async function generateMonthlyReportForLocation(
   })
 
   const token = process.env.BLOB_READ_WRITE_TOKEN
-  if (!token) {
-    console.error('generate-monthly-pdf: BLOB_READ_WRITE_TOKEN missing')
-    return null
+
+  if (token) {
+    const key = `reports/${String(location._id)}/${Date.now()}.pdf`
+    const blob = await put(key, pdfBuf, { access: 'public', token })
+
+    await Location.findByIdAndUpdate(location._id, {
+      $push: { reports: { month: monthKey, url: blob.url, generatedAt: new Date() } },
+      $set: { lastPdfReportAt: new Date() },
+    })
+
+    return {
+      ok: true,
+      url: blob.url,
+      monthKey,
+      locationName: location.name,
+      pdfBuffer: pdfBuf,
+    }
   }
 
-  const key = `reports/${String(location._id)}/${Date.now()}.pdf`
-  const blob = await put(key, pdfBuf, { access: 'public', token })
+  if (mode === 'manual') {
+    await Location.findByIdAndUpdate(location._id, {
+      $set: { lastPdfReportAt: new Date() },
+    })
+    return { ok: true, monthKey, locationName: location.name, pdfBuffer: pdfBuf }
+  }
 
   await Location.findByIdAndUpdate(location._id, {
-    $push: { reports: { month: monthKey, url: blob.url, generatedAt: new Date() } },
+    $push: { reports: { month: monthKey, url: REPORT_URL_EMAIL_ONLY, generatedAt: new Date() } },
     $set: { lastPdfReportAt: new Date() },
   })
-
-  return { url: blob.url, monthKey, locationName: location.name, pdfBuffer: pdfBuf }
+  return { ok: true, monthKey, locationName: location.name, pdfBuffer: pdfBuf }
 }

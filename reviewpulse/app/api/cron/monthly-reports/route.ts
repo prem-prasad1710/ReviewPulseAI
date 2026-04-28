@@ -30,7 +30,7 @@ export async function POST(request: Request) {
       for (const loc of locations) {
         try {
           const result = await generateMonthlyReportForLocation(loc._id, u._id, 'cron')
-          if (!result) continue
+          if (!result.ok) continue
           generated += 1
           if (u.email) {
             const send = await sendMonthlyReportEmail({
