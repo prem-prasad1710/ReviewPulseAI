@@ -1,4 +1,5 @@
 import type { Types } from 'mongoose'
+import { markRatingRecoveredAndNotify, shouldRecoverRating } from '@/lib/rating-recovery'
 import { processReviewAfterSync } from '@/lib/review-post-sync'
 import { connectDB } from '@/lib/mongodb'
 import { analyzeSentiment } from '@/lib/openai'
@@ -55,6 +56,10 @@ export async function syncLocationReviewsForUser(
       const reviewId = item.reviewId || item.name?.split('/').pop()
       if (!reviewId) continue
 
+      const prior = await Review.findOne({ userId, googleReviewId: reviewId })
+        .select('rating ratingMonitoringUntil ratingRecovered')
+        .lean()
+
       const rating = normalizeRating(item.starRating || undefined)
       const comment = item.comment || ''
       const sentimentPayload = await analyzeSentiment(comment || 'No text review', rating || 3)
@@ -79,6 +84,22 @@ export async function syncLocationReviewsForUser(
         { upsert: true, new: true, setDefaultsOnInsert: true }
       )
 
+      if (
+        reviewDoc?._id &&
+        prior &&
+        shouldRecoverRating(prior, rating) &&
+        typeof prior.rating === 'number'
+      ) {
+        await markRatingRecoveredAndNotify({
+          reviewId: reviewDoc._id as Types.ObjectId,
+          userId,
+          locationName: location.name,
+          reviewerName: reviewDoc.reviewerName || 'Google User',
+          oldRating: prior.rating,
+          newRating: rating,
+        })
+      }
+
       if (reviewDoc?._id) {
         await processReviewAfterSync(reviewDoc._id)
       }
@@ -86,6 +107,7 @@ export async function syncLocationReviewsForUser(
 
     location.lastSyncedAt = new Date()
     location.totalReviews = reviews.length
+    location.lastKnownReviewCount = reviews.length
     location.averageRating =
       reviews.length > 0
         ? (reviews as GbpReview[]).reduce(

@@ -21,6 +21,8 @@ export interface IUserLean {
   trialEndsAt?: Date
   repliesUsedThisMonth: number
   repliesResetAt: Date
+  whatsappBotDayKey?: string
+  whatsappBotInteractions?: number
   createdAt: Date
   updatedAt: Date
 }

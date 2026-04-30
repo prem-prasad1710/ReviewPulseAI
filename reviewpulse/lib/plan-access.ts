@@ -67,3 +67,18 @@ export function planAllowsMenuInsights(plan: string): boolean {
 export function planAllowsOfflineBridge(plan: string): boolean {
   return isPaidPlan(plan)
 }
+
+/** B1 — WhatsApp digest bot (pending, stats, …). Paid plans only. */
+export function planAllowsWhatsAppDigestBot(plan: string): boolean {
+  return isPaidPlan(plan)
+}
+
+/** G4 — CSV export of reviews. */
+export function planAllowsDataExport(plan: string): boolean {
+  return isPaidPlan(plan)
+}
+
+/** C3 — Review velocity / time-series analytics UI. */
+export function planAllowsVelocityAnalytics(plan: string): boolean {
+  return plan === 'growth' || plan === 'scale' || plan === 'agency'
+}

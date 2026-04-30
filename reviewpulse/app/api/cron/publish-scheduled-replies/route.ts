@@ -1,6 +1,7 @@
 import { err, ok } from '@/lib/api'
 import { connectDB } from '@/lib/mongodb'
 import { publishReviewReply, refreshIfNeeded } from '@/lib/gbp'
+import { monitoringUntilForRating } from '@/lib/rating-recovery'
 import Location from '@/models/Location'
 import Review from '@/models/Review'
 
@@ -31,6 +32,7 @@ export async function POST(request: Request) {
     for (const r of due) {
       const location = await Location.findOne({ _id: r.locationId, userId: r.userId })
       if (!location) continue
+      if (location.crisisMode) continue
       const refreshed = await refreshIfNeeded(
         location.accessToken,
         location.refreshToken,
@@ -54,12 +56,15 @@ export async function POST(request: Request) {
           accessToken: refreshed.accessToken,
           refreshToken: refreshed.refreshToken,
         })
+        const rating = typeof (r as { rating?: number }).rating === 'number' ? (r as { rating: number }).rating : 5
+        const until = monitoringUntilForRating(rating)
         await Review.findByIdAndUpdate(r._id, {
           $set: {
             publishedReply: text,
             status: 'replied',
             repliedAt: new Date(),
             scheduledAt: undefined,
+            ...(until ? { ratingMonitoringUntil: until } : {}),
           },
         })
         published += 1

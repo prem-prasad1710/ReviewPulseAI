@@ -84,11 +84,7 @@ export default function StatsCards({
   ]
 
   return (
-    <div
-      className={`grid gap-4 sm:grid-cols-2 ${
-        stats.length > 5 ? 'xl:grid-cols-6' : stats.length > 4 ? 'xl:grid-cols-5' : 'xl:grid-cols-4'
-      }`}
-    >
+    <div className="grid auto-rows-fr gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {stats.map((stat, i) => {
         const Icon = stat.icon
         return (

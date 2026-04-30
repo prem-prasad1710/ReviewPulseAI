@@ -98,6 +98,8 @@ export async function POST(request: Request) {
         ? location.toneExamples
         : undefined
 
+    const complianceMode = (location.complianceMode as 'standard' | 'healthcare' | 'legal' | 'finance' | undefined) || 'standard'
+
     const aiReply = await generateReviewReply({
       businessName: location.name,
       businessCategory: location.category || 'business',
@@ -109,6 +111,7 @@ export async function POST(request: Request) {
       toneExamples,
       detectedLanguageIso1: review.detectedLanguage || undefined,
       festiveAutoMode: location.festiveAutoMode !== false,
+      complianceMode,
     })
 
     const schedule = mergeReplySchedule(

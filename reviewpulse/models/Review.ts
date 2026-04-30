@@ -6,6 +6,15 @@ export interface ReviewAutopsy {
   generatedAt: Date
 }
 
+export type ReviewEmotion =
+  | 'joy'
+  | 'frustration'
+  | 'gratitude'
+  | 'disappointment'
+  | 'anger'
+  | 'surprise'
+  | 'neutral'
+
 export interface IReview extends Document {
   locationId: mongoose.Types.ObjectId
   userId: mongoose.Types.ObjectId
@@ -19,12 +28,19 @@ export interface IReview extends Document {
   translatedText?: string
   sentiment: 'positive' | 'neutral' | 'negative'
   sentimentScore: number
+  /** A1 — primary emotion (Growth+). */
+  emotion?: ReviewEmotion
   status: 'pending' | 'replied' | 'ignored' | 'scheduled'
   aiGeneratedReply?: string
   publishedReply?: string
   repliedAt?: Date
   scheduledAt?: Date
   lowRatingWhatsAppNotified?: boolean
+  /** C1 — monitor GBP for rating change until this date (low-star replies). */
+  ratingMonitoringUntil?: Date
+  /** C1 — reviewer raised stars after our reply. */
+  ratingRecovered?: boolean
+  ratingRecoveredAt?: Date
   /** Z1 Review Autopsy AI (Growth/Scale, once per review). */
   autopsy?: ReviewAutopsy
   /** Z4 Potentially inauthentic pattern score 0–100. */
@@ -52,6 +68,10 @@ const ReviewSchema = new Schema<IReview>(
     translatedText: String,
     sentiment: { type: String, enum: ['positive', 'neutral', 'negative'], default: 'neutral' },
     sentimentScore: { type: Number, min: -1, max: 1, default: 0 },
+    emotion: {
+      type: String,
+      enum: ['joy', 'frustration', 'gratitude', 'disappointment', 'anger', 'surprise', 'neutral'],
+    },
     status: {
       type: String,
       enum: ['pending', 'replied', 'ignored', 'scheduled'],
@@ -62,6 +82,9 @@ const ReviewSchema = new Schema<IReview>(
     repliedAt: Date,
     scheduledAt: Date,
     lowRatingWhatsAppNotified: { type: Boolean, default: false },
+    ratingMonitoringUntil: { type: Date, index: true },
+    ratingRecovered: { type: Boolean, default: false },
+    ratingRecoveredAt: Date,
     autopsy: {
       type: {
         rootCause: String,

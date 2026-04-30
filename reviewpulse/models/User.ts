@@ -21,6 +21,9 @@ export interface IUser extends Document {
   whatsappAlertsSent?: number
   agencyId?: mongoose.Types.ObjectId
   agencyLocationAddons?: number
+  /** B1 — rate limit WhatsApp bot commands per UTC day. */
+  whatsappBotDayKey?: string
+  whatsappBotInteractions?: number
   createdAt: Date
   updatedAt: Date
 }
@@ -48,6 +51,8 @@ const UserSchema = new Schema<IUser>(
     whatsappAlertsSent: { type: Number, default: 0 },
     agencyId: { type: Schema.Types.ObjectId, ref: 'Agency' },
     agencyLocationAddons: { type: Number, default: 0 },
+    whatsappBotDayKey: String,
+    whatsappBotInteractions: { type: Number, default: 0 },
   },
   { timestamps: true, strict: true }
 )

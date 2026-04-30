@@ -10,6 +10,7 @@ import {
   Palette,
   QrCode,
   Radio,
+  Share2,
   Target,
   Trophy,
   Users,
@@ -95,6 +96,12 @@ export const LOCATION_HUB_LINKS: LocationHubLink[] = [
     description: 'Workspace-wide trends and charts.',
     icon: BarChart3,
     segment: 'analytics',
+  },
+  {
+    label: 'Growth tools',
+    description: 'Badge, JSON-LD schema, CSV export, vertical & crisis.',
+    icon: Share2,
+    segment: 'growth-tools',
   },
   {
     label: 'PDF reports',

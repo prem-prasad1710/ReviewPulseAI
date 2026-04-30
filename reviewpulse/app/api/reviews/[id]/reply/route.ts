@@ -3,6 +3,7 @@ import { err, ok } from '@/lib/api'
 import { requireAuth } from '@/lib/auth-helpers'
 import { connectDB } from '@/lib/mongodb'
 import { publishReviewReply, refreshIfNeeded } from '@/lib/gbp'
+import { monitoringUntilForRating } from '@/lib/rating-recovery'
 import Location from '@/models/Location'
 import Review from '@/models/Review'
 
@@ -53,6 +54,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     review.status = 'replied'
     review.repliedAt = new Date()
     review.scheduledAt = undefined
+    const until = monitoringUntilForRating(review.rating)
+    if (until) review.ratingMonitoringUntil = until
     await review.save()
 
     return ok({ published: true })

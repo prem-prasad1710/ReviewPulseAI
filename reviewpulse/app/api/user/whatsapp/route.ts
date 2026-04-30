@@ -2,17 +2,22 @@ import { z } from 'zod'
 import { err, ok } from '@/lib/api'
 import { requireAuth } from '@/lib/auth-helpers'
 import { connectDB } from '@/lib/mongodb'
+import { normalizeWhatsAppInput } from '@/lib/phone-e164'
 import { planAllowsWhatsApp } from '@/lib/plan-access'
 import { isTwilioWhatsAppConfigured } from '@/lib/twilio-config'
 import User from '@/models/User'
 
+const e164OrEmpty = z.union([
+  z.literal(''),
+  z.string().regex(/^\+[1-9]\d{6,14}$/, 'Use a valid mobile: 10-digit Indian number or +country…'),
+])
+
 const putSchema = z.object({
   whatsappNumber: z
-    .union([
-      z.string().regex(/^\+[1-9]\d{6,14}$/, 'Use E.164 format, e.g. +919876543210'),
-      z.literal(''),
-    ])
-    .optional(),
+    .string()
+    .optional()
+    .transform((s) => (s === undefined ? undefined : normalizeWhatsAppInput(s)))
+    .pipe(e164OrEmpty.optional()),
   whatsappAlertsEnabled: z.boolean().optional(),
 })
 
@@ -25,12 +30,15 @@ export async function PUT(request: Request) {
 
     await connectDB()
 
+    const plan = (user.plan as string) || 'free'
+
     const $set: Record<string, unknown> = {}
     if (parsed.data.whatsappNumber !== undefined) {
       $set.whatsappNumber = parsed.data.whatsappNumber || undefined
     }
     if (parsed.data.whatsappAlertsEnabled !== undefined) {
-      $set.whatsappAlertsEnabled = parsed.data.whatsappAlertsEnabled
+      const wantOn = parsed.data.whatsappAlertsEnabled
+      $set.whatsappAlertsEnabled = wantOn && !planAllowsWhatsApp(plan) ? false : wantOn
     }
     if (Object.keys($set).length === 0) {
       return err('Nothing to update', 400)

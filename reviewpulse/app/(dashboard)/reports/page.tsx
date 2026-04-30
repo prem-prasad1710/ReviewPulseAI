@@ -290,7 +290,7 @@ export default function ReportsPage() {
               outlets.
             </p>
             <Link
-              href="/api/auth/signin/google?callbackUrl=/locations"
+              href="/locations/connect"
               className="mt-4 inline-flex items-center gap-2 rounded-xl bg-[#2563EB] px-4 py-2.5 text-sm font-semibold text-white shadow-md transition hover:bg-[#1f56c8]"
             >
               <MapPin className="h-4 w-4" />

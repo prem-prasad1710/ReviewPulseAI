@@ -94,6 +94,16 @@ export interface ILocation extends Document {
   menuInsightsManualAt?: Date
   /** Z5 Social content generations count. */
   socialPostsGenerated?: number
+  /** F3 — vertical for journey / prompts. */
+  businessType?: 'restaurant' | 'clinic' | 'salon' | 'retail' | 'hotel' | 'gym' | 'school' | 'other'
+  /** D2 — compliance-aware AI replies. */
+  complianceMode?: 'standard' | 'healthcare' | 'legal' | 'finance'
+  /** D4 — crisis mode pauses automation (manual handling). */
+  crisisMode?: boolean
+  /** D1 — last known count from GBP for removal detection. */
+  lastKnownReviewCount?: number
+  /** H1 — trust badge load counter (approx). */
+  badgeImpressions?: number
   createdAt: Date
   updatedAt: Date
 }
@@ -132,6 +142,19 @@ const LocationSchema = new Schema<ILocation>(
     menuInsights: { type: MenuInsightsSchema },
     menuInsightsManualAt: Date,
     socialPostsGenerated: { type: Number, default: 0 },
+    businessType: {
+      type: String,
+      enum: ['restaurant', 'clinic', 'salon', 'retail', 'hotel', 'gym', 'school', 'other'],
+      default: 'other',
+    },
+    complianceMode: {
+      type: String,
+      enum: ['standard', 'healthcare', 'legal', 'finance'],
+      default: 'standard',
+    },
+    crisisMode: { type: Boolean, default: false },
+    lastKnownReviewCount: { type: Number, default: 0 },
+    badgeImpressions: { type: Number, default: 0 },
   },
   { timestamps: true, strict: true }
 )

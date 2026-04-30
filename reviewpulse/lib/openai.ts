@@ -15,6 +15,31 @@ export function getOpenAI(): OpenAI {
   return cachedOpenAI
 }
 
+export type ReplyComplianceMode = 'standard' | 'healthcare' | 'legal' | 'finance'
+
+function compliancePromptAddon(mode: ReplyComplianceMode | undefined): string {
+  switch (mode) {
+    case 'healthcare':
+      return `\n\nCOMPLIANCE (HEALTHCARE):
+- Do not give medical advice, diagnoses, or treatment promises.
+- Do not reference or request protected health information.
+- Invite the reviewer to contact the clinic or care team directly for clinical concerns.
+- Keep claims modest; no guaranteed outcomes.`
+    case 'legal':
+      return `\n\nCOMPLIANCE (LEGAL SERVICES):
+- Do not offer legal advice or commentary on legal outcomes.
+- Do not discuss ongoing matters, liability, or disputes in public.
+- Invite the reviewer to contact the firm directly for case-specific discussion.`
+    case 'finance':
+      return `\n\nCOMPLIANCE (FINANCIAL SERVICES):
+- Do not give investment, tax, or guaranteed performance promises.
+- Avoid language that could read as personalized financial advice.
+- Direct product or account-specific matters to official offline channels.`
+    default:
+      return ''
+  }
+}
+
 interface GenerateReplyParams {
   businessName: string
   businessCategory: string
@@ -28,6 +53,8 @@ interface GenerateReplyParams {
   detectedLanguageIso1?: string
   /** Z3: when false, skip festive greeting injection. */
   festiveAutoMode?: boolean
+  /** D2: stricter reply boundaries for regulated verticals. */
+  complianceMode?: ReplyComplianceMode
 }
 
 export async function generateReviewReply(params: GenerateReplyParams): Promise<string> {
@@ -42,6 +69,7 @@ export async function generateReviewReply(params: GenerateReplyParams): Promise<
     toneExamples,
     detectedLanguageIso1,
     festiveAutoMode = true,
+    complianceMode = 'standard',
   } = params
 
   const languageInstruction = {
@@ -82,6 +110,8 @@ export async function generateReviewReply(params: GenerateReplyParams): Promise<
       ? `\n\nToday is ${festival.name} in India. If it feels natural and appropriate, you may weave a brief ${festival.greeting} greeting into the reply. Skip it entirely for complaints or very short reviews.`
       : ''
 
+  const complianceNote = compliancePromptAddon(complianceMode)
+
   const prompt = `You are writing a Google review reply on behalf of "${businessName}", a ${businessCategory} in India.
 
 REVIEWER: ${reviewerName}
@@ -97,7 +127,7 @@ INSTRUCTIONS:
 - Do not start with "Dear".
 - Do not mention competitors.
 - End with a warm closing that fits the business type.
-- Write ONLY the reply text. No preamble, labels, or explanation.${fewShot}${sameLanguageNote}${festiveNote}`
+- Write ONLY the reply text. No preamble, labels, or explanation.${fewShot}${sameLanguageNote}${complianceNote}${festiveNote}`
 
   const response = await getOpenAI().chat.completions.create({
     model: 'gpt-4o-mini',

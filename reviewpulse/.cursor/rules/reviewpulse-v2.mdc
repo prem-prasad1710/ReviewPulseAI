@@ -1,0 +1,50 @@
+---
+description: ReviewPulse AI v2 — roadmap constraints and build rules (condensed from product bible)
+globs: ["app/**", "components/**", "lib/**", "models/**", "types/**"]
+alwaysApply: false
+---
+
+# ReviewPulse v2 — Cursor rules (condensed)
+
+The full “Feature Bible” lists 40+ capabilities (AI heatmaps, WhatsApp bots, benchmarks, API, badges, etc.). Implement **one vertical slice at a time** behind plan gates and tests—do not land half-finished surface area.
+
+## Stack
+
+Next.js App Router, MongoDB/Mongoose, NextAuth (Google + `business.manage` scope), Razorpay, Twilio WhatsApp, Tailwind, shadcn-style UI.
+
+## Security and data
+
+1. **Auth first** (`requireAuth` / session), **plan gate second**, **queries scoped to `userId`** (or agency owner rules where applicable).
+2. Validate inputs with **Zod**; return structured errors; never leak stack traces or raw provider errors to the client.
+3. **PII**: healthcare / clinic modes must never echo patient details in AI replies when enabled (see bible D2).
+
+## WhatsApp / Twilio
+
+- Max message length **1024** characters; interactive button titles **≤ 20** chars.
+- **Alerts** (automated sends from review sync): Starter+ only; cap daily volume (existing `MAX_WHATSAPP_ALERTS_PER_DAY`).
+- **Test ping** (`/api/user/whatsapp/test`): allowed on **any** plan when Twilio env is set and a valid **saved** E.164 number exists.
+- Normalize Indian mobiles to `+91…` on save (`lib/phone-e164.ts`).
+- Production webhooks: set `TWILIO_WEBHOOK_PUBLIC_URL` so signature validation matches the public URL.
+
+## Google / locations
+
+- Prefer **`GET /locations/connect`**, which calls `signIn('google', { redirectTo: '/locations' })`, over linking directly to `/api/auth/signin/google` so the OAuth flow matches NextAuth v5 and reliably re-runs the sign-in callback (token refresh + `provisionLocationsFromGoogleOAuth`).
+
+## Performance
+
+- Avoid `force-dynamic` on entire dashboard layout unless required.
+- Prefer **Mongo aggregations** for analytics; cache expensive rollups on `Location` or dedicated summary collections when the bible calls for heatmaps / velocity / benchmarks.
+- Do **not** block page loads on OpenAI—use cron, `revalidatePath`, or background jobs.
+
+## OpenAI cost
+
+- Default model **`gpt-4o-mini`**; token ceilings: replies ~500, insights ~300, classifications ~150; batch classify when possible.
+
+## Agency
+
+- Runtime workspace and `/api/agency/bootstrap` require **`plan === 'agency'`**.
+- Custom host branding: `AGENCY_HOST_MAP` in production; middleware must keep running on `/` so mapped hosts still receive `x-agency-id`.
+
+## When adding a bible feature
+
+Add model fields + indexes (especially `userId`, dates used in filters), UI behind the correct **plan** tier, API route with auth + Zod, and a short regression path (manual or automated).

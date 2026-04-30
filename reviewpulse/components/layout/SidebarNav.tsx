@@ -127,7 +127,8 @@ export default function SidebarNav() {
             <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/50 p-3 text-center dark:border-slate-600 dark:bg-slate-800/30">
               <p className="text-[11px] leading-snug text-slate-500 dark:text-slate-400">No outlets yet—connect Google</p>
               <Link
-                href="/api/auth/signin/google?callbackUrl=/locations"
+                href="/locations/connect"
+                prefetch={false}
                 className="mt-2 inline-flex items-center justify-center gap-1 text-[11px] font-semibold text-indigo-600 hover:underline dark:text-indigo-400"
               >
                 <MapPin className="h-3 w-3" />

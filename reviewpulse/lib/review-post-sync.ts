@@ -1,7 +1,8 @@
 import { Resend } from 'resend'
 import type { Types } from 'mongoose'
 import { detectReviewLanguageIso1 } from '@/lib/language-detect'
-import { planAllowsKeywordAlerts, planAllowsWhatsApp } from '@/lib/plan-access'
+import { planAllowsKeywordAlerts, planAllowsMoodHeatmap, planAllowsWhatsApp } from '@/lib/plan-access'
+import { classifyReviewEmotion } from '@/lib/review-emotion'
 import { sendWhatsAppMessage } from '@/lib/twilio-whatsapp'
 import { translateToEnglish } from '@/lib/translate-review'
 import Location from '@/models/Location'
@@ -64,6 +65,18 @@ export async function processReviewAfterSync(reviewDbId: Types.ObjectId): Promis
   await Review.findByIdAndUpdate(review._id, { $set: setDoc })
 
   const plan = user.plan as string
+
+  if (planAllowsMoodHeatmap(plan) && comment.trim().length > 5 && !review.emotion) {
+    try {
+      const emotion = await classifyReviewEmotion(comment)
+      if (emotion) {
+        await Review.findByIdAndUpdate(review._id, { $set: { emotion } })
+      }
+    } catch (e) {
+      console.warn('Emotion classification skipped:', e)
+    }
+  }
+
   const commentLower = comment.toLowerCase()
 
   if (planAllowsKeywordAlerts(plan) && location.alertKeywords?.length) {

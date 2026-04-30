@@ -5,8 +5,6 @@ import { AUTH_DISABLED_FOR_DEV } from '@/lib/auth-dev'
 import { getAgencyBrandFromHeaders } from '@/lib/agency-branding'
 import { getAppSession } from '@/lib/auth-helpers'
 
-export const dynamic = 'force-dynamic'
-
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const session = await getAppSession()
   if (!AUTH_DISABLED_FOR_DEV && !session?.user?.id) redirect('/login')

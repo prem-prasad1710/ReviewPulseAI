@@ -7,6 +7,7 @@ import { CheckCircle2, Loader2, MessageCircle, RadioTower, Send, XCircle } from 
 import { Button } from '@/components/ui/button'
 import { Card, CardDescription, CardTitle } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
+import { normalizeWhatsAppInput } from '@/lib/phone-e164'
 
 export default function WhatsAppCard() {
   const [number, setNumber] = useState('')
@@ -88,7 +89,9 @@ export default function WhatsAppCard() {
     )
   }
 
-  const canTest = planOk && twilioOk && alertsOn && /^\+[1-9]\d{6,14}$/.test(number.trim())
+  const normalizedPreview = normalizeWhatsAppInput(number)
+  const validE164 = /^\+[1-9]\d{6,14}$/.test(normalizedPreview)
+  const canTest = twilioOk && validE164
 
   return (
     <Card className="border-slate-200/90 p-6 dark:border-slate-700/80 sm:p-7">
@@ -129,8 +132,9 @@ export default function WhatsAppCard() {
 
       {!planOk ? (
         <p className="mt-4 rounded-xl border border-amber-200/80 bg-amber-50/80 px-3 py-2 text-xs text-amber-900 dark:border-amber-800/50 dark:bg-amber-950/40 dark:text-amber-100">
-          Upgrade to Starter or above for WhatsApp delivery.{' '}
-          <Link href="/subscribe" className="font-semibold underline">
+          Automatic alerts (≤2★, keywords) go out on <strong>Starter</strong> and above. You can still save your number
+          and send a <strong>test message</strong> on Free to verify Twilio.{' '}
+          <Link href="/subscribe?plan=starter" className="font-semibold underline">
             View plans
           </Link>
         </p>
@@ -160,21 +164,22 @@ export default function WhatsAppCard() {
 
         <div>
           <label className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-            Your WhatsApp (E.164)
+            Your WhatsApp number
           </label>
           <input
             value={number}
             onChange={(e) => setNumber(e.target.value)}
-            placeholder="+919876543210"
+            placeholder="9876543210 or +919876543210"
             className="mt-1.5 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-950/50"
           />
           <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">
-            Use the same number you joined the Twilio WhatsApp sandbox with (reply “join …” to the sandbox code).
+            Indian 10-digit numbers are saved as +91…. Use the same number you joined the Twilio WhatsApp sandbox with
+            (reply &quot;join …&quot; to the sandbox code).
           </p>
         </div>
 
         <div className="flex flex-wrap gap-2">
-          <Button className="rounded-xl" disabled={saving || !planOk} onClick={() => void save()}>
+          <Button className="rounded-xl" disabled={saving} onClick={() => void save()}>
             {saving ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -189,7 +194,7 @@ export default function WhatsAppCard() {
             variant="outline"
             className="rounded-xl"
             disabled={testing || !canTest}
-            title={!canTest ? 'Needs valid number, Twilio env, paid plan, and alerts on' : undefined}
+            title={!canTest ? 'Needs Twilio env vars and a valid saved number (save first).' : undefined}
             onClick={() => void sendTest()}
           >
             {testing ? (

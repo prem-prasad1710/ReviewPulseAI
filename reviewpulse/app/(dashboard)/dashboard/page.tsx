@@ -41,6 +41,8 @@ export default async function DashboardPage() {
       ? await Location.find({ userId }).select('qrScans bridgeVisits').lean()
       : []
 
+  const locationCount = useMocks ? MOCK_LOCATIONS.length : userId ? locMetrics.length : 0
+
   const qrScansTotal = locMetrics.reduce((s, l) => s + (l.qrScans || 0), 0)
   const bridgeVisitsTotal = locMetrics.reduce((s, l) => s + ((l as { bridgeVisits?: number }).bridgeVisits || 0), 0)
 
@@ -139,6 +141,34 @@ export default async function DashboardPage() {
         </div>
       </Card>
       </Reveal>
+
+      {!useMocks && userId && locationCount === 0 ? (
+        <Reveal delay={55}>
+          <Card className="border-indigo-200/80 bg-indigo-50/50 p-5 dark:border-indigo-500/30 dark:bg-indigo-950/25 sm:p-6">
+            <h3 className="font-heading text-lg font-bold text-slate-900 dark:text-slate-50">Connect Google Business Profile</h3>
+            <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
+              Metrics stay at zero until we import your outlets. Use the same Google account that owns your Business
+              Profile listings (we request the Business Profile permission).
+            </p>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <Link
+                href="/locations/connect"
+                prefetch={false}
+                className="inline-flex h-10 items-center justify-center rounded-xl bg-[#2563EB] px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-[#1f56c8]"
+              >
+                <MapPin className="mr-2 h-4 w-4" />
+                Connect Google &amp; import locations
+              </Link>
+              <Link
+                href="/locations"
+                className="inline-flex h-10 items-center justify-center rounded-xl border border-slate-300 bg-white px-4 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
+              >
+                Locations page
+              </Link>
+            </div>
+          </Card>
+        </Reveal>
+      ) : null}
 
       <Reveal delay={70}>
         <InsightRail

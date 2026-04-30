@@ -9,10 +9,13 @@ import {
   TrendingDown,
   TrendingUp,
 } from 'lucide-react'
+import mongoose from 'mongoose'
+import ReviewVelocityLine from '@/components/analytics/ReviewVelocityLine'
 import { Card, CardDescription, CardTitle } from '@/components/ui/card'
 import { MOCK_LOCATIONS, MOCK_REVIEWS, shouldUseDashboardMocks } from '@/lib/dev-mock-dashboard'
 import { getAppSession } from '@/lib/auth-helpers'
 import { connectDB } from '@/lib/mongodb'
+import { planAllowsMoodHeatmap, planAllowsVelocityAnalytics } from '@/lib/plan-access'
 import Review from '@/models/Review'
 import Location from '@/models/Location'
 
@@ -24,6 +27,7 @@ type ReviewLean = {
   comment?: string
   reviewCreatedAt: Date
   locationId: unknown
+  emotion?: string | null
 }
 
 const riskKeywords = /refund|charged|twice|upi|fraud|scam/i
@@ -48,12 +52,48 @@ export default async function AnalyticsPage() {
   const session = await getAppSession()
   const useMocks = shouldUseDashboardMocks()
   const userId = session?.user?.id
+  const sessionPlan = (session?.user?.plan as string) || 'free'
 
   const reviews: ReviewLean[] = useMocks
     ? (MOCK_REVIEWS as unknown as ReviewLean[])
     : userId
       ? ((await Review.find({ userId }).sort({ reviewCreatedAt: -1 }).lean()) as unknown as ReviewLean[])
       : []
+
+  let velocitySeries: { day: string; count: number; avgRating: number }[] = []
+  let emotionRows: { emotion: string; n: number }[] = []
+  if (!useMocks && userId && mongoose.isValidObjectId(userId)) {
+    const uid = new mongoose.Types.ObjectId(userId)
+    if (planAllowsVelocityAnalytics(sessionPlan)) {
+      const raw = await Review.aggregate<{ _id: string; count: number; avgRating: number }>([
+        { $match: { userId: uid } },
+        {
+          $group: {
+            _id: { $dateToString: { format: '%Y-%m-%d', date: '$reviewCreatedAt' } },
+            count: { $sum: 1 },
+            avgRating: { $avg: '$rating' },
+          },
+        },
+        { $sort: { _id: 1 } },
+        { $limit: 90 },
+      ])
+      velocitySeries = raw.map((r) => ({
+        day: r._id,
+        count: r.count,
+        avgRating: Number((r.avgRating ?? 0).toFixed(2)),
+      }))
+    }
+    if (planAllowsMoodHeatmap(sessionPlan)) {
+      const em = await Review.aggregate<{ _id: string | null; n: number }>([
+        { $match: { userId: uid, emotion: { $exists: true, $nin: [null, ''] } } },
+        { $group: { _id: '$emotion', n: { $sum: 1 } } },
+        { $sort: { n: -1 } },
+      ])
+      emotionRows = em
+        .filter((e) => e._id)
+        .map((e) => ({ emotion: String(e._id), n: e.n }))
+    }
+  }
 
   const locationNameById = new Map<string, string>()
   if (useMocks) {
@@ -177,6 +217,49 @@ export default async function AnalyticsPage() {
           <CardDescription className="text-rose-900/80 dark:text-rose-200/80">Negative reviews</CardDescription>
         </Card>
       </div>
+
+      {(planAllowsVelocityAnalytics(sessionPlan) || planAllowsMoodHeatmap(sessionPlan)) && (
+        <div className="grid gap-4 lg:grid-cols-2">
+          {planAllowsVelocityAnalytics(sessionPlan) ? (
+            <Card className="dark:border-slate-700/80 dark:bg-slate-900/60">
+              <div className="mb-3 flex items-center gap-2 text-indigo-600 dark:text-indigo-400">
+                <Activity className="h-5 w-5" />
+                <CardTitle className="text-base dark:text-slate-100">Review velocity (90 days)</CardTitle>
+              </div>
+              <CardDescription className="mb-4 text-xs dark:text-slate-400">
+                Daily review volume and average stars (Growth / Scale / Agency).
+              </CardDescription>
+              <ReviewVelocityLine data={velocitySeries} />
+            </Card>
+          ) : null}
+          {planAllowsMoodHeatmap(sessionPlan) ? (
+            <Card className="dark:border-slate-700/80 dark:bg-slate-900/60">
+              <div className="mb-3 flex items-center gap-2 text-indigo-600 dark:text-indigo-400">
+                <Sparkles className="h-5 w-5" />
+                <CardTitle className="text-base dark:text-slate-100">Emotion mix</CardTitle>
+              </div>
+              <CardDescription className="mb-4 text-xs dark:text-slate-400">
+                Primary emotion per review after sync (Growth+). Calendar heatmap UI can build on this aggregate.
+              </CardDescription>
+              {emotionRows.length === 0 ? (
+                <p className="text-sm text-slate-500 dark:text-slate-400">No emotion labels yet — run a review sync.</p>
+              ) : (
+                <ul className="space-y-2 text-sm">
+                  {emotionRows.map((e) => (
+                    <li
+                      key={e.emotion}
+                      className="flex justify-between rounded-lg border border-slate-100 px-3 py-2 dark:border-slate-700"
+                    >
+                      <span className="font-medium capitalize text-slate-800 dark:text-slate-100">{e.emotion}</span>
+                      <span className="tabular-nums text-slate-600 dark:text-slate-300">{e.n}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </Card>
+          ) : null}
+        </div>
+      )}
 
       <div className="grid gap-4 lg:grid-cols-2">
         <Card className="dark:border-slate-700/80 dark:bg-slate-900/60">
