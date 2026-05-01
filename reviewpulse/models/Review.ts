@@ -31,6 +31,8 @@ export interface IReview extends Document {
   /** A1 — primary emotion (Growth+). */
   emotion?: ReviewEmotion
   status: 'pending' | 'replied' | 'ignored' | 'scheduled'
+  /** A5 — which reply A/B variant was generated (if enabled). */
+  replyAbVariant?: 'A' | 'B'
   aiGeneratedReply?: string
   publishedReply?: string
   repliedAt?: Date
@@ -85,6 +87,7 @@ const ReviewSchema = new Schema<IReview>(
     ratingMonitoringUntil: { type: Date, index: true },
     ratingRecovered: { type: Boolean, default: false },
     ratingRecoveredAt: Date,
+    replyAbVariant: { type: String, enum: ['A', 'B'] },
     autopsy: {
       type: {
         rootCause: String,

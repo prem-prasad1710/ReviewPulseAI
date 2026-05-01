@@ -1,6 +1,7 @@
 import type { LucideIcon } from 'lucide-react'
 import {
   BarChart3,
+  Brain,
   ChefHat,
   Clock,
   FileText,
@@ -102,6 +103,12 @@ export const LOCATION_HUB_LINKS: LocationHubLink[] = [
     description: 'Badge, JSON-LD schema, CSV export, vertical & crisis.',
     icon: Share2,
     segment: 'growth-tools',
+  },
+  {
+    label: 'v2 lab',
+    description: 'Emotion, predictions, superfans, surveys, PDFs, reel manifest.',
+    icon: Brain,
+    segment: 'v2-lab',
   },
   {
     label: 'PDF reports',

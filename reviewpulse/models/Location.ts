@@ -104,6 +104,32 @@ export interface ILocation extends Document {
   lastKnownReviewCount?: number
   /** H1 — trust badge load counter (approx). */
   badgeImpressions?: number
+  /** D1 — set when GBP review count drops vs previous sync (possible removals). */
+  reviewRemovalAlertAt?: Date
+  /** B2 — WhatsApp / copy automation for review requests. */
+  reviewRequestAutomation?: {
+    enabled: boolean
+    lastRunAt?: Date
+    bodyTemplate?: string
+  }
+  /** A5 — reply style A/B labels (AI prompt nudge). */
+  replyAbTest?: {
+    enabled: boolean
+    variantLabelA?: string
+    variantLabelB?: string
+    activeKey?: 'A' | 'B'
+  }
+  /** E1/E2/E3 — connector status (full OAuth not in scope; UI toggles). */
+  integrations?: {
+    zomato?: 'disconnected' | 'connected_stub' | 'coming_soon'
+    googleAds?: 'disconnected' | 'connected_stub' | 'coming_soon'
+    justdial?: 'disconnected' | 'connected_stub' | 'coming_soon'
+  }
+  /** F1 — last highlight reel manifest (JSON string). */
+  highlightReelManifestJson?: string
+  highlightReelGeneratedAt?: Date
+  /** H2 — flag for managed reply queue (human handoff). */
+  managedReplyQueue?: boolean
   createdAt: Date
   updatedAt: Date
 }
@@ -155,6 +181,38 @@ const LocationSchema = new Schema<ILocation>(
     crisisMode: { type: Boolean, default: false },
     lastKnownReviewCount: { type: Number, default: 0 },
     badgeImpressions: { type: Number, default: 0 },
+    reviewRemovalAlertAt: Date,
+    reviewRequestAutomation: {
+      type: {
+        enabled: { type: Boolean, default: false },
+        lastRunAt: Date,
+        bodyTemplate: String,
+      },
+      default: undefined,
+      _id: false,
+    },
+    replyAbTest: {
+      type: {
+        enabled: { type: Boolean, default: false },
+        variantLabelA: String,
+        variantLabelB: String,
+        activeKey: { type: String, enum: ['A', 'B'] },
+      },
+      default: undefined,
+      _id: false,
+    },
+    integrations: {
+      type: {
+        zomato: { type: String, enum: ['disconnected', 'connected_stub', 'coming_soon'], default: 'disconnected' },
+        googleAds: { type: String, enum: ['disconnected', 'connected_stub', 'coming_soon'], default: 'disconnected' },
+        justdial: { type: String, enum: ['disconnected', 'connected_stub', 'coming_soon'], default: 'disconnected' },
+      },
+      default: undefined,
+      _id: false,
+    },
+    highlightReelManifestJson: String,
+    highlightReelGeneratedAt: Date,
+    managedReplyQueue: { type: Boolean, default: false },
   },
   { timestamps: true, strict: true }
 )

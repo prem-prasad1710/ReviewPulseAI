@@ -52,6 +52,12 @@ export async function syncLocationReviewsForUser(
     const gbpLocationId = location.googleLocationId.split('/').pop() || location.googleLocationId
     const reviews = await listLocationReviews(location.googleAccountId, gbpLocationId, refreshed.accessToken)
 
+    const prevKnownCount = Math.max(
+      location.lastKnownReviewCount ?? 0,
+      location.totalReviews ?? 0,
+      0
+    )
+
     for (const item of reviews as GbpReview[]) {
       const reviewId = item.reviewId || item.name?.split('/').pop()
       if (!reviewId) continue
@@ -107,6 +113,9 @@ export async function syncLocationReviewsForUser(
 
     location.lastSyncedAt = new Date()
     location.totalReviews = reviews.length
+    if (prevKnownCount > 0 && reviews.length < prevKnownCount) {
+      location.reviewRemovalAlertAt = new Date()
+    }
     location.lastKnownReviewCount = reviews.length
     location.averageRating =
       reviews.length > 0

@@ -23,6 +23,12 @@ export default function MenuInsightsPage() {
   const [lastRun, setLastRun] = useState<string | null>(null)
   const [refreshing, setRefreshing] = useState(false)
 
+  const month = new Date().getMonth()
+  const seasonalTip =
+    month >= 9 || month <= 1
+      ? 'A6 Seasonal tip: festival season — push sweets / gift combos and limited menus in replies & QR campaigns.'
+      : 'A6 Seasonal tip: summer — highlight cold drinks, AC seating, and hygiene mentions in menu copy.'
+
   const load = async () => {
     const res = await fetch(`/api/locations/${id}/menu-insights`)
     const json = await res.json()
@@ -132,6 +138,10 @@ export default function MenuInsightsPage() {
           </Button>
         </div>
       </div>
+
+      <p className="rounded-xl border border-indigo-100 bg-indigo-50/80 px-4 py-3 text-sm text-indigo-950 dark:border-indigo-900/50 dark:bg-indigo-950/40 dark:text-indigo-100">
+        {seasonalTip}
+      </p>
 
       <Card className="overflow-hidden p-0 dark:border-slate-700 dark:bg-slate-900/60">
         <div className="overflow-x-auto">

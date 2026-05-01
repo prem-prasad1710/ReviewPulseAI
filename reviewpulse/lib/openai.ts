@@ -55,6 +55,8 @@ interface GenerateReplyParams {
   festiveAutoMode?: boolean
   /** D2: stricter reply boundaries for regulated verticals. */
   complianceMode?: ReplyComplianceMode
+  /** A5 — optional A/B style nudge appended to the prompt. */
+  abStyleHint?: string
 }
 
 export async function generateReviewReply(params: GenerateReplyParams): Promise<string> {
@@ -70,6 +72,7 @@ export async function generateReviewReply(params: GenerateReplyParams): Promise<
     detectedLanguageIso1,
     festiveAutoMode = true,
     complianceMode = 'standard',
+    abStyleHint,
   } = params
 
   const languageInstruction = {
@@ -111,6 +114,7 @@ export async function generateReviewReply(params: GenerateReplyParams): Promise<
       : ''
 
   const complianceNote = compliancePromptAddon(complianceMode)
+  const abNote = abStyleHint ? `\n\nA/B VARIANT: ${abStyleHint}` : ''
 
   const prompt = `You are writing a Google review reply on behalf of "${businessName}", a ${businessCategory} in India.
 
@@ -127,7 +131,7 @@ INSTRUCTIONS:
 - Do not start with "Dear".
 - Do not mention competitors.
 - End with a warm closing that fits the business type.
-- Write ONLY the reply text. No preamble, labels, or explanation.${fewShot}${sameLanguageNote}${complianceNote}${festiveNote}`
+- Write ONLY the reply text. No preamble, labels, or explanation.${fewShot}${sameLanguageNote}${complianceNote}${abNote}${festiveNote}`
 
   const response = await getOpenAI().chat.completions.create({
     model: 'gpt-4o-mini',

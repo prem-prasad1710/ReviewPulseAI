@@ -24,6 +24,13 @@ export interface IUser extends Document {
   /** B1 — rate limit WhatsApp bot commands per UTC day. */
   whatsappBotDayKey?: string
   whatsappBotInteractions?: number
+  /** G1 — public REST API bearer key. */
+  publicApiKey?: string
+  /** H4 — partner referral code for this account. */
+  partnerReferralCode?: string
+  referredByUserId?: mongoose.Types.ObjectId
+  /** B3 — last bulk festival greeting to superfans (rate limit). */
+  superFanFestivalSentAt?: Date
   createdAt: Date
   updatedAt: Date
 }
@@ -53,6 +60,10 @@ const UserSchema = new Schema<IUser>(
     agencyLocationAddons: { type: Number, default: 0 },
     whatsappBotDayKey: String,
     whatsappBotInteractions: { type: Number, default: 0 },
+    publicApiKey: { type: String, sparse: true, unique: true, index: true },
+    partnerReferralCode: { type: String, sparse: true, unique: true, index: true },
+    referredByUserId: { type: Schema.Types.ObjectId, ref: 'User' },
+    superFanFestivalSentAt: Date,
   },
   { timestamps: true, strict: true }
 )

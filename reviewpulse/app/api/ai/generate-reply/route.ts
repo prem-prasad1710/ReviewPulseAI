@@ -90,6 +90,27 @@ export async function POST(request: Request) {
     if (!location) return err('Location not found', 404)
 
     const plan = user.plan as string
+    const ab = location.replyAbTest as
+      | { enabled?: boolean; variantLabelA?: string; variantLabelB?: string; activeKey?: 'A' | 'B' }
+      | undefined
+    let abStyleHint: string | undefined
+    let abVariant: 'A' | 'B' | undefined
+    if (ab?.enabled) {
+      abVariant =
+        ab.activeKey === 'A' || ab.activeKey === 'B'
+          ? ab.activeKey
+          : Math.random() > 0.5
+            ? 'A'
+            : 'B'
+      const label =
+        abVariant === 'A'
+          ? (ab.variantLabelA || 'Warm / descriptive')
+          : (ab.variantLabelB || 'Crisp / direct')
+      abStyleHint = `Use reply style ${abVariant} (“${label}”). ${
+        abVariant === 'A' ? 'Lean slightly warmer and a bit more detailed.' : 'Keep tighter and more direct.'
+      }`
+    }
+
     const toneExamples =
       !parsed.data.skipToneExamples &&
       planAllowsToneTrainer(plan) &&
@@ -112,6 +133,7 @@ export async function POST(request: Request) {
       detectedLanguageIso1: review.detectedLanguage || undefined,
       festiveAutoMode: location.festiveAutoMode !== false,
       complianceMode,
+      abStyleHint,
     })
 
     const schedule = mergeReplySchedule(
@@ -135,6 +157,7 @@ export async function POST(request: Request) {
     } else {
       review.aiGeneratedReply = aiReply
     }
+    if (abVariant) review.replyAbVariant = abVariant
     await review.save()
 
     await User.findByIdAndUpdate(user._id, { $inc: { repliesUsedThisMonth: 1 } })

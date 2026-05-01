@@ -82,3 +82,28 @@ export function planAllowsDataExport(plan: string): boolean {
 export function planAllowsVelocityAnalytics(plan: string): boolean {
   return plan === 'growth' || plan === 'scale' || plan === 'agency'
 }
+
+/** A3 — Competitor battle card PDF. */
+export function planAllowsBattleCardPdf(plan: string): boolean {
+  return plan === 'growth' || plan === 'scale' || plan === 'agency'
+}
+
+/** C6 — Investor one-pager PDF. */
+export function planAllowsInvestorReportPdf(plan: string): boolean {
+  return plan === 'scale' || plan === 'agency'
+}
+
+/** F4 — Customer survey engine. */
+export function planAllowsSurveys(plan: string): boolean {
+  return plan === 'growth' || plan === 'scale' || plan === 'agency'
+}
+
+/** G1 — Public REST API key. */
+export function planAllowsPublicRestApi(plan: string): boolean {
+  return plan === 'growth' || plan === 'scale' || plan === 'agency'
+}
+
+/** A2 / A5 / F2 / C2 extras bundled for Growth+. */
+export function planAllowsV2IntelligencePack(plan: string): boolean {
+  return plan === 'growth' || plan === 'scale' || plan === 'agency'
+}
