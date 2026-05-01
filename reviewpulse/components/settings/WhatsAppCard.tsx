@@ -144,8 +144,11 @@ export default function WhatsAppCard() {
         <p className="mt-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-700 dark:border-slate-600 dark:bg-slate-800/80 dark:text-slate-300">
           Set <code className="rounded bg-white px-1 dark:bg-slate-950">TWILIO_ACCOUNT_SID</code>,{' '}
           <code className="rounded bg-white px-1 dark:bg-slate-950">TWILIO_AUTH_TOKEN</code>, and{' '}
-          <code className="rounded bg-white px-1 dark:bg-slate-950">TWILIO_WHATSAPP_FROM</code> (sandbox or approved sender,
-          e.g. <code className="whitespace-nowrap">whatsapp:+14155238886</code>). Restart the server after changing{' '}
+          <code className="rounded bg-white px-1 dark:bg-slate-950">TWILIO_WHATSAPP_FROM</code> sandbox / sender: use{' '}
+          <code className="whitespace-nowrap">whatsapp:+14155238886</code> or plain{' '}
+          <code className="whitespace-nowrap">+14155238886</code> (the app adds the{' '}
+          <code className="whitespace-nowrap">whatsapp:</code> prefix). For a Messaging Service, set the{' '}
+          <code className="whitespace-nowrap">MG…</code> SID instead. Restart after changing{' '}
           <code className="rounded bg-white px-1 dark:bg-slate-950">.env</code>.
         </p>
       ) : null}

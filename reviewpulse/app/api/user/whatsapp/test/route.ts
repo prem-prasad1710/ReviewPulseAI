@@ -12,7 +12,10 @@ export async function POST() {
     await connectDB()
 
     if (!isTwilioWhatsAppConfigured()) {
-      return err('Twilio is not configured (set TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_WHATSAPP_FROM).', 503)
+      return err(
+        'Twilio is not configured (set TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_WHATSAPP_FROM — sandbox example: +14155238886 or whatsapp:+14155238886).',
+        503
+      )
     }
 
     const u = await User.findById(user._id).select('whatsappNumber').lean()
