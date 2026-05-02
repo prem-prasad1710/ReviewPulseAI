@@ -107,3 +107,8 @@ export function planAllowsPublicRestApi(plan: string): boolean {
 export function planAllowsV2IntelligencePack(plan: string): boolean {
   return plan === 'growth' || plan === 'scale' || plan === 'agency'
 }
+
+/** E1 — Zomato (CSV) import. */
+export function planAllowsZomatoCsvImport(plan: string): boolean {
+  return plan === 'growth' || plan === 'scale' || plan === 'agency'
+}

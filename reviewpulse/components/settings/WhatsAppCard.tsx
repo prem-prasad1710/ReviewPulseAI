@@ -153,6 +153,17 @@ export default function WhatsAppCard() {
         </p>
       ) : null}
 
+      {twilioOk ? (
+        <p className="mt-3 rounded-xl border border-indigo-100 bg-indigo-50/60 px-3 py-2 text-[11px] text-indigo-950 dark:border-indigo-500/30 dark:bg-indigo-950/40 dark:text-indigo-100">
+          <strong>B4 Content API (optional):</strong> Create a WhatsApp-approved template in Twilio Content (variable{' '}
+          <code className="rounded bg-white/90 px-0.5 dark:bg-slate-900/80">{'{{1}}'}</code> = full message). Then set{' '}
+          <code className="rounded bg-white/90 px-0.5 dark:bg-slate-900/80">TWILIO_WHATSAPP_ALERT_CONTENT_SID=HX…</code>{' '}
+          for ≤2★ / keyword alerts, and/or{' '}
+          <code className="rounded bg-white/90 px-0.5 dark:bg-slate-900/80">TWILIO_WHATSAPP_DIGEST_REPLY_CONTENT_SID=HX…</code>{' '}
+          for digest bot TwiML replies. Without these, plain text is used.
+        </p>
+      ) : null}
+
       <div className="mt-5 space-y-4">
         <label className="flex cursor-pointer items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-3 py-2.5 dark:border-slate-600 dark:bg-slate-950/40">
           <span className="text-sm font-medium text-slate-800 dark:text-slate-200">Enable WhatsApp alerts</span>

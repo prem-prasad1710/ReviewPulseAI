@@ -3,7 +3,7 @@ import type { Types } from 'mongoose'
 import { detectReviewLanguageIso1 } from '@/lib/language-detect'
 import { planAllowsKeywordAlerts, planAllowsMoodHeatmap, planAllowsWhatsApp } from '@/lib/plan-access'
 import { classifyReviewEmotion } from '@/lib/review-emotion'
-import { sendWhatsAppMessage } from '@/lib/twilio-whatsapp'
+import { sendWhatsAppAlertWithOptionalContent } from '@/lib/twilio-whatsapp'
 import { translateToEnglish } from '@/lib/translate-review'
 import Location from '@/models/Location'
 import Review from '@/models/Review'
@@ -116,7 +116,7 @@ export async function processReviewAfterSync(reviewDbId: Types.ObjectId): Promis
         const allow = await incrementWhatsAppDailyCount(user._id as Types.ObjectId)
         if (allow) {
           const body = `${subject}\n\n"${comment.slice(0, 200)}"\n— ${review.reviewerName}\n\nOpen: ${reviewUrl}`
-          await sendWhatsAppMessage(user.whatsappNumber, body)
+          await sendWhatsAppAlertWithOptionalContent(user.whatsappNumber, body)
         }
       }
     }
@@ -141,7 +141,7 @@ export async function processReviewAfterSync(reviewDbId: Types.ObjectId): Promis
 
 AI reply is ready. Tap to review & publish:
 ${reviewUrl}`
-      const result = await sendWhatsAppMessage(user.whatsappNumber, msg)
+      const result = await sendWhatsAppAlertWithOptionalContent(user.whatsappNumber, msg)
       if (!result.error) {
         await Review.findByIdAndUpdate(review._id, { $set: { lowRatingWhatsAppNotified: true } })
       }

@@ -5,6 +5,7 @@ import { planAllowsWhatsAppDigestBot } from '@/lib/plan-access'
 import { handleWhatsAppDigestCommand } from '@/lib/twilio-whatsapp-commands'
 import { tryConsumeWhatsAppBotSlot } from '@/lib/twilio-whatsapp-bot-limit'
 import { shouldVerifyTwilioWebhookSignature, webhookUrlForSignatureValidation } from '@/lib/twilio-config'
+import { twimlMessageFromContentTemplate } from '@/lib/twilio-twiml-content'
 import { normalizeWhatsAppDestination } from '@/lib/twilio-whatsapp'
 import User from '@/models/User'
 
@@ -83,6 +84,10 @@ export async function POST(request: Request) {
         return twimlMessage('Daily command limit reached (50). Try again tomorrow or use the web app.')
       }
       const reply = await handleWhatsAppDigestCommand(user._id as import('mongoose').Types.ObjectId, cmd)
+      const contentSid = process.env.TWILIO_WHATSAPP_DIGEST_REPLY_CONTENT_SID?.trim()
+      if (contentSid?.startsWith('HX')) {
+        return twimlMessageFromContentTemplate(contentSid, reply)
+      }
       return twimlMessage(reply)
     } catch (e) {
       console.error('Twilio inbound bot failed:', e)

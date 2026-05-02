@@ -21,6 +21,7 @@ export default function LocationV2LabPage() {
   const [v2settings, setV2settings] = useState<{
     reviewRemovalAlertAt?: string
     managedReplyQueue?: boolean
+    highlightReelVideoUrl?: string
   } | null>(null)
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState<string | null>(null)
@@ -82,6 +83,7 @@ export default function LocationV2LabPage() {
         setV2settings({
           reviewRemovalAlertAt: sj.data.reviewRemovalAlertAt,
           managedReplyQueue: sj.data.managedReplyQueue,
+          highlightReelVideoUrl: sj.data.highlightReelVideoUrl,
         })
       }
     }
@@ -93,11 +95,32 @@ export default function LocationV2LabPage() {
 
   const genReel = async () => {
     setBusy(true)
+    setErr(null)
     try {
       const res = await fetch(`/api/locations/${id}/highlight-reel`, { method: 'POST' })
       const j = await res.json().catch(() => ({}))
       if (!res.ok) setErr(j?.error || 'Failed')
       else alert('Highlight reel manifest saved on location.')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const renderMp4 = async () => {
+    setBusy(true)
+    setErr(null)
+    try {
+      const res = await fetch(`/api/locations/${id}/highlight-reel/render`, { method: 'POST' })
+      const j = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        setErr(j?.error || 'Render failed')
+        return
+      }
+      const url = j?.data?.url as string | undefined
+      if (url) {
+        setV2settings((prev) => ({ ...(prev || {}), highlightReelVideoUrl: url }))
+      }
+      alert(url ? `Video uploaded: ${url}` : 'Done')
     } finally {
       setBusy(false)
     }
@@ -235,6 +258,19 @@ export default function LocationV2LabPage() {
             <Button type="button" variant="secondary" disabled={busy} onClick={() => void genReel()}>
               F1 Generate highlight reel manifest
             </Button>
+            <Button type="button" variant="secondary" disabled={busy} onClick={() => void renderMp4()}>
+              F1 Render MP4 (Remotion + Blob)
+            </Button>
+            {v2settings?.highlightReelVideoUrl ? (
+              <a
+                className="font-semibold text-indigo-600 underline"
+                href={v2settings.highlightReelVideoUrl}
+                target="_blank"
+                rel="noreferrer"
+              >
+                Last rendered video
+              </a>
+            ) : null}
             <a className="font-semibold text-indigo-600 underline" href={`/api/locations/${id}/brand-voice`}>
               D3 Brand voice JSON
             </a>

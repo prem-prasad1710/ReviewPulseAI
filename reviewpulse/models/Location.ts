@@ -130,6 +130,11 @@ export interface ILocation extends Document {
   highlightReelGeneratedAt?: Date
   /** H2 — flag for managed reply queue (human handoff). */
   managedReplyQueue?: boolean
+  /** F1 — last rendered highlight reel MP4 URL (e.g. Vercel Blob). */
+  highlightReelVideoUrl?: string
+  /** E1 — last Zomato CSV import. */
+  zomatoLastImportAt?: Date
+  zomatoImportedCount?: number
   createdAt: Date
   updatedAt: Date
 }
@@ -213,6 +218,9 @@ const LocationSchema = new Schema<ILocation>(
     highlightReelManifestJson: String,
     highlightReelGeneratedAt: Date,
     managedReplyQueue: { type: Boolean, default: false },
+    highlightReelVideoUrl: String,
+    zomatoLastImportAt: Date,
+    zomatoImportedCount: { type: Number, default: 0 },
   },
   { timestamps: true, strict: true }
 )

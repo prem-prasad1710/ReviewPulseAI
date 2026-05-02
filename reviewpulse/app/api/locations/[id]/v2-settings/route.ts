@@ -36,7 +36,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     const { id } = await params
     const loc = await Location.findOne({ _id: id, userId: user._id })
       .select(
-        'reviewRequestAutomation replyAbTest integrations managedReplyQueue reviewRemovalAlertAt highlightReelManifestJson highlightReelGeneratedAt'
+        'reviewRequestAutomation replyAbTest integrations managedReplyQueue reviewRemovalAlertAt highlightReelManifestJson highlightReelGeneratedAt highlightReelVideoUrl zomatoLastImportAt zomatoImportedCount'
       )
       .lean()
     if (!loc) return err('Location not found', 404)
@@ -76,7 +76,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       { new: true }
     )
       .select(
-        'reviewRequestAutomation replyAbTest integrations managedReplyQueue reviewRemovalAlertAt highlightReelManifestJson highlightReelGeneratedAt'
+        'reviewRequestAutomation replyAbTest integrations managedReplyQueue reviewRemovalAlertAt highlightReelManifestJson highlightReelGeneratedAt highlightReelVideoUrl zomatoLastImportAt zomatoImportedCount'
       )
       .lean()
     if (!loc) return err('Location not found', 404)

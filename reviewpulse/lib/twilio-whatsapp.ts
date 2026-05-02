@@ -74,3 +74,65 @@ export async function sendWhatsAppMessage(toE164: string, body: string): Promise
     return { error: channelHintForTwilioError(errMsg) }
   }
 }
+
+/**
+ * B4 / Content API — WhatsApp template (Content SID `HX…`). Do not pass `body` when using this.
+ * Template variables use string keys per Twilio (often `"1"`, `"2"`).
+ */
+export async function sendWhatsAppContentMessage(
+  toE164: string,
+  contentSid: string,
+  contentVariables: Record<string, string>
+): Promise<{ sid?: string; error?: string }> {
+  if (!isTwilioWhatsAppConfigured()) {
+    return { error: 'Twilio not configured' }
+  }
+  const trimmed = contentSid.trim()
+  if (!trimmed.startsWith('HX')) {
+    return { error: 'contentSid must be a Twilio Content SID (HX…)' }
+  }
+
+  const sid = process.env.TWILIO_ACCOUNT_SID!
+  const token = process.env.TWILIO_AUTH_TOKEN!
+  const fromRaw = process.env.TWILIO_WHATSAPP_FROM!.trim()
+  const client = twilio(sid, token)
+
+  const to = normalizeWhatsAppDestination(toE164)
+  const toAddress = `whatsapp:${to.replace(/^whatsapp:/i, '')}`
+  const statusCallback = getTwilioStatusCallbackUrl()
+
+  const payload: Record<string, string | undefined> = {
+    to: toAddress,
+    contentSid: trimmed,
+    contentVariables: JSON.stringify(contentVariables),
+    ...(statusCallback ? { statusCallback } : {}),
+  }
+
+  if (isMessagingServiceSid(fromRaw)) {
+    payload.messagingServiceSid = fromRaw
+  } else {
+    payload.from = normalizeTwilioWhatsAppFrom(fromRaw)
+  }
+
+  try {
+    const msg = await client.messages.create(payload as never)
+    return { sid: msg.sid }
+  } catch (e) {
+    const errMsg = e instanceof Error ? e.message : 'Twilio send failed'
+    console.error('Twilio WhatsApp Content error:', errMsg)
+    return { error: channelHintForTwilioError(errMsg) }
+  }
+}
+
+/** Prefer `TWILIO_WHATSAPP_ALERT_CONTENT_SID` (variable `1` = full alert text) when set. */
+export async function sendWhatsAppAlertWithOptionalContent(
+  toE164: string,
+  body: string
+): Promise<{ sid?: string; error?: string }> {
+  const hx = process.env.TWILIO_WHATSAPP_ALERT_CONTENT_SID?.trim()
+  if (hx?.startsWith('HX')) {
+    const r = await sendWhatsAppContentMessage(toE164, hx, { '1': body.slice(0, 1000) })
+    if (!r.error) return r
+  }
+  return sendWhatsAppMessage(toE164, body)
+}

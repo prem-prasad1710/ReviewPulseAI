@@ -21,6 +21,7 @@ const securityHeaders = [
 ]
 
 const nextConfig: NextConfig = {
+  transpilePackages: ['remotion', '@remotion/renderer', '@remotion/bundler'],
   poweredByHeader: false,
   async headers() {
     const headers = [...securityHeaders]
