@@ -28,8 +28,6 @@ export interface SentimentAnalysisResult {
 }
 
 class MultilingualSentimentAnalyzer {
-  private openai = getOpenAI()
-
   /**
    * Analyze sentiment of review text with multilingual support
    */
@@ -37,7 +35,7 @@ class MultilingualSentimentAnalyzer {
     try {
       const prompt = this.buildAnalysisPrompt(text, language)
 
-      const response = await this.openai.chat.completions.create({
+      const response = await getOpenAI().chat.completions.create({
         model: 'gpt-4o-mini',
         messages: [
           {

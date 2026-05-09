@@ -5,6 +5,16 @@ import type { NextConfig } from 'next'
 
 const appDir = path.dirname(fileURLToPath(import.meta.url))
 
+/** Remotion ships optional compositor binaries; webpack must not resolve other platforms. */
+function remotionCompositorPackageForHost(): string {
+  if (process.platform === 'darwin' && process.arch === 'arm64') return '@remotion/compositor-darwin-arm64'
+  if (process.platform === 'darwin' && process.arch === 'x64') return '@remotion/compositor-darwin-x64'
+  if (process.platform === 'win32' && process.arch === 'x64') return '@remotion/compositor-win32-x64-msvc'
+  if (process.platform === 'linux' && process.arch === 'arm64') return '@remotion/compositor-linux-arm64-gnu'
+  if (process.platform === 'linux' && process.arch === 'x64') return '@remotion/compositor-linux-x64-gnu'
+  return '@remotion/compositor-darwin-arm64'
+}
+
 // Load `.env*` from this app folder. Next can infer a parent directory as the workspace root when
 // multiple lockfiles exist; that skips reviewpulse env vars and breaks Mongo. Do not set
 // `turbopack.root` here — it breaks resolving `tailwindcss` from this package (see Next #90307).
@@ -21,8 +31,44 @@ const securityHeaders = [
 ]
 
 const nextConfig: NextConfig = {
-  transpilePackages: ['remotion', '@remotion/renderer', '@remotion/bundler'],
   poweredByHeader: false,
+  /** Align file tracing with this app when multiple lockfiles exist above this folder. */
+  outputFileTracingRoot: appDir,
+  serverExternalPackages: [
+    'remotion',
+    '@remotion/bundler',
+    '@remotion/renderer',
+    'esbuild',
+    '@esbuild/darwin-arm64',
+    '@esbuild/darwin-x64',
+    '@esbuild/linux-arm64',
+    '@esbuild/linux-x64',
+    '@esbuild/linux-ia32',
+    '@esbuild/win32-x64',
+  ],
+  webpack: (config, { isServer, webpack: wp }) => {
+    if (isServer) {
+      const keepCompositor = remotionCompositorPackageForHost()
+      config.plugins.push(
+        new wp.IgnorePlugin({
+          checkResource(resource: string) {
+            if (typeof resource !== 'string' || !resource.startsWith('@remotion/compositor-')) return false
+            return resource !== keepCompositor
+          },
+        })
+      )
+      config.plugins.push(
+        new wp.IgnorePlugin({
+          checkResource(resource: string, context: string) {
+            return Boolean(
+              resource.endsWith('.md') && typeof context === 'string' && context.includes(`${path.sep}esbuild${path.sep}`)
+            )
+          },
+        })
+      )
+    }
+    return config
+  },
   async headers() {
     const headers = [...securityHeaders]
     if (process.env.ENABLE_HSTS === 'true') {

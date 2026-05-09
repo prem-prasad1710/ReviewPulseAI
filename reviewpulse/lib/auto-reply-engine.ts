@@ -35,7 +35,6 @@ export interface GeneratedReply {
 }
 
 class AIAutoReplyEngine {
-  private openai = getOpenAI()
   private complianceGuidelines: Record<Compliance, string> = {
     standard: '',
     healthcare: `
@@ -68,7 +67,7 @@ FINANCIAL COMPLIANCE:
     try {
       const prompt = this.buildReplyPrompt(request)
 
-      const response = await this.openai.chat.completions.create({
+      const response = await getOpenAI().chat.completions.create({
         model: 'gpt-4o-mini',
         messages: [
           {
@@ -294,7 +293,7 @@ Hinglish Guidelines:
    */
   async extractKeyConcerns(reviewText: string): Promise<string[]> {
     try {
-      const response = await this.openai.chat.completions.create({
+      const response = await getOpenAI().chat.completions.create({
         model: 'gpt-4o-mini',
         messages: [
           {

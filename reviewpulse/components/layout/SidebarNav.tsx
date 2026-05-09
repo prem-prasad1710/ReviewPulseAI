@@ -9,12 +9,15 @@ import {
   FileText,
   KeyRound,
   LayoutDashboard,
+  LayoutGrid,
   MapPin,
   Medal,
   MessageSquare,
+  Plug,
   Rocket,
   Settings,
   Sparkles,
+  UsersRound,
   Zap,
 } from 'lucide-react'
 import { LOCATION_HUB_LINKS, hrefForLocationHubSegment } from '@/lib/location-hub-features'
@@ -28,13 +31,26 @@ const navItems = [
   { href: '/analytics', label: 'Analytics', icon: Sparkles },
   { href: '/leaderboard', label: 'Leaderboard', icon: Medal },
   { href: '/reports', label: 'Reports', icon: FileText },
+  { href: '/integrations', label: 'Integrations', icon: Plug },
+  { href: '/templates', label: 'Templates', icon: LayoutGrid },
+  { href: '/partner', label: 'Partner', icon: UsersRound },
   { href: '/developer', label: 'API', icon: KeyRound },
   { href: '/agency', label: 'Agency', icon: Building2 },
   { href: '/subscribe', label: 'Plans', icon: Zap },
   { href: '/settings', label: 'Settings', icon: Settings },
 ]
 
-const QUICK_SEGMENTS = ['inbox', 'voice-notes', 'heatmap', 'menu-insights', 'offline-bridge', 'tone-trainer'] as const
+const QUICK_SEGMENTS = [
+  'inbox',
+  'voice-notes',
+  'heatmap',
+  'menu-insights',
+  'offline-bridge',
+  'tone-trainer',
+  'competitors',
+  'booster',
+  'keywords',
+] as const
 
 type LocRow = { _id: string; name?: string; locationSlug?: string | null }
 

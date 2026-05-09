@@ -1,6 +1,7 @@
 import { existsSync, readFileSync } from 'node:fs'
 import path from 'node:path'
 import { loadEnvConfig } from '@next/env'
+import type { Db } from 'mongodb'
 import mongoose from 'mongoose'
 
 declare global {
@@ -98,4 +99,14 @@ export async function connectDB() {
 
   cached.conn = await cached.promise
   return cached.conn
+}
+
+/** Native MongoDB driver `Db` (for legacy aggregations / raw collections). Always call after `connectDB()`. */
+export async function getDb(): Promise<Db> {
+  await connectDB()
+  const db = mongoose.connection.db
+  if (!db) {
+    throw new Error('MongoDB connection has no database handle')
+  }
+  return db
 }

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { ObjectId } from 'mongodb'
 import { auth } from '@/lib/auth'
 import { alertManager } from '@/lib/alerts'
 import { getDb } from '@/lib/mongodb'
@@ -23,7 +24,12 @@ export async function POST(request: NextRequest) {
 
     // Get review details
     const db = await getDb()
-    const review = await db.collection('reviews').findOne({ _id: reviewId }) as any
+    const reviewIdStr = String(reviewId)
+    if (!ObjectId.isValid(reviewIdStr)) {
+      return NextResponse.json({ error: 'Invalid review id' }, { status: 400 })
+    }
+    const rid = new ObjectId(reviewIdStr)
+    const review = await db.collection('reviews').findOne({ _id: rid })
 
     if (!review) {
       return NextResponse.json({ error: 'Review not found' }, { status: 404 })
@@ -73,8 +79,13 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const idStr = String(session.user.id)
+    if (!ObjectId.isValid(idStr)) {
+      return NextResponse.json({ error: 'Invalid session' }, { status: 400 })
+    }
+    const uid = new ObjectId(idStr)
     const db = await getDb()
-    const user = await db.collection('users').findOne({ _id: session.user.id }) as any
+    const user = await db.collection('users').findOne({ _id: uid })
 
     const config = user?.alertConfig || {
       enableEmailAlerts: true,

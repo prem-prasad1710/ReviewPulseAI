@@ -91,8 +91,7 @@ class InsightsAggregator {
     const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000)
     const endDate = new Date()
 
-    // Fetch reviews for period
-    const query: any = { userId }
+    const query: Record<string, unknown> = { userId: new ObjectId(userId) }
     if (locationId) {
       query.locationId = new ObjectId(locationId)
     }
@@ -162,7 +161,10 @@ class InsightsAggregator {
     }
 
     sentimentResults.forEach((r: any) => {
-      sentimentCounts[r.sentiment]++
+      const s = r.sentiment as 'positive' | 'neutral' | 'negative'
+      if (s === 'positive' || s === 'neutral' || s === 'negative') {
+        sentimentCounts[s]++
+      }
     })
 
     // Calculate trend (last 7 days vs previous 7 days)
@@ -196,8 +198,8 @@ class InsightsAggregator {
   /**
    * Emotion breakdown
    */
-  private buildEmotionBreakdown(sentimentResults: any[]) {
-    const emotions: Record<string, number> = {
+  private buildEmotionBreakdown(sentimentResults: any[]): InsightsDashboardData['emotions'] {
+    const emotions: InsightsDashboardData['emotions'] = {
       joy: 0,
       frustration: 0,
       gratitude: 0,
@@ -208,7 +210,10 @@ class InsightsAggregator {
     }
 
     sentimentResults.forEach((r: any) => {
-      emotions[r.emotion]++
+      const k = r.emotion as keyof InsightsDashboardData['emotions']
+      if (k in emotions) {
+        emotions[k]++
+      }
     })
 
     return emotions
@@ -271,7 +276,7 @@ class InsightsAggregator {
       .map(([issue, data]) => ({
         issue,
         frequency: data.frequency,
-        severity: data.frequency > 5 ? 'high' : data.frequency > 2 ? 'medium' : 'low',
+        severity: (data.frequency > 5 ? 'high' : data.frequency > 2 ? 'medium' : 'low') as 'high' | 'medium' | 'low',
         relatedReviews: data.reviews,
       }))
       .sort((a, b) => b.frequency - a.frequency)
@@ -300,7 +305,7 @@ class InsightsAggregator {
       .map(([praise, data]) => ({
         praise,
         frequency: data.frequency,
-        impact: data.frequency > 5 ? 'high' : data.frequency > 2 ? 'medium' : 'low',
+        impact: (data.frequency > 5 ? 'high' : data.frequency > 2 ? 'medium' : 'low') as 'high' | 'medium' | 'low',
         relatedReviews: data.reviews,
       }))
       .sort((a, b) => b.frequency - a.frequency)

@@ -6,6 +6,7 @@
 
 import { Resend } from 'resend'
 import twilio from 'twilio'
+import { ObjectId } from 'mongodb'
 import { getDb } from '@/lib/mongodb'
 
 export interface AlertConfig {
@@ -50,16 +51,10 @@ class AlertManager {
     try {
       // Get user and location details for context
       const db = await getDb()
-      const userCol = db?.collection('users')
-      const locationCol = db?.collection('locations')
-      
-      if (!userCol || !locationCol) {
-        console.error('Database collections not found')
-        return
-      }
-      
-      const user = await userCol.findOne({ _id: userId }) as any
-      const location = await locationCol.findOne({ _id: locationId }) as any
+      const userCol = db.collection('users')
+      const locationCol = db.collection('locations')
+      const user = await userCol.findOne({ _id: new ObjectId(userId) })
+      const location = await locationCol.findOne({ _id: new ObjectId(locationId) })
 
       if (!user || !location) {
         console.error('User or location not found for alert')
@@ -273,14 +268,16 @@ class AlertManager {
     if (!config.escalateAfterMinutes) return
 
     const db = await getDb()
-    const review = await db.collection('reviews').findOne({ _id: reviewId }) as any
+    if (!ObjectId.isValid(reviewId)) return
+    const rid = new ObjectId(reviewId)
+    const review = await db.collection('reviews').findOne({ _id: rid })
 
     if (review?.status === 'replied') return
 
     const alertLog = await db.collection('alert_logs').findOne({
-      reviewId,
+      reviewId: rid,
       escalated: false,
-    }) as any
+    })
 
     if (alertLog) {
       const minutesElapsed = (Date.now() - alertLog.sentAt.getTime()) / (1000 * 60)
