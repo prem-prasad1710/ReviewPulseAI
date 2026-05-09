@@ -1,7 +1,7 @@
 import { Resend } from 'resend'
 import type { Types } from 'mongoose'
 import { detectReviewLanguageIso1 } from '@/lib/language-detect'
-import { planAllowsKeywordAlerts, planAllowsMoodHeatmap, planAllowsWhatsApp } from '@/lib/plan-access'
+import { planAllowsKeywordAlerts, planAllowsMoodHeatmap, planAllowsVoiceWhatsAppReply, planAllowsWhatsApp } from '@/lib/plan-access'
 import { classifyReviewEmotion } from '@/lib/review-emotion'
 import { sendWhatsAppAlertWithOptionalContent } from '@/lib/twilio-whatsapp'
 import { translateToEnglish } from '@/lib/translate-review'
@@ -10,6 +10,7 @@ import Review from '@/models/Review'
 import ReviewAlert from '@/models/ReviewAlert'
 import User from '@/models/User'
 import { enqueueZeroOneAfterSync } from '@/lib/review-zero-one'
+import { setWhatsAppVoicePinForReview } from '@/lib/whatsapp-voice-reply'
 
 const MAX_WHATSAPP_ALERTS_PER_DAY = 10
 
@@ -144,6 +145,13 @@ ${reviewUrl}`
       const result = await sendWhatsAppAlertWithOptionalContent(user.whatsappNumber, msg)
       if (!result.error) {
         await Review.findByIdAndUpdate(review._id, { $set: { lowRatingWhatsAppNotified: true } })
+        if (planAllowsVoiceWhatsAppReply(plan)) {
+          try {
+            await setWhatsAppVoicePinForReview(user._id as Types.ObjectId, review._id as Types.ObjectId)
+          } catch (e) {
+            console.warn('Voice pin for low-star alert skipped:', e)
+          }
+        }
       }
     }
   }

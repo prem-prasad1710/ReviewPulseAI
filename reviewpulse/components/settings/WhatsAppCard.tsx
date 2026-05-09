@@ -130,6 +130,12 @@ export default function WhatsAppCard() {
         <strong>keyword matches</strong> (Growth+). Max 10 WhatsApp alerts per day per account.
       </CardDescription>
 
+      <p className="mt-3 rounded-xl border border-violet-200/90 bg-violet-50/70 px-3 py-2 text-xs text-violet-950 dark:border-violet-500/30 dark:bg-violet-950/35 dark:text-violet-100">
+        <strong className="font-semibold">Voice reply (paid)</strong> — rare globally: after a low-star alert you can send a
+        voice note in Hindi or English; we transcribe with Whisper, polish with AI, then you reply <em>haan</em> or{' '}
+        <em>yes</em> to publish straight to Google. Or send <code className="rounded bg-white/80 px-1 dark:bg-slate-900/80">pending</code> then{' '}
+        <code className="rounded bg-white/80 px-1 dark:bg-slate-900/80">voice 1</code>–<code className="rounded bg-white/80 px-1 dark:bg-slate-900/80">voice 5</code> to pick a slot. Max 25 voice notes per day.
+      </p>
       {!planOk ? (
         <p className="mt-4 rounded-xl border border-amber-200/80 bg-amber-50/80 px-3 py-2 text-xs text-amber-900 dark:border-amber-800/50 dark:bg-amber-950/40 dark:text-amber-100">
           Automatic alerts (≤2★, keywords) go out on <strong>Starter</strong> and above. You can still save your number

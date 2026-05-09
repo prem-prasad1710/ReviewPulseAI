@@ -19,6 +19,7 @@ export async function handleWhatsAppDigestCommand(userId: Types.ObjectId, raw: s
       `• *stats* — today’s review count & avg ★\n` +
       `• *worst* / *best* — this week’s extremes\n` +
       `• *score* — overall avg & total reviews\n` +
+      `• *voice* / *voice 1*–*voice 5* — speak your reply (paid): see *voice* for steps\n` +
       `• *help* — this menu\n\n` +
       `Full inbox: ${base}/reviews\n` +
       `_Reply STOP to unsubscribe_`
@@ -97,7 +98,7 @@ export async function handleWhatsAppDigestCommand(userId: Types.ObjectId, raw: s
 
   if (cmd.startsWith('reply')) {
     return (
-      `*AI reply*\nUse the web inbox to draft & publish (GBP rules).\n${base}/reviews\n\n_Text commands like "reply 3" coming soon._`
+      `*AI reply*\nUse the web inbox to draft & publish (GBP rules).\n${base}/reviews\n\n_Or send *voice* to reply by voice note (paid)._`
     ).slice(0, 1000)
   }
 

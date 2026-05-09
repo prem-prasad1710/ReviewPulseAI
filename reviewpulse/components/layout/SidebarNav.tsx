@@ -34,7 +34,7 @@ const navItems = [
   { href: '/settings', label: 'Settings', icon: Settings },
 ]
 
-const QUICK_SEGMENTS = ['inbox', 'heatmap', 'menu-insights', 'offline-bridge', 'tone-trainer'] as const
+const QUICK_SEGMENTS = ['inbox', 'voice-notes', 'heatmap', 'menu-insights', 'offline-bridge', 'tone-trainer'] as const
 
 type LocRow = { _id: string; name?: string; locationSlug?: string | null }
 

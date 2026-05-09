@@ -31,6 +31,20 @@ export interface IUser extends Document {
   referredByUserId?: mongoose.Types.ObjectId
   /** B3 — last bulk festival greeting to superfans (rate limit). */
   superFanFestivalSentAt?: Date
+  /** 9.1 — Voice reply via WhatsApp: pin which review the next voice note applies to. */
+  whatsappVoicePin?: {
+    reviewId: mongoose.Types.ObjectId
+    expiresAt: Date
+  }
+  /** Whisper + GPT draft awaiting *haan* / *yes* to publish to GBP. */
+  whatsappVoiceDraft?: {
+    reviewId: mongoose.Types.ObjectId
+    locationId: mongoose.Types.ObjectId
+    replyText: string
+    createdAt: Date
+  }
+  whatsappVoiceDayKey?: string
+  whatsappVoiceNotesSent?: number
   createdAt: Date
   updatedAt: Date
 }
@@ -64,6 +78,18 @@ const UserSchema = new Schema<IUser>(
     partnerReferralCode: { type: String, sparse: true, unique: true, index: true },
     referredByUserId: { type: Schema.Types.ObjectId, ref: 'User' },
     superFanFestivalSentAt: Date,
+    whatsappVoicePin: {
+      reviewId: { type: Schema.Types.ObjectId, ref: 'Review' },
+      expiresAt: Date,
+    },
+    whatsappVoiceDraft: {
+      reviewId: { type: Schema.Types.ObjectId, ref: 'Review' },
+      locationId: { type: Schema.Types.ObjectId, ref: 'Location' },
+      replyText: { type: String, maxlength: 1200 },
+      createdAt: Date,
+    },
+    whatsappVoiceDayKey: String,
+    whatsappVoiceNotesSent: { type: Number, default: 0 },
   },
   { timestamps: true, strict: true }
 )

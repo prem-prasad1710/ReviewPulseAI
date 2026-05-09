@@ -3,7 +3,7 @@
  * Supports English, Hindi, and Hinglish
  */
 
-import { useContext, createContext, ReactNode } from 'react'
+import React, { useContext, createContext, ReactNode } from 'react'
 
 export type Language = 'en' | 'hi' | 'hinglish'
 
@@ -157,8 +157,9 @@ export function I18nProvider({ children, initialLanguage = 'en' }: { children: R
   const [language, setLanguage] = React.useState<Language>(initialLanguage)
 
   const t = (key: string): string => {
-    return translations[language][key as keyof typeof translations[language]] || key
+    const bundle = translations[language] as Record<string, string>
+    return bundle[key] || key
   }
 
-  return <i18nContext.Provider value={{ language, setLanguage, t }}>{children}</i18nContext.Provider>
+  return React.createElement(i18nContext.Provider, { value: { language, setLanguage, t } }, children)
 }

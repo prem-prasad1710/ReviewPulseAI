@@ -8,6 +8,7 @@ import {
   Grid3x3,
   KeyRound,
   MessageSquare,
+  Mic,
   Palette,
   QrCode,
   Radio,
@@ -31,6 +32,12 @@ export const LOCATION_HUB_LINKS: LocationHubLink[] = [
     description: 'Filter and reply to reviews for this outlet only.',
     icon: MessageSquare,
     segment: 'inbox',
+  },
+  {
+    label: 'Voice to Google',
+    description: 'Hindi/English voice note on WhatsApp → polished GBP reply.',
+    icon: Mic,
+    segment: 'voice-notes',
   },
   {
     label: 'Tone trainer',
@@ -132,6 +139,8 @@ export function hrefForLocationHubSegment(
       return '/analytics'
     case 'reports':
       return '/reports'
+    case 'voice-notes':
+      return '/settings'
     default:
       return `/locations/${locationId}/${segment}`
   }

@@ -2,9 +2,7 @@ import { z } from 'zod'
 import { err, ok } from '@/lib/api'
 import { requireAuth } from '@/lib/auth-helpers'
 import { connectDB } from '@/lib/mongodb'
-import { publishReviewReply, refreshIfNeeded } from '@/lib/gbp'
-import { monitoringUntilForRating } from '@/lib/rating-recovery'
-import Location from '@/models/Location'
+import { publishUserReviewToGbp } from '@/lib/review-publish-internal'
 import Review from '@/models/Review'
 
 const bodySchema = z.object({
@@ -19,44 +17,17 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     const { id } = await params
     const review = await Review.findOne({ _id: id, userId: user._id })
     if (!review) return err('Review not found', 404)
-    if (review.status !== 'pending' && review.status !== 'scheduled') {
-      return err('Review is not awaiting a reply', 400)
-    }
 
     const body = await request.json()
     const parsed = bodySchema.safeParse(body)
     if (!parsed.success) return err('Invalid input', 400)
 
-    const location = await Location.findOne({ _id: review.locationId, userId: user._id })
-    if (!location) return err('Location not found', 404)
-
-    const refreshed = await refreshIfNeeded(location.accessToken, location.refreshToken, location.tokenExpiresAt)
-
-    if (refreshed.encryptedAccessToken && refreshed.encryptedRefreshToken) {
-      location.accessToken = refreshed.encryptedAccessToken
-      location.refreshToken = refreshed.encryptedRefreshToken
-      location.tokenExpiresAt = refreshed.tokenExpiresAt
-      await location.save()
-    }
-
-    const locationId = location.googleLocationId.split('/').pop() || location.googleLocationId
-
-    await publishReviewReply({
-      accountId: location.googleAccountId,
-      locationId,
-      reviewId: review.googleReviewId,
+    const pub = await publishUserReviewToGbp({
+      userId: user._id,
+      reviewId: review._id,
       replyText: parsed.data.replyText,
-      accessToken: refreshed.accessToken,
-      refreshToken: refreshed.refreshToken,
     })
-
-    review.publishedReply = parsed.data.replyText
-    review.status = 'replied'
-    review.repliedAt = new Date()
-    review.scheduledAt = undefined
-    const until = monitoringUntilForRating(review.rating)
-    if (until) review.ratingMonitoringUntil = until
-    await review.save()
+    if (!pub.ok) return err(pub.message, 400)
 
     return ok({ published: true })
   } catch (error) {

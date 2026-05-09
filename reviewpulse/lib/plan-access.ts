@@ -73,6 +73,11 @@ export function planAllowsWhatsAppDigestBot(plan: string): boolean {
   return isPaidPlan(plan)
 }
 
+/** 9.1 — Voice note → Whisper → GBP draft/publish on WhatsApp. Paid plans only. */
+export function planAllowsVoiceWhatsAppReply(plan: string): boolean {
+  return isPaidPlan(plan)
+}
+
 /** G4 — CSV export of reviews. */
 export function planAllowsDataExport(plan: string): boolean {
   return isPaidPlan(plan)
