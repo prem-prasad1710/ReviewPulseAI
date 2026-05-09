@@ -5,9 +5,8 @@
  */
 
 import { Resend } from 'resend'
-import { twilio } from '@/lib/twilio-config'
+import twilio from 'twilio'
 import { getDb } from '@/lib/mongodb'
-import { User, Review, Location } from '@/models'
 
 export interface AlertConfig {
   enableEmailAlerts: boolean
@@ -29,12 +28,17 @@ export interface AlertPayload {
 }
 
 class AlertManager {
-  private resend: Resend
-  private twilioClient: typeof twilio
+  private resend: Resend | null = null
 
   constructor() {
-    this.resend = new Resend(process.env.RESEND_API_KEY)
-    this.twilioClient = twilio
+    try {
+      const apiKey = process.env.RESEND_API_KEY?.trim()
+      if (apiKey) {
+        this.resend = new Resend(apiKey)
+      }
+    } catch (error) {
+      console.warn('Resend not configured:', error)
+    }
   }
 
   /**
@@ -46,8 +50,16 @@ class AlertManager {
     try {
       // Get user and location details for context
       const db = await getDb()
-      const user = await db.collection('users').findOne({ _id: userId }) as any
-      const location = await db.collection('locations').findOne({ _id: locationId }) as any
+      const userCol = db?.collection('users')
+      const locationCol = db?.collection('locations')
+      
+      if (!userCol || !locationCol) {
+        console.error('Database collections not found')
+        return
+      }
+      
+      const user = await userCol.findOne({ _id: userId }) as any
+      const location = await locationCol.findOne({ _id: locationId }) as any
 
       if (!user || !location) {
         console.error('User or location not found for alert')
@@ -97,41 +109,79 @@ class AlertManager {
    * Send email alert with formatted content
    */
   private async sendEmailAlert(email: string, data: any, language: string) {
-    const subject = this.getAlertSubject(data.rating, language)
-    const body = this.getAlertEmailBody(data, language)
+    try {
+      if (!this.resend) {
+        console.warn('Resend not configured')
+        return null
+      }
+      
+      const subject = this.getAlertSubject(data.rating, language)
+      const body = this.getAlertEmailBody(data, language)
 
-    return this.resend.emails.send({
-      from: 'alerts@reviewpulse.io',
-      to: email,
-      subject,
-      html: body,
-    })
+      return await this.resend.emails.send({
+        from: 'alerts@reviewpulse.io',
+        to: email,
+        subject,
+        html: body,
+      })
+    } catch (error) {
+      console.error('Email send error:', error)
+      throw error
+    }
   }
 
   /**
    * Send SMS alert (Twilio)
    */
   private async sendSMSAlert(phone: string, data: any, language: string) {
-    const message = this.getAlertSMSBody(data, language)
+    try {
+      const message = this.getAlertSMSBody(data, language)
+      const sid = process.env.TWILIO_ACCOUNT_SID?.trim()
+      const token = process.env.TWILIO_AUTH_TOKEN?.trim()
+      const fromPhone = process.env.TWILIO_PHONE_NUMBER?.trim()
+      
+      if (!sid || !token || !fromPhone) {
+        console.warn('Twilio SMS not configured')
+        return null
+      }
 
-    return this.twilioClient.messages.create({
-      body: message,
-      from: process.env.TWILIO_PHONE_NUMBER,
-      to: phone,
-    })
+      const client = twilio(sid, token)
+      return await client.messages.create({
+        body: message,
+        from: fromPhone,
+        to: phone,
+      })
+    } catch (error) {
+      console.error('SMS send error:', error)
+      throw error
+    }
   }
 
   /**
    * Send WhatsApp alert (Twilio)
    */
   private async sendWhatsAppAlert(phone: string, data: any, language: string) {
-    const message = this.getAlertWhatsAppBody(data, language)
+    try {
+      const message = this.getAlertWhatsAppBody(data, language)
+      const sid = process.env.TWILIO_ACCOUNT_SID?.trim()
+      const token = process.env.TWILIO_AUTH_TOKEN?.trim()
+      const fromPhone = process.env.TWILIO_WHATSAPP_NUMBER?.trim()
+      
+      if (!sid || !token || !fromPhone) {
+        console.warn('Twilio WhatsApp not configured')
+        return null
+      }
 
-    return this.twilioClient.messages.create({
-      body: message,
-      from: `whatsapp:${process.env.TWILIO_WHATSAPP_NUMBER}`,
-      to: `whatsapp:${phone}`,
-    })
+      const client = twilio(sid, token)
+      return await client.messages.create({
+        body: message,
+        from: `whatsapp:${fromPhone}`,
+        to: `whatsapp:${phone}`,
+      })
+    } catch (error) {
+      console.error('WhatsApp send error:', error)
+      throw error
+    }
   }
 
   /**

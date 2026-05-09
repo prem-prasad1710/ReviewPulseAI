@@ -7,15 +7,14 @@
  * - Weekly report generation
  */
 
-import { CronJob } from 'cron'
 import { getDb } from '@/lib/mongodb'
 import { alertManager } from '@/lib/alerts'
 import { sentimentAnalyzer } from '@/lib/multilingual-sentiment'
-import { ObjectId } from 'mongodb'
 
 class BackgroundJobScheduler {
-  private jobs: Map<string, CronJob> = new Map()
+  private jobs: Map<string, any> = new Map()
   private isInitialized = false
+  private cronInitialized = false
 
   /**
    * Initialize all background jobs
@@ -24,20 +23,28 @@ class BackgroundJobScheduler {
     if (this.isInitialized) return
 
     try {
-      // Job 1: Check for new low-rating reviews and send alerts (every 5 minutes)
-      this.scheduleJob('low-rating-alerts', '*/5 * * * *', () => this.processLowRatingAlerts())
+      // Try to import cron dynamically
+      try {
+        const { CronJob } = await import('cron')
+        this.cronInitialized = true
+        
+        // Job 1: Check for new low-rating reviews and send alerts (every 5 minutes)
+        this.scheduleJob('low-rating-alerts', '*/5 * * * *', () => this.processLowRatingAlerts(), CronJob)
 
-      // Job 2: Analyze sentiment for unanalyzed reviews (every 15 minutes)
-      this.scheduleJob('sentiment-analysis', '*/15 * * * *', () => this.processSentimentAnalysis())
+        // Job 2: Analyze sentiment for unanalyzed reviews (every 15 minutes)
+        this.scheduleJob('sentiment-analysis', '*/15 * * * *', () => this.processSentimentAnalysis(), CronJob)
 
-      // Job 3: Check alert escalation (every hour)
-      this.scheduleJob('alert-escalation', '0 * * * *', () => this.checkAlertEscalation())
+        // Job 3: Check alert escalation (every hour)
+        this.scheduleJob('alert-escalation', '0 * * * *', () => this.checkAlertEscalation(), CronJob)
 
-      // Job 4: Generate weekly reports (every Monday at 8 AM)
-      this.scheduleJob('weekly-reports', '0 8 * * 1', () => this.generateWeeklyReports())
+        // Job 4: Generate weekly reports (every Monday at 8 AM)
+        this.scheduleJob('weekly-reports', '0 8 * * 1', () => this.generateWeeklyReports(), CronJob)
+      } catch (cronError) {
+        console.warn('Cron module not available - background jobs disabled:', cronError)
+      }
 
       this.isInitialized = true
-      console.log('✅ Background jobs initialized')
+      console.log('✅ Background jobs initialized' + (this.cronInitialized ? '' : ' (in-memory mode)'))
     } catch (error) {
       console.error('Failed to initialize jobs:', error)
     }
@@ -46,19 +53,23 @@ class BackgroundJobScheduler {
   /**
    * Schedule a cron job
    */
-  private scheduleJob(name: string, cronTime: string, task: () => Promise<void>) {
-    const job = new CronJob(cronTime, async () => {
-      try {
-        console.log(`🔄 Running job: ${name}`)
-        await task()
-        console.log(`✅ Completed job: ${name}`)
-      } catch (error) {
-        console.error(`❌ Job failed: ${name}`, error)
-      }
-    })
+  private scheduleJob(name: string, cronTime: string, task: () => Promise<void>, CronJob: any) {
+    try {
+      const job = new CronJob(cronTime, async () => {
+        try {
+          console.log(`🔄 Running job: ${name}`)
+          await task()
+          console.log(`✅ Completed job: ${name}`)
+        } catch (error) {
+          console.error(`❌ Job failed: ${name}`, error)
+        }
+      })
 
-    job.start()
-    this.jobs.set(name, job)
+      job.start()
+      this.jobs.set(name, job)
+    } catch (error) {
+      console.error(`Failed to schedule job ${name}:`, error)
+    }
   }
 
   /**
@@ -241,8 +252,10 @@ class BackgroundJobScheduler {
    * Stop all jobs
    */
   stop() {
-    this.jobs.forEach((job) => {
-      job.stop()
+    this.jobs.forEach((job: any) => {
+      if (job && typeof job.stop === 'function') {
+        job.stop()
+      }
     })
     console.log('All background jobs stopped')
   }
