@@ -143,6 +143,23 @@ body {
   }
 }
 
+@keyframes landing-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-landing-marquee {
+  animation: landing-marquee 36s linear infinite;
+}
+
+.landing-marquee-wrap:hover .animate-landing-marquee {
+  animation-play-state: paused;
+}
+
 .animate-fade-up {
   animation: fade-up 0.65s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
@@ -158,7 +175,8 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .animate-fade-up,
   .animate-fade-in,
-  .animate-float-soft {
+  .animate-float-soft,
+  .animate-landing-marquee {
     animation: none !important;
     opacity: 1 !important;
     transform: none !important;

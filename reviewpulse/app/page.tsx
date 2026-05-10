@@ -1,20 +1,17 @@
 import Link from 'next/link'
-import {
-  ArrowRight,
-  BadgeCheck,
-  Building2,
-  Check,
-  Clock3,
-  ShieldCheck,
-  Sparkles,
-  Star,
-} from 'lucide-react'
+import { ArrowRight, Clock3, ShieldCheck, Sparkles } from 'lucide-react'
 import LandingFaq from '@/components/marketing/LandingFaq'
 import LandingFeaturesExplorer, { type LandingFeatureItem } from '@/components/marketing/LandingFeaturesExplorer'
+import LandingFinalCta from '@/components/marketing/LandingFinalCta'
 import LandingHero3D from '@/components/marketing/LandingHero3D'
+import LandingHowItWorks from '@/components/marketing/LandingHowItWorks'
+import LandingLogoMarquee from '@/components/marketing/LandingLogoMarquee'
+import LandingNav from '@/components/marketing/LandingNav'
+import LandingPricingShowcase from '@/components/marketing/LandingPricingShowcase'
+import LandingStatChips from '@/components/marketing/LandingStatChips'
+import LandingTestimonialsSlider from '@/components/marketing/LandingTestimonialsSlider'
 import { Reveal } from '@/components/motion/Reveal'
 import { Button } from '@/components/ui/button'
-import { ThemeToggle } from '@/components/theme/ThemeToggle'
 
 const logos = ['Saffron Dine', 'The Skin Route', 'TrimCraft Salon', 'Namma Biryani', 'ClinicNova']
 
@@ -89,48 +86,7 @@ export default function Home() {
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,rgba(15,23,42,0.035)_1px,transparent_1px),linear-gradient(to_bottom,rgba(15,23,42,0.035)_1px,transparent_1px)] bg-[size:48px_48px] opacity-60 dark:bg-[linear-gradient(to_right,rgba(148,163,184,0.08)_1px,transparent_1px),linear-gradient(to_bottom,rgba(148,163,184,0.08)_1px,transparent_1px)] dark:opacity-100" />
 
       <main className="relative mx-auto max-w-7xl px-5 pb-24 pt-5 md:px-8">
-        <header className="animate-fade-in sticky top-4 z-50 mb-12 flex items-center justify-between rounded-2xl border border-white/50 bg-white/45 px-4 py-3 shadow-[0_8px_40px_-12px_rgba(15,23,42,0.12),inset_0_1px_0_0_rgba(255,255,255,0.75)] ring-1 ring-slate-900/[0.04] backdrop-blur-2xl backdrop-saturate-150 supports-[backdrop-filter]:bg-white/40 dark:border-white/[0.12] dark:bg-slate-950/35 dark:shadow-[0_12px_48px_-12px_rgba(0,0,0,0.55),inset_0_1px_0_0_rgba(255,255,255,0.06)] dark:ring-white/[0.06] dark:supports-[backdrop-filter]:bg-slate-950/30 md:px-6">
-          <Link href="/" className="flex items-center gap-2.5 text-sm font-bold text-slate-900 transition hover:opacity-90 dark:text-white">
-            <div className="rounded-xl bg-gradient-to-br from-indigo-600 to-blue-600 p-2 text-white shadow-md shadow-indigo-600/30 ring-1 ring-white/20">
-              <Building2 className="h-4 w-4" />
-            </div>
-            <span className="font-heading tracking-tight drop-shadow-sm dark:drop-shadow-[0_1px_2px_rgba(0,0,0,0.4)]">ReviewPulse</span>
-          </Link>
-          <nav className="hidden items-center gap-8 text-sm font-medium text-slate-600 dark:text-slate-300 md:flex">
-            <Link href="/tools/free-reply" className="transition hover:text-indigo-700 dark:hover:text-white">
-              Free reply tool
-            </Link>
-            <a href="#features" className="transition hover:text-indigo-700 dark:hover:text-white">
-              Features
-            </a>
-            <a href="#pricing" className="transition hover:text-indigo-700 dark:hover:text-white">
-              Pricing
-            </a>
-            <a href="#faq" className="transition hover:text-indigo-700 dark:hover:text-white">
-              FAQ
-            </a>
-            <a href="#customers" className="transition hover:text-indigo-700 dark:hover:text-white">
-              Customers
-            </a>
-          </nav>
-          <div className="flex items-center gap-2">
-            <ThemeToggle />
-            <Link href="/login">
-              <Button
-                variant="outline"
-                size="sm"
-                className="rounded-xl border-slate-300/80 bg-white/50 shadow-sm backdrop-blur-sm hover:bg-white/80 dark:border-white/20 dark:bg-white/5 dark:text-slate-100 dark:shadow-none dark:hover:bg-white/10"
-              >
-                Sign in
-              </Button>
-            </Link>
-            <Link href="/login">
-              <Button size="sm" className="rounded-xl shadow-md shadow-indigo-600/20">
-                Start free
-              </Button>
-            </Link>
-          </div>
-        </header>
+        <LandingNav />
 
         <Reveal>
           <section className="mb-20 grid items-center gap-12 lg:grid-cols-2">
@@ -139,6 +95,7 @@ export default function Home() {
                 <Sparkles className="h-3.5 w-3.5" />
                 Built for Indian SMB owners
               </p>
+              <LandingStatChips />
               <h1 className="font-heading mb-4 text-4xl font-bold leading-[1.08] tracking-tight text-slate-900 dark:text-slate-50 md:text-6xl">
                 Turn ignored reviews into{' '}
                 <span className="text-gradient-brand">growth</span>, not churn
@@ -194,17 +151,7 @@ export default function Home() {
             <p className="mb-5 text-center text-xs font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">
               Trusted by growing brands
             </p>
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-              {logos.map((logo, i) => (
-                <div
-                  key={logo}
-                  style={{ animationDelay: `${i * 50}ms` }}
-                  className="motion-safe:animate-fade-up rounded-xl border border-slate-200/90 bg-white/90 px-4 py-3.5 text-center text-sm font-semibold text-slate-600 shadow-sm transition duration-300 hover:-translate-y-0.5 hover:border-indigo-200 hover:text-slate-900 hover:shadow-md dark:border-slate-700/90 dark:bg-slate-900/70 dark:text-slate-300 dark:hover:border-indigo-500/40 dark:hover:text-slate-50 dark:hover:shadow-black/30"
-                >
-                  {logo}
-                </div>
-              ))}
-            </div>
+            <LandingLogoMarquee logos={logos} />
           </section>
         </Reveal>
 
@@ -226,27 +173,8 @@ export default function Home() {
         </Reveal>
 
         <Reveal delay={40}>
-          <section className="mb-20 rounded-3xl border border-slate-200/90 bg-white/90 p-8 shadow-sm backdrop-blur-sm dark:border-slate-700/90 dark:bg-slate-900/80 md:p-10">
-            <h3 className="mb-2 text-center font-heading text-2xl font-bold text-slate-900 dark:text-slate-50 md:text-3xl">How it works</h3>
-            <p className="mx-auto mb-8 max-w-xl text-center text-sm text-slate-600 dark:text-slate-400">
-              Three steps from signup to published replies—no spreadsheets, no tab overload.
-            </p>
-            <div className="grid gap-5 md:grid-cols-3">
-              {[
-                { step: '01', text: 'Connect Google Business Profile with secure OAuth.' },
-                { step: '02', text: 'Sync every location and review on a schedule you control.' },
-                { step: '03', text: 'Generate, edit, and publish AI replies with one click.' },
-              ].map((item, i) => (
-                <div
-                  key={item.step}
-                  style={{ animationDelay: `${i * 80}ms` }}
-                  className="motion-safe:animate-fade-up relative rounded-2xl border border-slate-100 bg-gradient-to-b from-slate-50/80 to-white p-5 transition hover:border-indigo-100 hover:shadow-md dark:border-slate-600/70 dark:from-slate-800/80 dark:to-slate-900/90 dark:hover:border-indigo-500/35"
-                >
-                  <p className="mb-2 text-xs font-bold uppercase tracking-widest text-indigo-600 dark:text-indigo-400">Step {item.step}</p>
-                  <p className="text-sm leading-relaxed text-slate-700 dark:text-slate-300">{item.text}</p>
-                </div>
-              ))}
-            </div>
+          <section className="mb-20">
+            <LandingHowItWorks />
           </section>
         </Reveal>
 
@@ -258,74 +186,20 @@ export default function Home() {
               <p className="mx-auto mt-3 max-w-xl text-sm text-slate-600 dark:text-slate-400">Transparent limits. Upgrade when you add locations or volume.</p>
             </div>
 
-            <div className="grid gap-5 lg:grid-cols-3">
-              {plans.map((plan) => (
-                <article
-                  key={plan.name}
-                  className={`motion-safe:animate-fade-up flex flex-col rounded-2xl border p-6 transition duration-300 hover:-translate-y-1 ${
-                    plan.highlighted
-                      ? 'border-indigo-500 bg-gradient-to-b from-indigo-50/90 to-white shadow-xl shadow-indigo-900/10 ring-1 ring-indigo-500/20 dark:border-indigo-400 dark:from-indigo-950/70 dark:to-slate-900/90 dark:shadow-indigo-950/30 dark:ring-indigo-400/25'
-                      : 'border-slate-200/90 bg-white/95 hover:border-indigo-200 hover:shadow-lg dark:border-slate-700/90 dark:bg-slate-900/80 dark:hover:border-indigo-500/40 dark:hover:shadow-black/25'
-                  }`}
-                >
-                  {plan.highlighted ? (
-                    <span className="mb-3 w-fit rounded-full bg-indigo-600 px-3 py-1 text-xs font-semibold text-white shadow-sm">
-                      Most popular
-                    </span>
-                  ) : (
-                    <span className="mb-3 h-7" aria-hidden />
-                  )}
-                  <h3 className="text-xl font-bold text-slate-900 dark:text-slate-50">{plan.name}</h3>
-                  <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{plan.subtitle}</p>
-                  <p className="mt-5 text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-50">
-                    {plan.price}
-                    <span className="text-sm font-medium text-slate-500 dark:text-slate-400">/mo</span>
-                  </p>
-
-                  <ul className="mt-5 flex-1 space-y-2.5">
-                    {plan.points.map((point) => (
-                      <li key={point} className="flex items-start gap-2 text-sm text-slate-700 dark:text-slate-300">
-                        <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
-                        {point}
-                      </li>
-                    ))}
-                  </ul>
-
-                  <div className="mt-6 space-y-2">
-                    <Link href={`/subscribe?plan=${plan.planKey}`} className="block">
-                      <Button variant={plan.highlighted ? 'default' : 'outline'} className="w-full rounded-xl">
-                        Subscribe — {plan.name}
-                      </Button>
-                    </Link>
-                    <p className="text-center text-[10px] leading-snug text-slate-500 dark:text-slate-400">
-                      Secured by Razorpay · Sign in required · Same checkout as Settings
-                    </p>
-                  </div>
-                </article>
-              ))}
-            </div>
+            <LandingPricingShowcase plans={plans} />
           </section>
         </Reveal>
 
         <Reveal delay={40}>
-          <section className="mb-20 grid gap-5 md:grid-cols-2">
-            {testimonials.map((item) => (
-              <blockquote
-                key={item.name}
-                className="rounded-2xl border border-slate-200/90 bg-white/95 p-6 shadow-sm transition duration-300 hover:-translate-y-0.5 hover:border-indigo-100 hover:shadow-md dark:border-slate-700/90 dark:bg-slate-900/80 dark:hover:border-indigo-500/35 dark:hover:shadow-black/25"
-              >
-                <div className="mb-3 flex items-center gap-1 text-amber-400">
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <Star key={i} className="h-4 w-4 fill-current" />
-                  ))}
-                </div>
-                <p className="mb-4 text-sm leading-relaxed text-slate-700 dark:text-slate-300">“{item.quote}”</p>
-                <footer className="border-t border-slate-100 pt-4 dark:border-slate-700">
-                  <p className="font-semibold text-slate-900 dark:text-slate-50">{item.name}</p>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">{item.role}</p>
-                </footer>
-              </blockquote>
-            ))}
+          <section className="mb-20">
+            <div className="relative mb-8 text-center md:text-left">
+              <p className="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-indigo-600 dark:text-indigo-400">Stories</p>
+              <h2 className="font-heading text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-50 md:text-3xl">Teams that reply faster</h2>
+              <p className="mx-auto mt-2 max-w-xl text-sm text-slate-600 dark:text-slate-400 md:mx-0">
+                Swipe on mobile or use arrows on desktop — same quotes, easier to browse.
+              </p>
+            </div>
+            <LandingTestimonialsSlider items={testimonials} />
           </section>
         </Reveal>
 
@@ -340,40 +214,17 @@ export default function Home() {
         </Reveal>
 
         <Reveal delay={40}>
-          <section className="rounded-3xl border border-indigo-200/60 bg-gradient-to-br from-indigo-50 via-white to-emerald-50/80 p-10 text-center shadow-lg shadow-indigo-900/5 dark:border-indigo-500/25 dark:from-indigo-950/50 dark:via-slate-900 dark:to-emerald-950/30 dark:shadow-black/30 md:p-12">
-            <p className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/80 bg-white/90 px-3 py-1 text-xs font-semibold text-indigo-800 shadow-sm dark:border-slate-600/80 dark:bg-slate-800/90 dark:text-indigo-200">
-              <BadgeCheck className="h-3.5 w-3.5" />
-              No card required to start
-            </p>
-            <h3 className="font-heading mb-3 text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-50 md:text-4xl">
-              Turn every review into repeat business
-            </h3>
-            <p className="mx-auto mb-8 max-w-2xl text-sm leading-relaxed text-slate-600 dark:text-slate-400 md:text-base">
-              Launch ReviewPulse and give every customer a fast, thoughtful response that protects your reputation and
-              compounds trust over time.
-            </p>
-            <div className="flex flex-wrap justify-center gap-3">
-              <Link href="/login">
-                <Button size="lg" className="gap-2 rounded-xl shadow-lg shadow-indigo-600/25">
-                  Start free trial
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
-              </Link>
-              <Link href="/dashboard">
-                <Button size="lg" variant="outline" className="rounded-xl border-slate-200 bg-white/90 dark:border-slate-600 dark:bg-slate-800/80">
-                  Explore product
-                </Button>
-              </Link>
-            </div>
-          </section>
+          <LandingFinalCta />
         </Reveal>
 
-        <footer className="mt-16 border-t border-slate-200/80 pt-10 text-sm text-slate-600 dark:border-slate-700/80 dark:text-slate-400">
+        <footer className="mt-16 border-t border-slate-200/80 pt-10 text-sm text-slate-600 transition-colors dark:border-slate-700/80 dark:text-slate-400">
           <div className="flex flex-col items-center justify-between gap-6 md:flex-row">
-            <div className="flex items-center gap-2 font-bold text-slate-900 dark:text-slate-100">
-              <Building2 className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
+            <Link href="/" className="flex items-center gap-2 font-bold text-slate-900 transition hover:text-indigo-700 dark:text-slate-100 dark:hover:text-indigo-300">
+              <span className="rounded-lg bg-gradient-to-br from-indigo-600 to-blue-600 p-1.5 text-white shadow-sm">
+                <Sparkles className="h-3.5 w-3.5" aria-hidden />
+              </span>
               ReviewPulse AI
-            </div>
+            </Link>
             <div className="flex flex-wrap justify-center gap-6 text-xs font-medium md:justify-end">
               <Link href="/login" className="transition hover:text-indigo-700 dark:hover:text-indigo-400">
                 Sign in
