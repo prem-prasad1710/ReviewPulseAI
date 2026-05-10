@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils'
 
 /** App favicon as a mark — use with a visible label or `sr-only` “ReviewPulse” nearby for a11y. */
 export function AppMark({
-  size = 40,
+  size = 60,
   className,
   priority = false,
 }: {

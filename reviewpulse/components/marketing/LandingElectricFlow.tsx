@@ -45,17 +45,17 @@ const NODES_OUT: FlowNode[] = [
 const PILLS_IN: { label: string; left: string; top: string }[] = [
   { label: 'Live sync', left: '20%', top: '14%' },
   { label: 'GBP data', left: '24%', top: '30%' },
-  { label: 'Themes', left: '22%', top: '46%' },
-  { label: 'All outlets', left: '20%', top: '62%' },
-  { label: 'Voice lock', left: '18%', top: '78%' },
+  { label: 'Themes', left: '22%', top: '56%' },
+  { label: 'All outlets', left: '20%', top: '72%' },
+  { label: 'Voice lock', left: '18%', top: '88%' },
 ]
 
 const PILLS_OUT: { label: string; left: string; top: string }[] = [
   { label: 'One-click', left: '72%', top: '14%' },
   { label: 'Bilingual', left: '70%', top: '30%' },
-  { label: 'Real-time', left: '74%', top: '46%' },
-  { label: 'Export', left: '76%', top: '62%' },
-  { label: 'Shareable', left: '78%', top: '78%' },
+  { label: 'Real-time', left: '74%', top: '56%' },
+  { label: 'Export', left: '76%', top: '72%' },
+  { label: 'Shareable', left: '78%', top: '88%' },
 ]
 
 /** Cubic paths in viewBox 0 0 1000 520 — left column → hub, hub → right. */
