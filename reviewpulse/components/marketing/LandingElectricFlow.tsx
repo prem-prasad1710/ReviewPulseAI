@@ -1,6 +1,6 @@
 'use client'
 
-import { useId, useMemo, useState } from 'react'
+import { useCallback, useId, useLayoutEffect, useRef, useState } from 'react'
 import {
   BarChart3,
   Bell,
@@ -42,47 +42,109 @@ const NODES_OUT: FlowNode[] = [
   { id: 'out-4', label: 'Free reply tool', sub: 'No login preview', Icon: Link2 },
 ]
 
-const PILLS_IN: { label: string; left: string; top: string }[] = [
-  { label: 'Live sync', left: '20%', top: '14%' },
-  { label: 'GBP data', left: '24%', top: '30%' },
-  { label: 'Themes', left: '22%', top: '56%' },
-  { label: 'All outlets', left: '20%', top: '72%' },
-  { label: 'Voice lock', left: '18%', top: '88%' },
-]
+const PILL_LABELS_IN = ['Live sync', 'GBP data', 'Themes', 'All outlets', 'Voice lock'] as const
+const PILL_LABELS_OUT = ['One-click', 'Bilingual', 'Real-time', 'Export', 'Shareable'] as const
 
-const PILLS_OUT: { label: string; left: string; top: string }[] = [
-  { label: 'One-click', left: '72%', top: '14%' },
-  { label: 'Bilingual', left: '70%', top: '30%' },
-  { label: 'Real-time', left: '74%', top: '56%' },
-  { label: 'Export', left: '76%', top: '72%' },
-  { label: 'Shareable', left: '78%', top: '88%' },
-]
-
-/** Cubic paths in viewBox 0 0 1000 520 — left column → hub, hub → right. */
-function pathsIn(): string[] {
-  const leftX = 88
-  const hubX = 412
-  const leftYs = [82, 158, 234, 310, 386]
-  const hubYs = [218, 238, 258, 278, 298]
-  return leftYs.map((y0, i) => {
-    const y1 = hubYs[i] ?? 258
-    const c1x = 260
-    const c2x = 340
-    return `M ${leftX} ${y0} C ${c1x} ${y0}, ${c2x} ${y1}, ${hubX} ${y1}`
-  })
+type ElectricGeom = {
+  w: number
+  h: number
+  dIn: string[]
+  dOut: string[]
+  pillIn: { x: number; y: number }[]
+  pillOut: { x: number; y: number }[]
 }
 
-function pathsOut(): string[] {
-  const hubX = 588
-  const rightX = 912
-  const hubYs = [218, 238, 258, 278, 298]
-  const rightYs = [82, 158, 234, 310, 386]
-  return hubYs.map((y0, i) => {
-    const y1 = rightYs[i] ?? 310
-    const c1x = 700
-    const c2x = 820
-    return `M ${hubX} ${y0} C ${c1x} ${y0}, ${c2x} ${y1}, ${rightX} ${y1}`
-  })
+function localRect(el: DOMRect, mesh: DOMRect) {
+  return {
+    left: el.left - mesh.left,
+    top: el.top - mesh.top,
+    right: el.right - mesh.left,
+    bottom: el.bottom - mesh.top,
+  }
+}
+
+/** Smooth horizontal cubic: card edge → hub edge. */
+function cubicBridge(sx: number, sy: number, ex: number, ey: number, tension = 0.48) {
+  const dx = ex - sx
+  const cx1 = sx + dx * tension
+  const cy1 = sy
+  const cx2 = ex - dx * tension
+  const cy2 = ey
+  return { d: `M ${sx} ${sy} C ${cx1} ${cy1}, ${cx2} ${cy2}, ${ex} ${ey}`, cx1, cy1, cx2, cy2, x3: ex, y3: ey }
+}
+
+function cubicMidpoint(
+  x0: number,
+  y0: number,
+  x1: number,
+  y1: number,
+  x2: number,
+  y2: number,
+  x3: number,
+  y3: number,
+  t = 0.5
+) {
+  const mt = 1 - t
+  const a = mt * mt * mt
+  const b = 3 * mt * mt * t
+  const c = 3 * mt * t * t
+  const d = t * t * t
+  return { x: a * x0 + b * x1 + c * x2 + d * x3, y: a * y0 + b * y1 + c * y2 + d * y3 }
+}
+
+function measureElectricMesh(mesh: HTMLElement): ElectricGeom | null {
+  const w = mesh.clientWidth
+  const h = mesh.clientHeight
+  if (w < 64 || h < 64) return null
+
+  const meshRect = mesh.getBoundingClientRect()
+  const hubEl = mesh.querySelector<HTMLElement>('[data-electric-hub]')
+  const leftEl = mesh.querySelector<HTMLElement>('[data-electric-col="in"]')
+  const rightEl = mesh.querySelector<HTMLElement>('[data-electric-col="out"]')
+  if (!hubEl || !leftEl || !rightEl) return null
+
+  const hub = localRect(hubEl.getBoundingClientRect(), meshRect)
+  const leftBtns = [...leftEl.querySelectorAll<HTMLButtonElement>('button')]
+  const rightBtns = [...rightEl.querySelectorAll<HTMLButtonElement>('button')]
+  if (leftBtns.length !== NODES_IN.length || rightBtns.length !== NODES_OUT.length) return null
+
+  const inset = 6
+  const n = NODES_IN.length
+  const hubLeftX = hub.left + inset
+  const hubRightX = hub.right - inset
+
+  const hubPortY = (i: number) => {
+    const span = Math.max(hub.bottom - hub.top - inset * 2, 1)
+    return hub.top + inset + ((i + 0.5) / n) * span
+  }
+
+  const dIn: string[] = []
+  const pillIn: { x: number; y: number }[] = []
+  for (let i = 0; i < n; i++) {
+    const L = localRect(leftBtns[i]!.getBoundingClientRect(), meshRect)
+    const sx = L.right - 1
+    const sy = (L.top + L.bottom) / 2
+    const ex = hubLeftX
+    const ey = hubPortY(i)
+    const { d, cx1, cy1, cx2, cy2, x3, y3 } = cubicBridge(sx, sy, ex, ey)
+    dIn.push(d)
+    pillIn.push(cubicMidpoint(sx, sy, cx1, cy1, cx2, cy2, x3, y3, 0.5))
+  }
+
+  const dOut: string[] = []
+  const pillOut: { x: number; y: number }[] = []
+  for (let i = 0; i < n; i++) {
+    const R = localRect(rightBtns[i]!.getBoundingClientRect(), meshRect)
+    const sx = hubRightX
+    const sy = hubPortY(i)
+    const ex = R.left + 1
+    const ey = (R.top + R.bottom) / 2
+    const { d, cx1, cy1, cx2, cy2, x3, y3 } = cubicBridge(sx, sy, ex, ey)
+    dOut.push(d)
+    pillOut.push(cubicMidpoint(sx, sy, cx1, cy1, cx2, cy2, x3, y3, 0.5))
+  }
+
+  return { w, h, dIn, dOut, pillIn, pillOut }
 }
 
 function NodeButton({
@@ -135,12 +197,46 @@ function NodeButton({
 export default function LandingElectricFlow() {
   const rawId = useId().replace(/:/g, '')
   const gradId = `electric-grad-${rawId}`
+  const meshRef = useRef<HTMLDivElement>(null)
 
   const [hoverIn, setHoverIn] = useState<number | null>(null)
   const [hoverOut, setHoverOut] = useState<number | null>(null)
+  const [geom, setGeom] = useState<ElectricGeom | null>(null)
 
-  const dIn = useMemo(() => pathsIn(), [])
-  const dOut = useMemo(() => pathsOut(), [])
+  const remesh = useCallback(() => {
+    const el = meshRef.current
+    if (!el) return
+    setGeom(measureElectricMesh(el))
+  }, [])
+
+  useLayoutEffect(() => {
+    const tick = () => remesh()
+    tick()
+    requestAnimationFrame(tick)
+
+    const el = meshRef.current
+    if (!el || typeof ResizeObserver === 'undefined') {
+      window.addEventListener('resize', remesh)
+      return () => window.removeEventListener('resize', remesh)
+    }
+    const ro = new ResizeObserver(() => remesh())
+    ro.observe(el)
+    window.addEventListener('resize', remesh)
+
+    const mql = window.matchMedia('(min-width: 1024px)')
+    const onBp = () => requestAnimationFrame(remesh)
+    mql.addEventListener('change', onBp)
+
+    return () => {
+      ro.disconnect()
+      window.removeEventListener('resize', remesh)
+      mql.removeEventListener('change', onBp)
+    }
+  }, [remesh])
+
+  useLayoutEffect(() => {
+    remesh()
+  }, [remesh, hoverIn, hoverOut])
 
   const pathClass = (side: FlowSide, index: number) => {
     const active = side === 'in' ? hoverIn === index : hoverOut === index
@@ -229,12 +325,15 @@ export default function LandingElectricFlow() {
           <p className="text-center text-[11px] text-slate-500 dark:text-slate-500">On desktop, hover the nodes to trace each live path.</p>
         </div>
 
-        {/* Desktop: SVG electric mesh */}
-        <div className="relative mx-auto hidden min-h-[480px] max-w-6xl lg:block lg:min-h-[520px]">
+        {/* Desktop: SVG electric mesh — paths measured from real node + hub geometry */}
+        <div
+          ref={meshRef}
+          className="relative mx-auto hidden min-h-[480px] max-w-6xl lg:block lg:min-h-[520px]"
+        >
           <svg
-            className="absolute inset-0 h-full w-full"
-            viewBox="0 0 1000 520"
-            preserveAspectRatio="xMidYMid meet"
+            className="absolute inset-0 z-0 h-full w-full"
+            viewBox={geom ? `0 0 ${geom.w} ${geom.h}` : '0 0 1000 520'}
+            preserveAspectRatio="none"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
             aria-hidden
@@ -246,7 +345,7 @@ export default function LandingElectricFlow() {
                 <stop offset="100%" stopColor="#c084fc" />
               </linearGradient>
             </defs>
-            {dIn.map((d, i) => (
+            {(geom?.dIn ?? []).map((d, i) => (
               <path
                 key={`in-${i}`}
                 d={d}
@@ -254,7 +353,7 @@ export default function LandingElectricFlow() {
                 className={pathClass('in', i)}
               />
             ))}
-            {dOut.map((d, i) => (
+            {(geom?.dOut ?? []).map((d, i) => (
               <path
                 key={`out-${i}`}
                 d={d}
@@ -264,34 +363,47 @@ export default function LandingElectricFlow() {
             ))}
           </svg>
 
-          {PILLS_IN.map((p, i) => (
-            <span
-              key={`pill-in-${i}`}
-              className={cn(
-                'pointer-events-none absolute z-[1] max-w-[7rem] truncate rounded-full border px-2 py-0.5 text-[10px] font-semibold backdrop-blur-md transition-opacity duration-300',
-                hoverIn === i || hoverIn === null ? 'opacity-100' : 'opacity-25',
-                'border-cyan-600/25 bg-cyan-100/90 text-cyan-900 backdrop-blur-md dark:border-cyan-400/35 dark:bg-cyan-950/50 dark:text-cyan-100/95'
-              )}
-              style={{ left: p.left, top: p.top, transform: 'translate(-50%, -50%)' }}
-            >
-              {p.label}
-            </span>
-          ))}
-          {PILLS_OUT.map((p, i) => (
-            <span
-              key={`pill-out-${i}`}
-              className={cn(
-                'pointer-events-none absolute z-[1] max-w-[7rem] truncate rounded-full border px-2 py-0.5 text-[10px] font-semibold backdrop-blur-md transition-opacity duration-300',
-                hoverOut === i || hoverOut === null ? 'opacity-100' : 'opacity-25',
-                'border-violet-500/25 bg-violet-100/90 text-violet-900 backdrop-blur-md dark:border-violet-400/35 dark:bg-violet-950/50 dark:text-violet-100/95'
-              )}
-              style={{ left: p.left, top: p.top, transform: 'translate(-50%, -50%)' }}
-            >
-              {p.label}
-            </span>
-          ))}
+          {geom &&
+            geom.pillIn.map((p, i) => (
+              <span
+                key={`pill-in-${i}`}
+                className={cn(
+                  'pointer-events-none absolute z-[1] max-w-[7rem] truncate rounded-full border px-2 py-0.5 text-[10px] font-semibold backdrop-blur-md transition-opacity duration-300',
+                  hoverIn === i || hoverIn === null ? 'opacity-100' : 'opacity-25',
+                  'border-cyan-600/25 bg-cyan-100/90 text-cyan-900 backdrop-blur-md dark:border-cyan-400/35 dark:bg-cyan-950/50 dark:text-cyan-100/95'
+                )}
+                style={{
+                  left: `${(p.x / geom.w) * 100}%`,
+                  top: `${(p.y / geom.h) * 100}%`,
+                  transform: 'translate(-50%, -50%)',
+                }}
+              >
+                {PILL_LABELS_IN[i]}
+              </span>
+            ))}
+          {geom &&
+            geom.pillOut.map((p, i) => (
+              <span
+                key={`pill-out-${i}`}
+                className={cn(
+                  'pointer-events-none absolute z-[1] max-w-[7rem] truncate rounded-full border px-2 py-0.5 text-[10px] font-semibold backdrop-blur-md transition-opacity duration-300',
+                  hoverOut === i || hoverOut === null ? 'opacity-100' : 'opacity-25',
+                  'border-violet-500/25 bg-violet-100/90 text-violet-900 backdrop-blur-md dark:border-violet-400/35 dark:bg-violet-950/50 dark:text-violet-100/95'
+                )}
+                style={{
+                  left: `${(p.x / geom.w) * 100}%`,
+                  top: `${(p.y / geom.h) * 100}%`,
+                  transform: 'translate(-50%, -50%)',
+                }}
+              >
+                {PILL_LABELS_OUT[i]}
+              </span>
+            ))}
 
-          <div className="absolute inset-y-8 left-0 z-[2] flex w-[11.5rem] flex-col justify-between py-2">
+          <div
+            data-electric-col="in"
+            className="absolute inset-y-8 left-0 z-[2] flex w-[11.5rem] flex-col justify-between py-2"
+          >
             {NODES_IN.map((n, i) => (
               <NodeButton
                 key={n.id}
@@ -307,11 +419,14 @@ export default function LandingElectricFlow() {
             ))}
           </div>
 
-          <div className="absolute left-1/2 top-1/2 z-[3] w-[min(100%,17.5rem)] -translate-x-1/2 -translate-y-1/2">
+          <div data-electric-hub className="absolute left-1/2 top-1/2 z-[3] w-[min(100%,17.5rem)] -translate-x-1/2 -translate-y-1/2">
             <HubCard />
           </div>
 
-          <div className="absolute inset-y-8 right-0 z-[2] flex w-[11.5rem] flex-col justify-between py-2">
+          <div
+            data-electric-col="out"
+            className="absolute inset-y-8 right-0 z-[2] flex w-[11.5rem] flex-col justify-between py-2"
+          >
             {NODES_OUT.map((n, i) => (
               <NodeButton
                 key={n.id}

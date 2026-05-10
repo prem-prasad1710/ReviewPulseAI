@@ -228,7 +228,7 @@ export default function Home() {
         <footer className="mt-20 border-t border-slate-200/80 pt-12 text-sm text-slate-600 dark:border-slate-700/80 dark:text-slate-400">
           <div className="flex flex-col items-center justify-between gap-8 md:flex-row">
             <Link href="/" className="flex items-center gap-3 font-bold text-slate-900 transition hover:opacity-90 dark:text-slate-100">
-              <AppMark size={40} className="rounded-xl ring-1 ring-slate-200/80 dark:ring-slate-600" />
+              <AppMark size={60} className="rounded-xl ring-1 ring-slate-200/80 dark:ring-slate-600" />
               <span>
                 <span className="font-heading block text-base tracking-tight">ReviewPulse AI</span>
                 <span className="text-xs font-medium text-slate-500 dark:text-slate-400">Reputation for Indian SMBs</span>
