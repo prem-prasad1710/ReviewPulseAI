@@ -91,6 +91,14 @@ class InsightsAggregator {
     const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000)
     const endDate = new Date()
 
+    if (!ObjectId.isValid(userId)) {
+      return this.getEmptyInsights(startDate, endDate)
+    }
+
+    if (locationId && !ObjectId.isValid(locationId)) {
+      return this.getEmptyInsights(startDate, endDate)
+    }
+
     const query: Record<string, unknown> = { userId: new ObjectId(userId) }
     if (locationId) {
       query.locationId = new ObjectId(locationId)

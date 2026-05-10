@@ -1,4 +1,10 @@
 import { getOpenAI } from '@/lib/openai'
+import {
+  buildAiCacheKey,
+  normalizeGenericTextInput,
+  publicFreeReplyCacheTtlSeconds,
+  withCachedAiText,
+} from '@/lib/ai-redis-cache'
 
 export type PublicReplyLanguage = 'english' | 'hindi' | 'hinglish'
 
@@ -23,14 +29,29 @@ export async function generatePublicFreeReply(params: {
         : 'Write in clear Indian English, warm and professional.'
 
   const openai = getOpenAI()
-  const completion = await openai.chat.completions.create({
-    model: 'gpt-4o-mini',
-    temperature: 0.45,
-    max_tokens: 500,
-    messages: [
-      {
-        role: 'system',
-        content: `You draft a short Google Business Profile reply for a local business in India.
+  const userContent = `Business: ${name}\nStar rating: ${rating}/5\nReview:\n${text}`
+
+  const cacheKey = buildAiCacheKey(
+    'public-free-reply',
+    'gpt-4o-mini',
+    normalizeGenericTextInput(text).slice(0, 4000),
+    String(rating),
+    language,
+    name
+  )
+
+  return withCachedAiText({
+    cacheKey,
+    ttlSeconds: publicFreeReplyCacheTtlSeconds(),
+    produce: async () => {
+      const completion = await openai.chat.completions.create({
+        model: 'gpt-4o-mini',
+        temperature: 0.45,
+        max_tokens: 500,
+        messages: [
+          {
+            role: 'system',
+            content: `You draft a short Google Business Profile reply for a local business in India.
 Rules:
 - ${langLine}
 - 80–160 words; never under 40 characters.
@@ -40,14 +61,15 @@ Rules:
 - No discounts unless user review explicitly mentions one.
 - No medical/legal/financial advice.
 - Output ONLY the reply text, no quotes or labels.`,
-      },
-      {
-        role: 'user',
-        content: `Business: ${name}\nStar rating: ${rating}/5\nReview:\n${text}`,
-      },
-    ],
+          },
+          {
+            role: 'user',
+            content: userContent,
+          },
+        ],
+      })
+      const out = completion.choices[0]?.message?.content?.trim() || ''
+      return out.slice(0, 1500)
+    },
   })
-
-  const out = completion.choices[0]?.message?.content?.trim() || ''
-  return out.slice(0, 1500)
 }

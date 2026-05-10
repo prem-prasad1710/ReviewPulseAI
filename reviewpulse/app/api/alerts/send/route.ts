@@ -22,17 +22,29 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
-    // Get review details
+    const idStr = String(session.user.id)
+    if (!ObjectId.isValid(idStr)) {
+      return NextResponse.json({ error: 'Invalid session' }, { status: 400 })
+    }
+    const uid = new ObjectId(idStr)
+    const locStr = String(locationId)
+    if (!ObjectId.isValid(locStr)) {
+      return NextResponse.json({ error: 'Invalid location id' }, { status: 400 })
+    }
+
     const db = await getDb()
     const reviewIdStr = String(reviewId)
     if (!ObjectId.isValid(reviewIdStr)) {
       return NextResponse.json({ error: 'Invalid review id' }, { status: 400 })
     }
     const rid = new ObjectId(reviewIdStr)
-    const review = await db.collection('reviews').findOne({ _id: rid })
+    const review = await db.collection('reviews').findOne({ _id: rid, userId: uid })
 
     if (!review) {
       return NextResponse.json({ error: 'Review not found' }, { status: 404 })
+    }
+    if (String(review.locationId) !== locStr) {
+      return NextResponse.json({ error: 'Location does not match this review' }, { status: 400 })
     }
 
     // Prepare alert payload

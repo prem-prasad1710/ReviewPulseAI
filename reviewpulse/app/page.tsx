@@ -2,44 +2,42 @@ import Link from 'next/link'
 import {
   ArrowRight,
   BadgeCheck,
-  Bot,
   Building2,
   Check,
   Clock3,
-  Globe2,
-  MessageCircleReply,
   ShieldCheck,
   Sparkles,
   Star,
-  TrendingUp,
 } from 'lucide-react'
 import LandingFaq from '@/components/marketing/LandingFaq'
+import LandingFeaturesExplorer, { type LandingFeatureItem } from '@/components/marketing/LandingFeaturesExplorer'
+import LandingHero3D from '@/components/marketing/LandingHero3D'
 import { Reveal } from '@/components/motion/Reveal'
 import { Button } from '@/components/ui/button'
 import { ThemeToggle } from '@/components/theme/ThemeToggle'
 
 const logos = ['Saffron Dine', 'The Skin Route', 'TrimCraft Salon', 'Namma Biryani', 'ClinicNova']
 
-const features = [
+const features: LandingFeatureItem[] = [
   {
     title: 'Unified Review Inbox',
     description: 'View every location and every review in one dashboard with filters for sentiment and urgency.',
-    icon: Globe2,
+    icon: 'Globe2',
   },
   {
     title: 'AI Replies in Hindi & English',
     description: 'Generate context-aware responses in Hindi, English, or Hinglish with tone controls.',
-    icon: Bot,
+    icon: 'Bot',
   },
   {
     title: 'One-Click Publish',
     description: 'Review, edit, and publish to Google directly without switching tabs or tools.',
-    icon: MessageCircleReply,
+    icon: 'MessageCircleReply',
   },
   {
     title: 'Owner-Ready Analytics',
     description: 'Spot negative trends early and track how response time impacts your rating growth.',
-    icon: TrendingUp,
+    icon: 'TrendingUp',
   },
 ]
 
@@ -87,7 +85,7 @@ const testimonials = [
 
 export default function Home() {
   return (
-    <div className="bg-mesh relative min-h-screen overflow-hidden">
+    <div className="bg-mesh relative min-h-screen overflow-x-hidden">
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,rgba(15,23,42,0.035)_1px,transparent_1px),linear-gradient(to_bottom,rgba(15,23,42,0.035)_1px,transparent_1px)] bg-[size:48px_48px] opacity-60 dark:bg-[linear-gradient(to_right,rgba(148,163,184,0.08)_1px,transparent_1px),linear-gradient(to_bottom,rgba(148,163,184,0.08)_1px,transparent_1px)] dark:opacity-100" />
 
       <main className="relative mx-auto max-w-7xl px-5 pb-24 pt-5 md:px-8">
@@ -185,40 +183,8 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="animate-float-soft relative rounded-3xl border border-slate-200/90 bg-white/95 p-6 shadow-2xl shadow-indigo-900/10 ring-1 ring-slate-900/[0.04] dark:border-slate-700/90 dark:bg-slate-900/90 dark:shadow-black/40 dark:ring-white/[0.06] md:p-7">
-              <div className="mb-4 grid grid-cols-3 gap-3">
-                {[
-                  { label: 'Total reviews', value: '1,274', tone: 'text-slate-900 dark:text-slate-100' },
-                  { label: 'Avg rating', value: '4.6', tone: 'text-slate-900 dark:text-slate-100' },
-                  { label: 'Unanswered', value: '217', tone: 'text-rose-600 dark:text-rose-400' },
-                ].map((m) => (
-                  <div
-                    key={m.label}
-                    className="rounded-xl border border-slate-100 bg-gradient-to-b from-slate-50 to-white p-3 transition hover:border-indigo-100 hover:shadow-sm dark:border-slate-600/80 dark:from-slate-800/90 dark:to-slate-900/90 dark:hover:border-indigo-500/35"
-                  >
-                    <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">{m.label}</p>
-                    <p className={`mt-1 text-xl font-bold tabular-nums ${m.tone}`}>{m.value}</p>
-                  </div>
-                ))}
-              </div>
-
-              <div className="rounded-2xl border border-slate-100 bg-slate-50/50 p-4 dark:border-slate-600/70 dark:bg-slate-800/50">
-                <div className="mb-2 flex items-center justify-between">
-                  <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">Latest review</p>
-                  <div className="flex items-center gap-0.5 text-amber-400">
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <Star key={i} className="h-3.5 w-3.5 fill-current" />
-                    ))}
-                  </div>
-                </div>
-                <p className="mb-3 text-sm leading-relaxed text-slate-700 dark:text-slate-300">
-                  Amazing food and super quick service. Paneer tikka was outstanding.
-                </p>
-                <div className="rounded-xl border border-indigo-100 bg-gradient-to-br from-indigo-50 to-blue-50/80 p-3 text-sm leading-relaxed text-indigo-950 dark:border-indigo-500/30 dark:from-indigo-950/70 dark:to-blue-950/50 dark:text-indigo-100">
-                  Thank you for your kind words—we are thrilled you enjoyed our paneer tikka and service. We look
-                  forward to welcoming you again soon.
-                </div>
-              </div>
+            <div className="lg:pl-2">
+              <LandingHero3D />
             </div>
           </section>
         </Reveal>
@@ -247,31 +213,15 @@ export default function Home() {
             <div className="mb-10 text-center">
               <p className="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-indigo-600 dark:text-indigo-400">Features</p>
               <h2 className="font-heading mx-auto max-w-3xl text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-50 md:text-4xl">
-                Everything you need to scale review operations
+                Explore the stack — scroll, tap, and dive in
               </h2>
               <p className="mx-auto mt-3 max-w-2xl text-sm text-slate-600 dark:text-slate-400 md:text-base">
-                Purpose-built workflows for owners, ops leads, and agencies who cannot afford a missed review.
+                Interactive 3D cards on desktop; swipe horizontally on your phone. Same workflows your team uses after
+                signup.
               </p>
             </div>
 
-            <div className="grid gap-5 md:grid-cols-2">
-              {features.map((feature, i) => {
-                const Icon = feature.icon
-                return (
-                  <article
-                    key={feature.title}
-                    style={{ animationDelay: `${i * 70}ms` }}
-                    className="motion-safe:animate-fade-up group rounded-2xl border border-slate-200/90 bg-white/95 p-6 shadow-sm transition duration-300 hover:-translate-y-1 hover:border-indigo-200/80 hover:shadow-xl hover:shadow-indigo-900/5 dark:border-slate-700/90 dark:bg-slate-900/80 dark:hover:border-indigo-500/40 dark:hover:shadow-black/25"
-                  >
-                    <div className="mb-4 inline-flex rounded-xl bg-indigo-50 p-2.5 text-indigo-600 ring-1 ring-indigo-100 transition group-hover:scale-105 group-hover:bg-indigo-100 dark:bg-indigo-950/60 dark:text-indigo-300 dark:ring-indigo-500/30 dark:group-hover:bg-indigo-900/50">
-                      <Icon className="h-5 w-5" />
-                    </div>
-                    <h3 className="mb-2 text-lg font-bold text-slate-900 dark:text-slate-50">{feature.title}</h3>
-                    <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-400">{feature.description}</p>
-                  </article>
-                )
-              })}
-            </div>
+            <LandingFeaturesExplorer items={features} />
           </section>
         </Reveal>
 

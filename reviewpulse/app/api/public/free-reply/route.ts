@@ -19,9 +19,18 @@ function clientIp(request: Request): string {
   return 'unknown'
 }
 
-/** Acquisition — paste a review, get a professional reply (no login). Rate-limited when Redis is configured. */
+/** Acquisition — paste a review, get a professional reply (no login). Rate-limited via Upstash in production. */
 export async function POST(request: Request) {
   try {
+    if (process.env.NODE_ENV === 'production' && !publicFreeReplyLimiter) {
+      if (process.env.ALLOW_PUBLIC_FREE_REPLY_WITHOUT_REDIS !== 'true') {
+        return err(
+          'Preview is unavailable: configure UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN for rate limits, or set ALLOW_PUBLIC_FREE_REPLY_WITHOUT_REDIS=true (not recommended — OpenAI abuse risk).',
+          503
+        )
+      }
+    }
+
     if (publicFreeReplyLimiter) {
       const ip = clientIp(request)
       const { success } = await publicFreeReplyLimiter.limit(`free-reply:${ip}`)

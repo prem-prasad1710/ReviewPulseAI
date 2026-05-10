@@ -4,6 +4,12 @@
  */
 
 import { getOpenAI } from '@/lib/openai'
+import {
+  buildAiCacheKey,
+  normalizeGenericTextInput,
+  sentimentCacheTtlSeconds,
+  withCachedAiJson,
+} from '@/lib/ai-redis-cache'
 
 export type Language = 'english' | 'hindi' | 'hinglish'
 export type Sentiment = 'positive' | 'neutral' | 'negative'
@@ -34,34 +40,45 @@ class MultilingualSentimentAnalyzer {
   async analyzeReview(text: string, language?: Language): Promise<SentimentAnalysisResult> {
     try {
       const prompt = this.buildAnalysisPrompt(text, language)
+      const cacheKey = buildAiCacheKey(
+        'multilingual-sentiment',
+        'gpt-4o-mini',
+        normalizeGenericTextInput(text).slice(0, 8000),
+        language || 'auto'
+      )
+      return await withCachedAiJson({
+        cacheKey,
+        ttlSeconds: sentimentCacheTtlSeconds(),
+        produce: async () => {
+          const response = await getOpenAI().chat.completions.create({
+            model: 'gpt-4o-mini',
+            messages: [
+              {
+                role: 'user',
+                content: prompt,
+              },
+            ],
+            temperature: 0.3,
+            response_format: { type: 'json_object' },
+          })
 
-      const response = await getOpenAI().chat.completions.create({
-        model: 'gpt-4o-mini',
-        messages: [
-          {
-            role: 'user',
-            content: prompt,
-          },
-        ],
-        temperature: 0.3,
-        response_format: { type: 'json_object' },
+          const content = response.choices[0]?.message?.content
+          if (!content) throw new Error('No response from OpenAI')
+
+          const parsed = JSON.parse(content)
+
+          return {
+            sentiment: parsed.sentiment,
+            sentimentScore: parsed.sentimentScore,
+            emotion: parsed.emotion,
+            emotionConfidence: parsed.emotionConfidence,
+            detectedLanguage: parsed.detectedLanguage,
+            keyPhrases: parsed.keyPhrases,
+            urgency: this.calculateUrgency(parsed.sentiment, parsed.sentimentScore),
+            summary: parsed.summary,
+          }
+        },
       })
-
-      const content = response.choices[0]?.message?.content
-      if (!content) throw new Error('No response from OpenAI')
-
-      const parsed = JSON.parse(content)
-
-      return {
-        sentiment: parsed.sentiment,
-        sentimentScore: parsed.sentimentScore,
-        emotion: parsed.emotion,
-        emotionConfidence: parsed.emotionConfidence,
-        detectedLanguage: parsed.detectedLanguage,
-        keyPhrases: parsed.keyPhrases,
-        urgency: this.calculateUrgency(parsed.sentiment, parsed.sentimentScore),
-        summary: parsed.summary,
-      }
     } catch (error) {
       console.error('Sentiment analysis error:', error)
       // Fallback: basic sentiment detection

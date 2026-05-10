@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { ObjectId } from 'mongodb'
 import { auth } from '@/lib/auth'
 import { insightsAggregator } from '@/lib/insights-aggregator'
 
@@ -15,6 +16,9 @@ export async function GET(request: NextRequest) {
 
     const searchParams = request.nextUrl.searchParams
     const locationId = searchParams.get('locationId') || undefined
+    if (locationId && !ObjectId.isValid(locationId)) {
+      return NextResponse.json({ error: 'Invalid locationId' }, { status: 400 })
+    }
     const days = parseInt(searchParams.get('days') || '30')
 
     // Generate insights
@@ -47,6 +51,9 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json()
     const { locationId, format = 'pdf', days = 30 } = body
+    if (locationId != null && String(locationId).trim() !== '' && !ObjectId.isValid(String(locationId))) {
+      return NextResponse.json({ error: 'Invalid locationId' }, { status: 400 })
+    }
 
     // Get insights data
     const insights = await insightsAggregator.generateDashboardInsights(

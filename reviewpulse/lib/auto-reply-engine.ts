@@ -5,6 +5,7 @@
  */
 
 import { getOpenAI } from '@/lib/openai'
+import { buildAiCacheKey, defaultAiCacheTtlSeconds, withCachedAiJson } from '@/lib/ai-redis-cache'
 
 export type ReplyTone = 'professional' | 'friendly' | 'formal' | 'grateful' | 'concise'
 export type Language = 'english' | 'hindi' | 'hinglish'
@@ -66,40 +67,47 @@ FINANCIAL COMPLIANCE:
   async generateReply(request: GenerateReplyRequest): Promise<GeneratedReply> {
     try {
       const prompt = this.buildReplyPrompt(request)
+      const system = this.getSystemPrompt(request)
+      const cacheKey = buildAiCacheKey('auto-reply-engine', 'gpt-4o-mini', system, prompt)
 
-      const response = await getOpenAI().chat.completions.create({
-        model: 'gpt-4o-mini',
-        messages: [
-          {
-            role: 'system',
-            content: this.getSystemPrompt(request),
-          },
-          {
-            role: 'user',
-            content: prompt,
-          },
-        ],
-        temperature: 0.7,
-        max_tokens: 250,
-        response_format: { type: 'json_object' },
+      return await withCachedAiJson({
+        cacheKey,
+        ttlSeconds: defaultAiCacheTtlSeconds(),
+        produce: async () => {
+          const response = await getOpenAI().chat.completions.create({
+            model: 'gpt-4o-mini',
+            messages: [
+              {
+                role: 'system',
+                content: system,
+              },
+              {
+                role: 'user',
+                content: prompt,
+              },
+            ],
+            temperature: 0.7,
+            max_tokens: 250,
+            response_format: { type: 'json_object' },
+          })
+
+          const content = response.choices[0]?.message?.content
+          if (!content) throw new Error('No response from OpenAI')
+
+          const parsed = JSON.parse(content)
+
+          const warnings = this.checkCompliance(parsed.reply, request.compliance)
+
+          return {
+            reply: parsed.reply,
+            language: request.language,
+            tone: request.tone,
+            length: this.getReplyLength(parsed.reply),
+            qualityScore: 0.85 + Math.random() * 0.15,
+            warnings: warnings.length > 0 ? warnings : undefined,
+          }
+        },
       })
-
-      const content = response.choices[0]?.message?.content
-      if (!content) throw new Error('No response from OpenAI')
-
-      const parsed = JSON.parse(content)
-
-      // Validate compliance
-      const warnings = this.checkCompliance(parsed.reply, request.compliance)
-
-      return {
-        reply: parsed.reply,
-        language: request.language,
-        tone: request.tone,
-        length: this.getReplyLength(parsed.reply),
-        qualityScore: 0.85 + Math.random() * 0.15, // Placeholder
-        warnings: warnings.length > 0 ? warnings : undefined,
-      }
     } catch (error) {
       console.error('Reply generation error:', error)
       throw error

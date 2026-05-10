@@ -58,7 +58,7 @@ export const syncAllLimiter = redis
     })
   : null
 
-/** SEO / acquisition — free reply preview (no auth). Tight limit without Redis. */
+/** SEO / acquisition — free reply preview (no auth). Requires Redis in production (see route guard). */
 export const publicFreeReplyLimiter = redis
   ? new Ratelimit({
       redis,

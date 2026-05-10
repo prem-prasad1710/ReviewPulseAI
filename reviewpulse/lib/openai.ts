@@ -1,4 +1,12 @@
 import OpenAI from 'openai'
+import {
+  buildAiCacheKey,
+  defaultAiCacheTtlSeconds,
+  sentimentCacheTtlSeconds,
+  withCachedAiJson,
+  withCachedAiJsonAllowNull,
+  withCachedAiText,
+} from '@/lib/ai-redis-cache'
 import { getCurrentFestival } from '@/lib/festivals'
 
 let cachedOpenAI: OpenAI | null = null
@@ -133,32 +141,45 @@ INSTRUCTIONS:
 - End with a warm closing that fits the business type.
 - Write ONLY the reply text. No preamble, labels, or explanation.${fewShot}${sameLanguageNote}${complianceNote}${abNote}${festiveNote}`
 
-  const response = await getOpenAI().chat.completions.create({
-    model: 'gpt-4o-mini',
-    messages: [{ role: 'user', content: prompt }],
-    max_tokens: 250,
-    temperature: 0.7,
+  const cacheKey = buildAiCacheKey('review-reply', 'gpt-4o-mini', prompt)
+  return withCachedAiText({
+    cacheKey,
+    ttlSeconds: defaultAiCacheTtlSeconds(),
+    produce: async () => {
+      const response = await getOpenAI().chat.completions.create({
+        model: 'gpt-4o-mini',
+        messages: [{ role: 'user', content: prompt }],
+        max_tokens: 250,
+        temperature: 0.7,
+      })
+      return response.choices[0]?.message?.content?.trim() ?? ''
+    },
   })
-
-  return response.choices[0]?.message?.content?.trim() ?? ''
 }
 
 export async function analyzeSentiment(reviewText: string, stars: number) {
   const prompt = `Rate the sentiment of this review on a scale from -1.0 (very negative) to 1.0 (very positive). Reply with ONLY a number.\nReview: "${reviewText}"\nRating: ${stars}/5`
 
-  const response = await getOpenAI().chat.completions.create({
-    model: 'gpt-4o-mini',
-    messages: [{ role: 'user', content: prompt }],
-    max_tokens: 10,
-    temperature: 0,
+  const cacheKey = buildAiCacheKey('sentiment-number', 'gpt-4o-mini', prompt)
+  return withCachedAiJson({
+    cacheKey,
+    ttlSeconds: sentimentCacheTtlSeconds(),
+    produce: async () => {
+      const response = await getOpenAI().chat.completions.create({
+        model: 'gpt-4o-mini',
+        messages: [{ role: 'user', content: prompt }],
+        max_tokens: 10,
+        temperature: 0,
+      })
+
+      const score = Number(response.choices[0]?.message?.content?.trim() || '0')
+      const safeScore = Number.isFinite(score) ? Math.max(-1, Math.min(1, score)) : 0
+
+      const sentiment = safeScore > 0.2 ? 'positive' : safeScore < -0.2 ? 'negative' : 'neutral'
+
+      return { sentiment, sentimentScore: safeScore }
+    },
   })
-
-  const score = Number(response.choices[0]?.message?.content?.trim() || '0')
-  const safeScore = Number.isFinite(score) ? Math.max(-1, Math.min(1, score)) : 0
-
-  const sentiment = safeScore > 0.2 ? 'positive' : safeScore < -0.2 ? 'negative' : 'neutral'
-
-  return { sentiment, sentimentScore: safeScore }
 }
 
 export interface ReviewAutopsyResult {
@@ -185,21 +206,27 @@ Identify:
 
 Return JSON only: {"rootCause": string, "suggestedFix": string}`
 
-  const response = await getOpenAI().chat.completions.create({
-    model: 'gpt-4o-mini',
-    messages: [{ role: 'user', content: prompt }],
-    max_tokens: 150,
-    temperature: 0.3,
-  })
+  const cacheKey = buildAiCacheKey('autopsy', 'gpt-4o-mini', prompt)
+  return withCachedAiJsonAllowNull({
+    cacheKey,
+    produce: async () => {
+      const response = await getOpenAI().chat.completions.create({
+        model: 'gpt-4o-mini',
+        messages: [{ role: 'user', content: prompt }],
+        max_tokens: 150,
+        temperature: 0.3,
+      })
 
-  const raw = response.choices[0]?.message?.content?.trim() ?? ''
-  try {
-    const parsed = JSON.parse(raw) as { rootCause?: string; suggestedFix?: string }
-    if (!parsed.rootCause || !parsed.suggestedFix) return null
-    return { rootCause: parsed.rootCause, suggestedFix: parsed.suggestedFix }
-  } catch {
-    return null
-  }
+      const raw = response.choices[0]?.message?.content?.trim() ?? ''
+      try {
+        const parsed = JSON.parse(raw) as { rootCause?: string; suggestedFix?: string }
+        if (!parsed.rootCause || !parsed.suggestedFix) return null
+        return { rootCause: parsed.rootCause, suggestedFix: parsed.suggestedFix }
+      } catch {
+        return null
+      }
+    },
+  })
 }
 
 export interface StaffMentionExtracted {
@@ -218,29 +245,35 @@ Review: '${reviewText.replace(/'/g, "\\'")}'
 Return JSON array only: [{"name": string, "sentiment": "positive"|"negative"|"neutral", "quote": string}]
 If no staff names found, return [].`
 
-  const response = await getOpenAI().chat.completions.create({
-    model: 'gpt-4o-mini',
-    messages: [{ role: 'user', content: prompt }],
-    max_tokens: 300,
-    temperature: 0.2,
-  })
+  const cacheKey = buildAiCacheKey('staff-mentions', 'gpt-4o-mini', prompt)
+  return withCachedAiJson({
+    cacheKey,
+    produce: async () => {
+      const response = await getOpenAI().chat.completions.create({
+        model: 'gpt-4o-mini',
+        messages: [{ role: 'user', content: prompt }],
+        max_tokens: 300,
+        temperature: 0.2,
+      })
 
-  const raw = response.choices[0]?.message?.content?.trim() ?? ''
-  try {
-    const arr = JSON.parse(raw) as Array<{ name?: string; sentiment?: string; quote?: string }>
-    if (!Array.isArray(arr)) return []
-    return arr
-      .filter((x) => x.name && x.sentiment && x.quote)
-      .map((x) => ({
-        name: toTitleCase(String(x.name).trim()),
-        sentiment: (['positive', 'negative', 'neutral'].includes(String(x.sentiment))
-          ? x.sentiment
-          : 'neutral') as StaffMentionExtracted['sentiment'],
-        quote: String(x.quote).slice(0, 200),
-      }))
-  } catch {
-    return []
-  }
+      const raw = response.choices[0]?.message?.content?.trim() ?? ''
+      try {
+        const arr = JSON.parse(raw) as Array<{ name?: string; sentiment?: string; quote?: string }>
+        if (!Array.isArray(arr)) return []
+        return arr
+          .filter((x) => x.name && x.sentiment && x.quote)
+          .map((x) => ({
+            name: toTitleCase(String(x.name).trim()),
+            sentiment: (['positive', 'negative', 'neutral'].includes(String(x.sentiment))
+              ? x.sentiment
+              : 'neutral') as StaffMentionExtracted['sentiment'],
+            quote: String(x.quote).slice(0, 200),
+          }))
+      } catch {
+        return []
+      }
+    },
+  })
 }
 
 function toTitleCase(s: string): string {
@@ -273,25 +306,31 @@ Generate social media content to celebrate this positive feedback:
 
 Return JSON only: {"instagram": string, "whatsapp": string, "googlePost": string}`
 
-  const response = await getOpenAI().chat.completions.create({
-    model: 'gpt-4o-mini',
-    messages: [{ role: 'user', content: prompt }],
-    max_tokens: 500,
-    temperature: 0.6,
-  })
+  const cacheKey = buildAiCacheKey('social-formats', 'gpt-4o-mini', prompt)
+  return withCachedAiJsonAllowNull({
+    cacheKey,
+    produce: async () => {
+      const response = await getOpenAI().chat.completions.create({
+        model: 'gpt-4o-mini',
+        messages: [{ role: 'user', content: prompt }],
+        max_tokens: 500,
+        temperature: 0.6,
+      })
 
-  const raw = response.choices[0]?.message?.content?.trim() ?? ''
-  try {
-    const parsed = JSON.parse(raw) as Partial<SocialFormatsResult>
-    if (!parsed.instagram || !parsed.whatsapp || !parsed.googlePost) return null
-    return {
-      instagram: parsed.instagram,
-      whatsapp: parsed.whatsapp,
-      googlePost: parsed.googlePost,
-    }
-  } catch {
-    return null
-  }
+      const raw = response.choices[0]?.message?.content?.trim() ?? ''
+      try {
+        const parsed = JSON.parse(raw) as Partial<SocialFormatsResult>
+        if (!parsed.instagram || !parsed.whatsapp || !parsed.googlePost) return null
+        return {
+          instagram: parsed.instagram,
+          whatsapp: parsed.whatsapp,
+          googlePost: parsed.googlePost,
+        }
+      } catch {
+        return null
+      }
+    },
+  })
 }
 
 export interface MenuInsightBatchItem {
@@ -312,24 +351,31 @@ Include a sample quote for context.
 Reviews batch: ${params.reviewsBatch}
 Return JSON only: {"items": [{"name": string, "positiveCount": number, "negativeCount": number, "sampleQuote": string}]}`
 
-  const response = await getOpenAI().chat.completions.create({
-    model: 'gpt-4o-mini',
-    messages: [{ role: 'user', content: prompt }],
-    max_tokens: 2000,
-    temperature: 0.3,
-  })
+  const cacheKey = buildAiCacheKey('menu-insights-batch', 'gpt-4o-mini', prompt)
+  return withCachedAiJson({
+    cacheKey,
+    ttlSeconds: defaultAiCacheTtlSeconds(),
+    produce: async () => {
+      const response = await getOpenAI().chat.completions.create({
+        model: 'gpt-4o-mini',
+        messages: [{ role: 'user', content: prompt }],
+        max_tokens: 2000,
+        temperature: 0.3,
+      })
 
-  const raw = response.choices[0]?.message?.content?.trim() ?? ''
-  try {
-    const parsed = JSON.parse(raw) as { items?: MenuInsightBatchItem[] }
-    if (!parsed.items || !Array.isArray(parsed.items)) return []
-    return parsed.items.map((i) => ({
-      name: String(i.name || '').trim(),
-      positiveCount: Math.max(0, Number(i.positiveCount) || 0),
-      negativeCount: Math.max(0, Number(i.negativeCount) || 0),
-      sampleQuote: String(i.sampleQuote || '').slice(0, 300),
-    }))
-  } catch {
-    return []
-  }
+      const raw = response.choices[0]?.message?.content?.trim() ?? ''
+      try {
+        const parsed = JSON.parse(raw) as { items?: MenuInsightBatchItem[] }
+        if (!parsed.items || !Array.isArray(parsed.items)) return []
+        return parsed.items.map((i) => ({
+          name: String(i.name || '').trim(),
+          positiveCount: Math.max(0, Number(i.positiveCount) || 0),
+          negativeCount: Math.max(0, Number(i.negativeCount) || 0),
+          sampleQuote: String(i.sampleQuote || '').slice(0, 300),
+        }))
+      } catch {
+        return []
+      }
+    },
+  })
 }

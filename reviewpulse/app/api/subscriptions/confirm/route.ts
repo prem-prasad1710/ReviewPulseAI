@@ -57,6 +57,10 @@ export async function POST(request: Request) {
     const rz = getRazorpayClient()
     const entity = (await rz.subscriptions.fetch(razorpay_subscription_id)) as RazorpaySubscriptionEntity
 
+    if (String(entity.status || '').toLowerCase() === 'cancelled') {
+      return err('This subscription is cancelled. Use billing to subscribe again.', 409)
+    }
+
     sub.status = entity.status as typeof sub.status
     if (entity.current_start) sub.currentStart = new Date(entity.current_start * 1000)
     if (entity.current_end) sub.currentEnd = new Date(entity.current_end * 1000)
