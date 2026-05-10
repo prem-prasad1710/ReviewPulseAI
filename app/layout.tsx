@@ -3,7 +3,7 @@ import { Manrope, Space_Grotesk } from 'next/font/google'
 import { Toaster } from 'sonner'
 import Providers from '@/components/providers/Providers'
 import './globals.css'
-
+import { Analytics } from "@vercel/analytics/next";
 const manrope = Manrope({
   variable: '--font-manrope',
   subsets: ['latin'],
