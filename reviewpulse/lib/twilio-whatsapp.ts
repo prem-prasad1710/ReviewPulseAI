@@ -28,9 +28,15 @@ export function normalizeWhatsAppDestination(raw: string): string {
   return s.startsWith('+') ? s : `+${s.replace(/^\+/, '')}`
 }
 
-function channelHintForTwilioError(message: string): string {
+function channelHintForTwilioError(message: string, fromRaw: string): string {
   if (!/channel|from address/i.test(message)) return message
-  return `${message} — For WhatsApp use TWILIO_WHATSAPP_FROM=whatsapp:+14155238886 (sandbox) or your Twilio WhatsApp sender; plain +1… without the whatsapp: prefix will not work.`
+  const trimmed = fromRaw.trim()
+  const looksLikeWhatsAppFrom = /^whatsapp:\+/i.test(trimmed)
+  const looksLikeMessagingService = /^MG[a-f0-9]{32}$/i.test(trimmed)
+  if (looksLikeWhatsAppFrom || looksLikeMessagingService) {
+    return `${message} — That From value is not a WhatsApp channel on this Twilio account (wrong account, sender not onboarded, or sandbox). In Twilio Console: Messaging → Senders / WhatsApp sandbox: use sandbox From whatsapp:+14155238886 and have each recipient join the sandbox; for production, use a number shown as an approved WhatsApp sender (or a Messaging Service SID MG… that includes one).`
+  }
+  return `${message} — Set TWILIO_WHATSAPP_FROM to a WhatsApp From, e.g. sandbox whatsapp:+14155238886 or whatsapp:+15551234567 for an onboarded Twilio WhatsApp sender. A plain +1… without the whatsapp: prefix is treated as SMS and triggers this error.`
 }
 
 export async function sendWhatsAppMessage(toE164: string, body: string): Promise<{ sid?: string; error?: string }> {
@@ -71,7 +77,7 @@ export async function sendWhatsAppMessage(toE164: string, body: string): Promise
   } catch (e) {
     const errMsg = e instanceof Error ? e.message : 'Twilio send failed'
     console.error('Twilio WhatsApp error:', errMsg)
-    return { error: channelHintForTwilioError(errMsg) }
+    return { error: channelHintForTwilioError(errMsg, fromRaw) }
   }
 }
 
@@ -120,7 +126,7 @@ export async function sendWhatsAppContentMessage(
   } catch (e) {
     const errMsg = e instanceof Error ? e.message : 'Twilio send failed'
     console.error('Twilio WhatsApp Content error:', errMsg)
-    return { error: channelHintForTwilioError(errMsg) }
+    return { error: channelHintForTwilioError(errMsg, fromRaw) }
   }
 }
 
