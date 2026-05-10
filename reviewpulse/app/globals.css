@@ -244,17 +244,45 @@ body {
   opacity: 0.35;
 }
 
+html:not(.dark) #electric-flow .landing-electric-path-muted {
+  opacity: 0.48;
+}
+
 .landing-electric-path-active {
   opacity: 1;
   stroke-width: 3.25;
-  filter: drop-shadow(0 0 10px rgb(99 102 241 / 0.65));
+  filter: drop-shadow(0 0 7px rgb(79 70 229 / 0.4));
   animation-duration: 1.1s;
+}
+
+.dark .landing-electric-path-active {
+  filter: drop-shadow(0 0 10px rgb(99 102 241 / 0.65));
+}
+
+@keyframes landing-how-shimmer {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .landing-electric-path {
     animation: none;
     stroke-dasharray: none;
+  }
+}
+
+.landing-how-bg-shimmer {
+  animation: landing-how-shimmer 4.5s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-how-bg-shimmer {
+    animation: none;
   }
 }
 

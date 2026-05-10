@@ -110,23 +110,23 @@ function NodeButton({
         'group relative flex w-full items-center gap-3 rounded-2xl border px-3 py-2.5 text-left transition-all duration-300',
         align === 'left' ? 'flex-row' : 'flex-row-reverse text-right',
         active
-          ? 'border-cyan-400/50 bg-white/12 shadow-[0_0_24px_-4px_rgba(34,211,238,0.35)]'
-          : 'border-white/10 bg-white/[0.04] hover:border-indigo-400/35 hover:bg-white/[0.08]'
+          ? 'border-cyan-500/45 bg-gradient-to-br from-cyan-50/90 to-indigo-50/80 shadow-[0_0_20px_-4px_rgba(6,182,212,0.25)] dark:border-cyan-400/50 dark:from-transparent dark:to-transparent dark:bg-white/12 dark:shadow-[0_0_24px_-4px_rgba(34,211,238,0.35)]'
+          : 'border-slate-200/90 bg-white/90 hover:border-indigo-300/70 hover:bg-slate-50/95 dark:border-white/10 dark:bg-white/[0.04] dark:hover:border-indigo-400/35 dark:hover:bg-white/[0.08]'
       )}
     >
       <span
         className={cn(
           'flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border transition-all duration-300',
           active
-            ? 'border-cyan-300/60 bg-cyan-500/20 text-cyan-100'
-            : 'border-white/15 bg-slate-900/60 text-slate-300 group-hover:border-indigo-400/40 group-hover:text-white'
+            ? 'border-cyan-500/40 bg-cyan-100 text-cyan-900 dark:border-cyan-300/60 dark:bg-cyan-500/20 dark:text-cyan-100'
+            : 'border-slate-200 bg-slate-50 text-slate-600 group-hover:border-indigo-300 group-hover:text-indigo-800 dark:border-white/15 dark:bg-slate-900/60 dark:text-slate-300 dark:group-hover:border-indigo-400/40 dark:group-hover:text-white'
         )}
       >
         <Icon className="h-[18px] w-[18px]" aria-hidden />
       </span>
       <span className="min-w-0">
-        <span className="block text-[13px] font-semibold leading-tight text-white">{node.label}</span>
-        <span className="mt-0.5 block text-[11px] font-medium text-slate-400">{node.sub}</span>
+        <span className="block text-[13px] font-semibold leading-tight text-slate-900 dark:text-white">{node.label}</span>
+        <span className="mt-0.5 block text-[11px] font-medium text-slate-600 dark:text-slate-400">{node.sub}</span>
       </span>
     </button>
   )
@@ -156,10 +156,18 @@ export default function LandingElectricFlow() {
   return (
     <section
       id="electric-flow"
-      className="relative mb-20 overflow-hidden rounded-[2rem] border border-slate-800/80 bg-slate-950 shadow-[0_40px_100px_-40px_rgba(0,0,0,0.85)] ring-1 ring-white/[0.06]"
+      className="relative mb-20 overflow-hidden rounded-[2rem] border border-slate-200/90 bg-gradient-to-b from-white via-slate-50/90 to-indigo-50/25 shadow-[0_40px_80px_-36px_rgba(15,23,42,0.12)] ring-1 ring-slate-900/[0.04] dark:border-slate-800/80 dark:from-slate-950 dark:via-slate-950 dark:to-slate-950 dark:shadow-[0_40px_100px_-40px_rgba(0,0,0,0.85)] dark:ring-white/[0.06]"
     >
       <div
-        className="pointer-events-none absolute inset-0 opacity-[0.45]"
+        className="pointer-events-none absolute inset-0 opacity-[0.5] dark:hidden"
+        style={{
+          backgroundImage: `linear-gradient(rgba(100,116,139,0.14)_1px,transparent_1px),linear-gradient(90deg,rgba(100,116,139,0.14)_1px,transparent_1px)`,
+          backgroundSize: '40px 40px',
+        }}
+        aria-hidden
+      />
+      <div
+        className="pointer-events-none absolute inset-0 hidden dark:block"
         style={{
           backgroundImage: `linear-gradient(rgba(148,163,184,0.07)_1px,transparent_1px),linear-gradient(90deg,rgba(148,163,184,0.07)_1px,transparent_1px)`,
           backgroundSize: '40px 40px',
@@ -167,17 +175,17 @@ export default function LandingElectricFlow() {
         aria-hidden
       />
       <div
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_0%,rgb(99,102,241,0.22),transparent_55%),radial-gradient(ellipse_60%_50%_at_100%_50%,rgb(6,182,212,0.12),transparent_50%),radial-gradient(ellipse_50%_40%_at_0%_80%,rgb(139,92,246,0.12),transparent_45%)]"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_85%_55%_at_50%_0%,rgb(99,102,241,0.14),transparent_58%),radial-gradient(ellipse_55%_45%_at_100%_45%,rgb(6,182,212,0.08),transparent_52%),radial-gradient(ellipse_45%_38%_at_0%_85%,rgb(139,92,246,0.08),transparent_48%)] dark:bg-[radial-gradient(ellipse_80%_60%_at_50%_0%,rgb(99,102,241,0.22),transparent_55%),radial-gradient(ellipse_60%_50%_at_100%_50%,rgb(6,182,212,0.12),transparent_50%),radial-gradient(ellipse_50%_40%_at_0%_80%,rgb(139,92,246,0.12),transparent_45%)]"
         aria-hidden
       />
 
       <div className="relative px-5 py-12 md:px-10 md:py-16 lg:px-12">
         <header className="mx-auto mb-10 max-w-3xl text-center lg:mb-12">
-          <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.22em] text-cyan-300/90">Dynamic product map</p>
-          <h2 className="font-heading text-balance text-3xl font-bold leading-[1.12] tracking-tight text-white md:text-4xl lg:text-[2.65rem]">
+          <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.22em] text-indigo-600 dark:text-cyan-300/90">Dynamic product map</p>
+          <h2 className="font-heading text-balance text-3xl font-bold leading-[1.12] tracking-tight text-slate-900 dark:text-white md:text-4xl lg:text-[2.65rem]">
             Connect every signal your customers leave — ship replies that feel human, fast
           </h2>
-          <p className="mx-auto mt-4 max-w-2xl text-pretty text-sm leading-relaxed text-slate-400 md:text-base">
+          <p className="mx-auto mt-4 max-w-2xl text-pretty text-sm leading-relaxed text-slate-600 dark:text-slate-400 md:text-base">
             Unlike generic “review widgets,” ReviewPulse is built for Google Business workflows in India: bilingual AI,
             approval before publish, and ops that scale from one salon to ten outlets without losing context.
           </p>
@@ -186,7 +194,7 @@ export default function LandingElectricFlow() {
         {/* Mobile: stacked flow */}
         <div className="mx-auto max-w-md space-y-8 lg:hidden">
           <div className="space-y-2">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Into the hub</p>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-500">Into the hub</p>
             <div className="space-y-2">
               {NODES_IN.map((n, i) => (
                 <NodeButton
@@ -204,7 +212,7 @@ export default function LandingElectricFlow() {
           <HubCard />
 
           <div className="space-y-2">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Out to the market</p>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-500">Out to the market</p>
             <div className="space-y-2">
               {NODES_OUT.map((n, i) => (
                 <NodeButton
@@ -218,7 +226,7 @@ export default function LandingElectricFlow() {
               ))}
             </div>
           </div>
-          <p className="text-center text-[11px] text-slate-500">On desktop, hover the nodes to trace each live path.</p>
+          <p className="text-center text-[11px] text-slate-500 dark:text-slate-500">On desktop, hover the nodes to trace each live path.</p>
         </div>
 
         {/* Desktop: SVG electric mesh */}
@@ -262,7 +270,7 @@ export default function LandingElectricFlow() {
               className={cn(
                 'pointer-events-none absolute z-[1] max-w-[7rem] truncate rounded-full border px-2 py-0.5 text-[10px] font-semibold backdrop-blur-md transition-opacity duration-300',
                 hoverIn === i || hoverIn === null ? 'opacity-100' : 'opacity-25',
-                'border-cyan-400/35 bg-cyan-950/50 text-cyan-100/95'
+                'border-cyan-600/25 bg-cyan-100/90 text-cyan-900 backdrop-blur-md dark:border-cyan-400/35 dark:bg-cyan-950/50 dark:text-cyan-100/95'
               )}
               style={{ left: p.left, top: p.top, transform: 'translate(-50%, -50%)' }}
             >
@@ -275,7 +283,7 @@ export default function LandingElectricFlow() {
               className={cn(
                 'pointer-events-none absolute z-[1] max-w-[7rem] truncate rounded-full border px-2 py-0.5 text-[10px] font-semibold backdrop-blur-md transition-opacity duration-300',
                 hoverOut === i || hoverOut === null ? 'opacity-100' : 'opacity-25',
-                'border-violet-400/35 bg-violet-950/50 text-violet-100/95'
+                'border-violet-500/25 bg-violet-100/90 text-violet-900 backdrop-blur-md dark:border-violet-400/35 dark:bg-violet-950/50 dark:text-violet-100/95'
               )}
               style={{ left: p.left, top: p.top, transform: 'translate(-50%, -50%)' }}
             >
@@ -320,11 +328,11 @@ export default function LandingElectricFlow() {
           </div>
         </div>
 
-        <footer className="relative z-[4] mt-12 border-t border-white/10 pt-8 md:mt-14">
-          <p className="mb-4 text-center text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Built to sit beside tools you already use</p>
-          <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3 opacity-80 grayscale transition hover:grayscale-0 hover:opacity-100">
+        <footer className="relative z-[4] mt-12 border-t border-slate-200/90 pt-8 dark:border-white/10 md:mt-14">
+          <p className="mb-4 text-center text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-500">Built to sit beside tools you already use</p>
+          <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3 opacity-90 grayscale transition hover:grayscale-0 hover:opacity-100 dark:opacity-80">
             {['Google Business', 'Gmail', 'Slack', 'WhatsApp', 'Razorpay', 'Resend'].map((name) => (
-              <span key={name} className="text-xs font-semibold tracking-wide text-slate-400">
+              <span key={name} className="text-xs font-semibold tracking-wide text-slate-500 dark:text-slate-400">
                 {name}
               </span>
             ))}
@@ -337,41 +345,41 @@ export default function LandingElectricFlow() {
 
 function HubCard() {
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-white/15 bg-white/[0.06] p-5 shadow-[0_0_0_1px_rgba(255,255,255,0.04)_inset] backdrop-blur-xl">
-      <div className="pointer-events-none absolute -right-12 -top-12 h-32 w-32 rounded-full bg-indigo-500/25 blur-3xl" aria-hidden />
-      <div className="pointer-events-none absolute -bottom-10 -left-10 h-28 w-28 rounded-full bg-cyan-500/20 blur-3xl" aria-hidden />
+    <div className="relative overflow-hidden rounded-2xl border border-slate-200/90 bg-white/90 p-5 shadow-lg shadow-slate-900/[0.04] ring-1 ring-slate-900/[0.03] backdrop-blur-xl dark:border-white/15 dark:bg-white/[0.06] dark:shadow-[0_0_0_1px_rgba(255,255,255,0.04)_inset] dark:ring-transparent">
+      <div className="pointer-events-none absolute -right-12 -top-12 h-32 w-32 rounded-full bg-indigo-400/20 blur-3xl dark:bg-indigo-500/25" aria-hidden />
+      <div className="pointer-events-none absolute -bottom-10 -left-10 h-28 w-28 rounded-full bg-cyan-400/15 blur-3xl dark:bg-cyan-500/20" aria-hidden />
 
-      <div className="relative flex items-center justify-between gap-2 border-b border-white/10 pb-3">
+      <div className="relative flex items-center justify-between gap-2 border-b border-slate-200/90 pb-3 dark:border-white/10">
         <div className="flex items-center gap-2">
-          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-500/30 text-indigo-100">
+          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-600 text-white dark:bg-indigo-500/30 dark:text-indigo-100">
             <Bot className="h-4 w-4" aria-hidden />
           </span>
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">ReviewPulse hub</p>
-            <p className="text-sm font-semibold text-white">Reply intelligence</p>
+            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">ReviewPulse hub</p>
+            <p className="text-sm font-semibold text-slate-900 dark:text-white">Reply intelligence</p>
           </div>
         </div>
-        <BarChart3 className="h-4 w-4 shrink-0 text-slate-500" aria-hidden />
+        <BarChart3 className="h-4 w-4 shrink-0 text-slate-400 dark:text-slate-500" aria-hidden />
       </div>
 
       <div className="relative mt-4 space-y-3 text-[11px]">
-        <div className="rounded-xl border border-white/10 bg-slate-950/40 px-3 py-2">
+        <div className="rounded-xl border border-slate-200/90 bg-slate-50/90 px-3 py-2 dark:border-white/10 dark:bg-slate-950/40">
           <p className="mb-1.5 font-semibold uppercase tracking-wide text-slate-500">Conditions</p>
           <div className="flex flex-wrap gap-1.5">
-            <span className="rounded-md bg-rose-500/20 px-2 py-0.5 font-medium text-rose-100">Rating ≤ 3★</span>
-            <span className="rounded-md bg-amber-500/15 px-2 py-0.5 font-medium text-amber-100">Urgent</span>
-            <span className="rounded-md bg-white/10 px-2 py-0.5 font-medium text-slate-200">Last 30 days</span>
+            <span className="rounded-md bg-rose-100 px-2 py-0.5 font-medium text-rose-800 dark:bg-rose-500/20 dark:text-rose-100">Rating ≤ 3★</span>
+            <span className="rounded-md bg-amber-100 px-2 py-0.5 font-medium text-amber-900 dark:bg-amber-500/15 dark:text-amber-100">Urgent</span>
+            <span className="rounded-md bg-slate-200/80 px-2 py-0.5 font-medium text-slate-800 dark:bg-white/10 dark:text-slate-200">Last 30 days</span>
           </div>
         </div>
-        <div className="rounded-xl border border-white/10 bg-slate-950/40 px-3 py-2">
+        <div className="rounded-xl border border-slate-200/90 bg-slate-50/90 px-3 py-2 dark:border-white/10 dark:bg-slate-950/40">
           <p className="mb-1.5 font-semibold uppercase tracking-wide text-slate-500">Output</p>
           <div className="flex flex-wrap gap-1.5">
-            <span className="rounded-md bg-cyan-500/20 px-2 py-0.5 font-medium text-cyan-50">Draft reply</span>
-            <span className="rounded-md bg-indigo-500/25 px-2 py-0.5 font-medium text-indigo-100">Hindi / English</span>
-            <span className="rounded-md bg-emerald-500/20 px-2 py-0.5 font-medium text-emerald-100">Awaiting approve</span>
+            <span className="rounded-md bg-cyan-100 px-2 py-0.5 font-medium text-cyan-900 dark:bg-cyan-500/20 dark:text-cyan-50">Draft reply</span>
+            <span className="rounded-md bg-indigo-100 px-2 py-0.5 font-medium text-indigo-900 dark:bg-indigo-500/25 dark:text-indigo-100">Hindi / English</span>
+            <span className="rounded-md bg-emerald-100 px-2 py-0.5 font-medium text-emerald-900 dark:bg-emerald-500/20 dark:text-emerald-100">Awaiting approve</span>
           </div>
         </div>
-        <p className="text-center text-[10px] leading-relaxed text-slate-500">
+        <p className="text-center text-[10px] leading-relaxed text-slate-500 dark:text-slate-500">
           Nothing posts without you — we are not a faceless auto-poster.
         </p>
       </div>
