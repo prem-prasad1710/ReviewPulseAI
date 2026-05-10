@@ -235,8 +235,8 @@ export default function PlanCheckoutButtons({
         </div>
       ) : null}
       <p className="text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">
-        Create matching plans in Razorpay Dashboard and set <code className="rounded bg-slate-100 px-1 dark:bg-slate-800">RAZORPAY_PLAN_*</code> env
-        vars. Webhooks update your workspace plan after payment.
+        Create matching plans in Razorpay Dashboard and set <code className="rounded bg-slate-100 px-1 dark:bg-slate-800">RAZORPAY_PLAN_*</code>{' '}
+        environment variables. Checkout confirms your plan in the database right away; webhooks also sync billing.
       </p>
     </div>
   )
