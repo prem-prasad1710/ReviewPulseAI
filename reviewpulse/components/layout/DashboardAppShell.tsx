@@ -2,9 +2,7 @@
 
 import { useCallback, useEffect, useState, type ReactNode } from 'react'
 import { usePathname } from 'next/navigation'
-import type { Session } from 'next-auth'
 import { DashboardShellContext } from '@/components/layout/dashboard-shell-context'
-import type { AgencyBrand } from '@/lib/agency-branding'
 import { cn } from '@/lib/utils'
 
 export default function DashboardAppShell({

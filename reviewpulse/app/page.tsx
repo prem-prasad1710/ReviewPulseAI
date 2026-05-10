@@ -1,5 +1,8 @@
 import Link from 'next/link'
 import { ArrowRight, Clock3, ShieldCheck, Sparkles } from 'lucide-react'
+import { AppMark } from '@/components/brand/AppMark'
+import LandingEdgeCards from '@/components/marketing/LandingEdgeCards'
+import LandingElectricFlow from '@/components/marketing/LandingElectricFlow'
 import LandingFaq from '@/components/marketing/LandingFaq'
 import LandingFeaturesExplorer, { type LandingFeatureItem } from '@/components/marketing/LandingFeaturesExplorer'
 import LandingFinalCta from '@/components/marketing/LandingFinalCta'
@@ -85,28 +88,27 @@ export default function Home() {
     <div className="bg-mesh relative min-h-screen overflow-x-hidden">
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,rgba(15,23,42,0.035)_1px,transparent_1px),linear-gradient(to_bottom,rgba(15,23,42,0.035)_1px,transparent_1px)] bg-[size:48px_48px] opacity-60 dark:bg-[linear-gradient(to_right,rgba(148,163,184,0.08)_1px,transparent_1px),linear-gradient(to_bottom,rgba(148,163,184,0.08)_1px,transparent_1px)] dark:opacity-100" />
 
-      <main className="relative mx-auto max-w-7xl px-5 pb-24 pt-5 md:px-8">
+      <main className="relative mx-auto max-w-7xl px-5 pb-28 pt-5 md:px-8">
         <LandingNav />
 
+        {/* Hero */}
         <Reveal>
-          <section className="mb-20 grid items-center gap-12 lg:grid-cols-2">
+          <section className="mb-16 grid items-center gap-12 lg:mb-20 lg:grid-cols-2 lg:gap-14">
             <div>
               <p className="mb-4 inline-flex items-center gap-2 rounded-full border border-indigo-200/80 bg-indigo-50/90 px-3 py-1.5 text-xs font-semibold text-indigo-800 dark:border-indigo-500/40 dark:bg-indigo-950/60 dark:text-indigo-200">
                 <Sparkles className="h-3.5 w-3.5" />
                 Built for Indian SMB owners
               </p>
               <LandingStatChips />
-              <h1 className="font-heading mb-4 text-4xl font-bold leading-[1.08] tracking-tight text-slate-900 dark:text-slate-50 md:text-6xl">
-                Turn ignored reviews into{' '}
-                <span className="text-gradient-brand">growth</span>, not churn
+              <h1 className="font-heading mb-4 text-4xl font-bold leading-[1.08] tracking-tight text-slate-900 dark:text-slate-50 md:text-5xl lg:text-6xl">
+                Turn ignored reviews into <span className="text-gradient-brand">growth</span>, not churn
               </h1>
               <p className="mb-3 max-w-xl text-base font-medium text-slate-800 dark:text-slate-200 md:text-lg">
                 “You have 217 unanswered reviews.” Restaurants lose bookings when bad feedback sits silent.
               </p>
               <p className="mb-8 max-w-xl text-base leading-relaxed text-slate-600 dark:text-slate-400 md:text-lg">
-                ReviewPulse is the India-first reputation layer: connect Google Business in about a minute, see
-                sentiment and themes instantly, and ship professional replies—including a free public generator for
-                tough reviews.
+                ReviewPulse is the India-first reputation layer: connect Google Business in about a minute, see sentiment
+                and themes instantly, and ship professional replies — including a free public generator for tough reviews.
               </p>
 
               <div className="mb-8 flex flex-wrap gap-3">
@@ -146,6 +148,15 @@ export default function Home() {
           </section>
         </Reveal>
 
+        {/* Electric flow — product story */}
+        <Reveal delay={30}>
+          <LandingElectricFlow />
+        </Reveal>
+
+        <Reveal delay={40}>
+          <LandingEdgeCards />
+        </Reveal>
+
         <Reveal delay={40}>
           <section id="customers" className="mb-20">
             <p className="mb-5 text-center text-xs font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">
@@ -163,11 +174,9 @@ export default function Home() {
                 Explore the stack — scroll, tap, and dive in
               </h2>
               <p className="mx-auto mt-3 max-w-2xl text-sm text-slate-600 dark:text-slate-400 md:text-base">
-                Interactive 3D cards on desktop; swipe horizontally on your phone. Same workflows your team uses after
-                signup.
+                Interactive 3D cards on desktop; swipe horizontally on your phone. Same workflows your team uses after signup.
               </p>
             </div>
-
             <LandingFeaturesExplorer items={features} />
           </section>
         </Reveal>
@@ -185,7 +194,6 @@ export default function Home() {
               <h2 className="font-heading text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-50 md:text-4xl">Simple INR plans</h2>
               <p className="mx-auto mt-3 max-w-xl text-sm text-slate-600 dark:text-slate-400">Transparent limits. Upgrade when you add locations or volume.</p>
             </div>
-
             <LandingPricingShowcase plans={plans} />
           </section>
         </Reveal>
@@ -217,18 +225,22 @@ export default function Home() {
           <LandingFinalCta />
         </Reveal>
 
-        <footer className="mt-16 border-t border-slate-200/80 pt-10 text-sm text-slate-600 transition-colors dark:border-slate-700/80 dark:text-slate-400">
-          <div className="flex flex-col items-center justify-between gap-6 md:flex-row">
-            <Link href="/" className="flex items-center gap-2 font-bold text-slate-900 transition hover:text-indigo-700 dark:text-slate-100 dark:hover:text-indigo-300">
-              <span className="rounded-lg bg-gradient-to-br from-indigo-600 to-blue-600 p-1.5 text-white shadow-sm">
-                <Sparkles className="h-3.5 w-3.5" aria-hidden />
+        <footer className="mt-20 border-t border-slate-200/80 pt-12 text-sm text-slate-600 dark:border-slate-700/80 dark:text-slate-400">
+          <div className="flex flex-col items-center justify-between gap-8 md:flex-row">
+            <Link href="/" className="flex items-center gap-3 font-bold text-slate-900 transition hover:opacity-90 dark:text-slate-100">
+              <AppMark size={40} className="rounded-xl ring-1 ring-slate-200/80 dark:ring-slate-600" />
+              <span>
+                <span className="font-heading block text-base tracking-tight">ReviewPulse AI</span>
+                <span className="text-xs font-medium text-slate-500 dark:text-slate-400">Reputation for Indian SMBs</span>
               </span>
-              ReviewPulse AI
             </Link>
             <div className="flex flex-wrap justify-center gap-6 text-xs font-medium md:justify-end">
               <Link href="/login" className="transition hover:text-indigo-700 dark:hover:text-indigo-400">
                 Sign in
               </Link>
+              <a href="#electric-flow" className="transition hover:text-indigo-700 dark:hover:text-indigo-400">
+                Product map
+              </a>
               <a href="#pricing" className="transition hover:text-indigo-700 dark:hover:text-indigo-400">
                 Pricing
               </a>
@@ -240,7 +252,7 @@ export default function Home() {
               </Link>
             </div>
           </div>
-          <p className="mt-6 text-center text-xs text-slate-500 dark:text-slate-500">© {new Date().getFullYear()} ReviewPulse · Built for Indian SMBs</p>
+          <p className="mt-8 text-center text-xs text-slate-500 dark:text-slate-500">© {new Date().getFullYear()} ReviewPulse · Built for Indian SMBs</p>
         </footer>
       </main>
     </div>

@@ -10,6 +10,7 @@ import { cn } from '@/lib/utils'
 
 const NAV_LINKS = [
   { href: '/tools/free-reply', label: 'Free reply tool' },
+  { href: '#electric-flow', label: 'Product map' },
   { href: '#features', label: 'Features' },
   { href: '#pricing', label: 'Pricing' },
   { href: '#faq', label: 'FAQ' },

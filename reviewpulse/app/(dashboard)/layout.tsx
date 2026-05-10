@@ -33,8 +33,6 @@ export default async function DashboardLayout({ children }: { children: React.Re
         }}
       />
       <DashboardAppShell
-        session={session}
-        agencyBrand={agencyBrand}
         sidebar={<Sidebar agencyBrand={agencyBrand} />}
         header={<TopBar session={session} agencyBrand={agencyBrand} />}
       >

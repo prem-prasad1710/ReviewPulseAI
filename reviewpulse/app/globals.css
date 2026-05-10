@@ -224,6 +224,40 @@ body {
   }
 }
 
+/* Landing “electric flow” SVG paths */
+@keyframes landing-electric-dash {
+  to {
+    stroke-dashoffset: -140;
+  }
+}
+
+.landing-electric-path {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2.25;
+  stroke-dasharray: 12 18;
+  animation: landing-electric-dash 2.4s linear infinite;
+}
+
+.landing-electric-path-muted {
+  opacity: 0.35;
+}
+
+.landing-electric-path-active {
+  opacity: 1;
+  stroke-width: 3.25;
+  filter: drop-shadow(0 0 10px rgb(99 102 241 / 0.65));
+  animation-duration: 1.1s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-electric-path {
+    animation: none;
+    stroke-dasharray: none;
+  }
+}
+
 /* Focus ring for accessibility */
 :focus-visible {
   outline: 2px solid var(--ring);
