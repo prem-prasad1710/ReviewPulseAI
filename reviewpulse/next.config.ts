@@ -16,8 +16,7 @@ function remotionCompositorPackageForHost(): string {
 }
 
 // Load `.env*` from this app folder. Next can infer a parent directory as the workspace root when
-// multiple lockfiles exist; that skips reviewpulse env vars and breaks Mongo. Do not set
-// `turbopack.root` here — it breaks resolving `tailwindcss` from this package (see Next #90307).
+// multiple lockfiles exist; that skips reviewpulse env vars and breaks Mongo.
 loadEnvConfig(appDir)
 
 const securityHeaders = [
@@ -32,6 +31,15 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  /**
+   * When this app lives under a parent folder (e.g. `…/ReviewPulseAI/reviewpulse`), Turbopack can
+   * pick the parent as the project root. Then `@import "tailwindcss"` in `app/globals.css`
+   * resolves from a path with no `package.json` / `node_modules` → "Can't resolve 'tailwindcss'".
+   * Pinning the root to this directory fixes that without changing `outputFileTracingRoot`.
+   */
+  turbopack: {
+    root: appDir,
+  },
   /**
    * Local monorepos: trace from this app root. On Vercel, omit — setting this has caused
    * finalize to look for `.next` under `/vercel/path0` while the build landed under `/vercel/output`.
