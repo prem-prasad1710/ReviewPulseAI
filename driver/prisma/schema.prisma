@@ -1,0 +1,132 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                 String   @id @default(cuid())
+  phone              String   @unique
+  displayName        String?
+  city               String?
+  language           String   @default("hi")
+  subscriptionTier   String   @default("FREE") // FREE | PRO
+  freeChecksUsed     Int      @default(0)
+  waOptIn            Boolean  @default(true)
+  /// JSON: WhatsApp conversation state { flow, step, data }
+  waState            String   @default("{}")
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  vehicles       VehicleProfile[]
+  earningsChecks EarningsCheck[]
+  challanCases   ChallanCase[]
+  loanInquiries    LoanInquiry[]
+  reminders        Reminder[]
+  vaultAssets      VaultAsset[]
+  tickets          SupportTicket[]
+  expenses         WalletExpense[]
+}
+
+model VehicleProfile {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  vehicleType  String
+  city         String?
+  platformTags String   @default("[]") // JSON string array
+  createdAt    DateTime @default(now())
+}
+
+model EarningsCheck {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  platform     String // OLA | UBER | RAPIDO | OTHER
+  checkDate    DateTime @default(now())
+  inputsJson   String
+  resultJson   String
+  proofText    String?
+  createdAt    DateTime @default(now())
+}
+
+model ChallanCase {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amount      Float
+  city        String?
+  offenceText String?
+  status      String    @default("open")
+  explainJson String
+  dueAt       DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model LoanInquiry {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lenderGuess String?
+  notes       String?
+  riskJson    String
+  createdAt   DateTime @default(now())
+}
+
+model Reminder {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String // INSURANCE | RC | PUC | ...
+  title     String
+  dueAt     DateTime
+  notified  Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model VaultAsset {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kind       String
+  fileName   String
+  mimeType   String
+  storageKey String   @unique
+  createdAt  DateTime @default(now())
+}
+
+model CommunitySignal {
+  id         String   @id @default(cuid())
+  patternKey String
+  city       String?
+  weight     Int      @default(1)
+  verified   Boolean  @default(false)
+  note       String?
+  createdAt  DateTime @default(now())
+}
+
+model SupportTicket {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  platform    String?
+  templateKey String?
+  body        String
+  status      String    @default("draft")
+  nextAt      DateTime?
+  createdAt   DateTime  @default(now())
+}
+
+model WalletExpense {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category  String
+  amount    Float
+  note      String?
+  spentAt   DateTime @default(now())
+}
