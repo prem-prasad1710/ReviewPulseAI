@@ -32,8 +32,11 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
-  /** Align file tracing with this app when multiple lockfiles exist above this folder. */
-  outputFileTracingRoot: appDir,
+  /**
+   * Local monorepos: trace from this app root. On Vercel, omit — setting this has caused
+   * finalize to look for `.next` under `/vercel/path0` while the build landed under `/vercel/output`.
+   */
+  ...(process.env.VERCEL ? {} : { outputFileTracingRoot: appDir }),
   serverExternalPackages: [
     'remotion',
     '@remotion/bundler',
