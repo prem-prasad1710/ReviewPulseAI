@@ -1,16 +1,13 @@
 import { err, ok } from '@/lib/api'
 import { connectDB } from '@/lib/mongodb'
 import { getRazorpayClient, verifyRazorpayWebhookSignature } from '@/lib/razorpay'
+import {
+  applyPrimaryPlanToUser,
+  resolveWorkspacePlanFromSubscription,
+} from '@/lib/razorpay-subscription-plan-sync'
 import Agency from '@/models/Agency'
 import Subscription from '@/models/Subscription'
 import User from '@/models/User'
-
-const PLAN_BY_ID: Record<string, 'starter' | 'growth' | 'scale' | 'agency'> = {
-  [process.env.RAZORPAY_PLAN_STARTER || '']: 'starter',
-  [process.env.RAZORPAY_PLAN_GROWTH || '']: 'growth',
-  [process.env.RAZORPAY_PLAN_SCALE || '']: 'scale',
-  [process.env.RAZORPAY_PLAN_AGENCY || '']: 'agency',
-}
 
 type SubscriptionEntity = {
   id: string
@@ -62,12 +59,14 @@ export async function POST(request: Request) {
     const sub = await Subscription.findOne({ razorpaySubscriptionId: subscriptionId })
     if (!sub) return ok({ received: true })
 
-    if (!entity && payload.event === 'payment.failed') {
+    if (!entity) {
       try {
         const rz = getRazorpayClient()
         entity = (await rz.subscriptions.fetch(subscriptionId)) as SubscriptionEntity
       } catch {
-        entity = { id: subscriptionId, status: sub.status, plan_id: sub.razorpayPlanId }
+        if (payload.event === 'payment.failed') {
+          entity = { id: subscriptionId, status: sub.status, plan_id: sub.razorpayPlanId }
+        }
       }
     }
 
@@ -79,8 +78,7 @@ export async function POST(request: Request) {
       await sub.save()
     }
 
-    const planFromRazorpay = PLAN_BY_ID[(entity?.plan_id || sub.razorpayPlanId) ?? '']
-    const plan = planFromRazorpay || (sub.plan !== 'agency_addon' ? sub.plan : undefined)
+    const plan = resolveWorkspacePlanFromSubscription(sub, entity)
 
     if (sub.plan === 'agency_addon') {
       if (payload.event === 'subscription.activated') {
@@ -89,7 +87,7 @@ export async function POST(request: Request) {
           $set: { subscriptionStatus: 'active' },
         })
       }
-      if (payload.event === 'subscription.charged') {
+      if (payload.event === 'subscription.charged' || payload.event === 'payment.captured') {
         await User.findByIdAndUpdate(sub.userId, {
           $set: { subscriptionStatus: 'active' },
         })
@@ -105,27 +103,14 @@ export async function POST(request: Request) {
 
     const matchesPrimary = await userOwnsThisSubscription(String(sub.userId), subscriptionId)
 
-    if (payload.event === 'subscription.activated' && plan && matchesPrimary) {
-      await User.findByIdAndUpdate(sub.userId, {
-        $set: { plan, subscriptionStatus: 'active' },
-      })
-      if (plan === 'agency') {
-        await Agency.updateMany(
-          { ownerId: sub.userId },
-          { $set: { razorpaySubscriptionId: subscriptionId } }
-        )
-      }
-    }
+    const primaryPaidEvents = new Set([
+      'subscription.activated',
+      'subscription.charged',
+      'payment.captured',
+    ])
 
-    if (payload.event === 'subscription.charged' && plan && matchesPrimary) {
-      await User.findByIdAndUpdate(sub.userId, {
-        $set: {
-          subscriptionStatus: 'active',
-          plan,
-          repliesUsedThisMonth: 0,
-          repliesResetAt: new Date(),
-        },
-      })
+    if (primaryPaidEvents.has(payload.event) && plan && matchesPrimary) {
+      await applyPrimaryPlanToUser(sub.userId, plan, subscriptionId)
     }
 
     if (payload.event === 'subscription.cancelled' && matchesPrimary) {

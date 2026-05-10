@@ -58,13 +58,32 @@ export async function ensureRazorpayCheckoutReady(): Promise<void> {
   )
 }
 
+export type RazorpaySubscriptionCheckoutSuccess = {
+  razorpay_payment_id: string
+  razorpay_subscription_id: string
+  razorpay_signature: string
+}
+
+/** Persists plan + subscription row immediately after Checkout (webhooks can lag). */
+export async function confirmSubscriptionWithServer(response: RazorpaySubscriptionCheckoutSuccess): Promise<void> {
+  const res = await fetch('/api/subscriptions/confirm', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(response),
+  })
+  const json = (await res.json()) as { success?: boolean; error?: string }
+  if (!res.ok || json.success === false) {
+    throw new Error(typeof json.error === 'string' ? json.error : 'Could not confirm subscription with server')
+  }
+}
+
 export function openRazorpaySubscriptionModal(opts: {
   key: string
   subscriptionId: string
   name: string
   description: string
   prefill?: RazorpayPrefill
-  onSuccess: () => void
+  onSuccess: (response: RazorpaySubscriptionCheckoutSuccess) => void | Promise<void>
   onDismiss?: () => void
 }) {
   if (!window.Razorpay) {
@@ -80,7 +99,9 @@ export function openRazorpaySubscriptionModal(opts: {
     subscription_id: opts.subscriptionId,
     name: opts.name,
     description: opts.description,
-    handler: opts.onSuccess,
+    handler: (response: Record<string, unknown>) => {
+      void opts.onSuccess(response as RazorpaySubscriptionCheckoutSuccess)
+    },
     theme: { color: '#4f46e5' },
     ...(hasPrefill ? { prefill: { email: prefill?.email, name: prefill?.name, contact: prefill?.contact } } : {}),
   }

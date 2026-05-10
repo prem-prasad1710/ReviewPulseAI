@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import {
+  confirmSubscriptionWithServer,
   ensureRazorpayCheckoutReady,
   loadRazorpayScript,
   openRazorpaySubscriptionModal,
@@ -61,9 +62,15 @@ export default function BillingResumeButton({
         name: brandName,
         description,
         prefill,
-        onSuccess: () => {
-          toast.success('Payment authorized — your plan will update in a moment.')
-          router.refresh()
+        onSuccess: async (checkout) => {
+          try {
+            await confirmSubscriptionWithServer(checkout)
+            toast.success('Payment confirmed — billing updated.')
+            router.refresh()
+          } catch (e) {
+            toast.error(e instanceof Error ? e.message : 'Sync failed — try refresh shortly.')
+            router.refresh()
+          }
         },
         onDismiss: () => toast.message('Checkout closed — you can resume anytime from Billing.'),
       })

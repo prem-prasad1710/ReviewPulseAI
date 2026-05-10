@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import {
+  confirmSubscriptionWithServer,
   ensureRazorpayCheckoutReady,
   loadRazorpayScript,
   openRazorpaySubscriptionModal,
@@ -89,10 +90,20 @@ export default function PlanCheckoutButtons({
         name: plan === 'agency' || plan === 'agency_addon' ? 'ReviewPulse Agency' : 'ReviewPulse',
         description: LABELS[plan],
         prefill,
-        onSuccess: () => {
-          toast.success('Payment authorized — your plan will update in a moment.')
-          if (successRedirect) router.push(successRedirect)
-          else router.refresh()
+        onSuccess: async (checkout) => {
+          try {
+            await confirmSubscriptionWithServer(checkout)
+            toast.success('Payment confirmed — your plan is updated.')
+            if (successRedirect) router.push(successRedirect)
+            else router.refresh()
+          } catch (e) {
+            toast.error(
+              e instanceof Error
+                ? e.message
+                : 'Payment succeeded but server sync failed — refresh in a minute or contact support.'
+            )
+            router.refresh()
+          }
         },
         onDismiss: () =>
           toast.message('Checkout closed — if you did not see it, check for overlays or try again.'),
