@@ -7,6 +7,7 @@ import { connectDB } from '@/lib/mongodb'
 import Location from '@/models/Location'
 import LocationSyncButton from '@/components/locations/LocationSyncButton'
 import LocationsToolbar from '@/components/locations/LocationsToolbar'
+import DevSeedPanel from '@/components/dev/DevSeedPanel'
 import { Card, CardDescription } from '@/components/ui/card'
 
 export default async function LocationsPage() {
@@ -14,6 +15,8 @@ export default async function LocationsPage() {
   const session = await getAppSession()
   const useMocks = shouldUseDashboardMocks()
   const userId = session?.user?.id
+  const showDevSeed =
+    process.env.NODE_ENV !== 'production' && process.env.ALLOW_DEV_SEED === 'true' && Boolean(userId) && !useMocks
   const locations = useMocks
     ? MOCK_LOCATIONS
     : userId
@@ -33,6 +36,8 @@ export default async function LocationsPage() {
         </div>
         <LocationsToolbar useMocks={useMocks} />
       </div>
+
+      {showDevSeed ? <DevSeedPanel /> : null}
 
       {locations.length === 0 ? (
         <Card className="dark:bg-slate-900/70">

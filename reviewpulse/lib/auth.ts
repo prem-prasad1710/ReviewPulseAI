@@ -108,6 +108,15 @@ export const authConfig: NextAuthConfig = {
       if (session.user) {
         session.user.id = String(token.id ?? '')
         session.user.plan = (token.plan as string | undefined) ?? 'free'
+        if (process.env.NODE_ENV === 'development' && session.user.id) {
+          try {
+            await connectDB()
+            const u = await User.findById(session.user.id).select('plan').lean()
+            if (u?.plan) session.user.plan = u.plan as string
+          } catch {
+            /* ignore — session still valid with JWT plan */
+          }
+        }
       }
       return session
     },

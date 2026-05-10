@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
+    "seed:test": "tsx --tsconfig tsconfig.json scripts/seed-test-data.ts",
     "mongo:local:up": "podman rm -f reviewpulse-mongo-local 2>/dev/null || true && podman run -d --name reviewpulse-mongo-local -p 127.0.0.1:27018:27017 -e MONGO_INITDB_ROOT_USERNAME=localuser -e MONGO_INITDB_ROOT_PASSWORD=localuser docker.io/library/mongo:7",
     "mongo:local:down": "podman rm -f reviewpulse-mongo-local 2>/dev/null || true",
     "mongo:local:compose-up": "sh -c 'cd infra/local-mongo && podman compose -f compose.yml up -d'",
@@ -59,6 +60,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.2.4",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "tsx": "^4.19.3"
   }
 }
