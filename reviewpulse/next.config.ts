@@ -31,6 +31,9 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  experimental: {
+    optimizePackageImports: ['lucide-react'],
+  },
   /**
    * When this app lives under a parent folder (e.g. `…/ReviewPulseAI/reviewpulse`), Turbopack can
    * pick the parent as the project root. Then `@import "tailwindcss"` in `app/globals.css`

@@ -7,11 +7,17 @@ import './globals.css'
 const manrope = Manrope({
   variable: '--font-manrope',
   subsets: ['latin'],
+  display: 'swap',
+  preload: true,
+  adjustFontFallback: true,
 })
 
 const spaceGrotesk = Space_Grotesk({
   variable: '--font-space-grotesk',
   subsets: ['latin'],
+  display: 'swap',
+  preload: false,
+  adjustFontFallback: true,
 })
 
 const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'

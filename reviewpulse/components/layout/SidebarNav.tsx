@@ -21,6 +21,7 @@ import {
   Zap,
 } from 'lucide-react'
 import { LOCATION_HUB_LINKS, hrefForLocationHubSegment } from '@/lib/location-hub-features'
+import { useDashboardShell } from '@/components/layout/dashboard-shell-context'
 import { cn } from '@/lib/utils'
 
 const navItems = [
@@ -56,8 +57,15 @@ type LocRow = { _id: string; name?: string; locationSlug?: string | null }
 
 export default function SidebarNav() {
   const pathname = usePathname()
+  const shell = useDashboardShell()
   const [locations, setLocations] = useState<LocRow[]>([])
   const [locLoaded, setLocLoaded] = useState(false)
+
+  const onNav = () => {
+    if (typeof window !== 'undefined' && window.matchMedia('(max-width: 1023px)').matches) {
+      shell?.closeMobileNav()
+    }
+  }
 
   useEffect(() => {
     let cancelled = false
@@ -82,7 +90,7 @@ export default function SidebarNav() {
 
   return (
     <div className="flex flex-col gap-6">
-      <nav className="grid grid-cols-2 gap-1.5 lg:grid-cols-1">
+      <nav className="grid grid-cols-1 gap-1.5 lg:grid-cols-1">
         {navItems.map((item) => {
           const Icon = item.icon
           const active = pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href))
@@ -90,6 +98,7 @@ export default function SidebarNav() {
             <Link
               key={item.href}
               href={item.href}
+              onClick={onNav}
               className={cn(
                 'inline-flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium transition-all motion-safe:duration-200',
                 active
@@ -124,6 +133,7 @@ export default function SidebarNav() {
                   <Link
                     key={seg}
                     href={href}
+                    onClick={onNav}
                     className={cn(
                       'flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs font-medium transition-colors',
                       active
@@ -139,6 +149,7 @@ export default function SidebarNav() {
               })}
               <Link
                 href={`/locations/${String(primary._id)}`}
+                onClick={onNav}
                 className="mt-1 flex items-center justify-center gap-1 rounded-lg py-1.5 text-[11px] font-semibold text-indigo-600 hover:bg-indigo-50 dark:text-indigo-400 dark:hover:bg-indigo-950/40"
               >
                 All tools
@@ -151,6 +162,7 @@ export default function SidebarNav() {
               <Link
                 href="/locations/connect"
                 prefetch={false}
+                onClick={onNav}
                 className="mt-2 inline-flex items-center justify-center gap-1 text-[11px] font-semibold text-indigo-600 hover:underline dark:text-indigo-400"
               >
                 <MapPin className="h-3 w-3" />

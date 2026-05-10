@@ -1,5 +1,6 @@
 import Link from 'next/link'
-import { Building2, LifeBuoy } from 'lucide-react'
+import { LifeBuoy } from 'lucide-react'
+import { AppMark } from '@/components/brand/AppMark'
 import SidebarNav from '@/components/layout/SidebarNav'
 import type { AgencyBrand } from '@/lib/agency-branding'
 import { cn } from '@/lib/utils'
@@ -12,11 +13,10 @@ export default function Sidebar({ agencyBrand }: { agencyBrand?: AgencyBrand | n
   return (
     <aside
       className={cn(
-        'relative z-[2] flex w-full shrink-0 flex-col border-b border-slate-200/70 bg-gradient-to-b from-white/95 to-slate-50/90 p-4 shadow-[0_1px_0_rgba(15,23,42,0.04)] backdrop-blur-xl dark:border-slate-700/70 dark:from-slate-900/98 dark:to-slate-950/95 dark:shadow-black/30',
-        'lg:sticky lg:top-0 lg:z-20 lg:h-[100dvh] lg:max-h-[100dvh] lg:w-64 lg:flex-col lg:overflow-hidden lg:border-b-0 lg:border-r lg:border-slate-200/70 lg:shadow-[inset_-1px_0_0_rgba(99,102,241,0.06)] dark:lg:border-slate-700/70'
+        'relative flex h-full min-h-0 w-full flex-col overflow-hidden border-slate-200/70 bg-gradient-to-b from-white/95 to-slate-50/90 p-4 shadow-[inset_-1px_0_0_rgba(99,102,241,0.04)] backdrop-blur-xl dark:border-slate-700/70 dark:from-slate-900/98 dark:to-slate-950/95 dark:shadow-[inset_-1px_0_0_rgba(99,102,241,0.08)]'
       )}
     >
-      <div className="pointer-events-none absolute inset-y-0 right-0 hidden w-px bg-gradient-to-b from-indigo-200/0 via-indigo-200/40 to-indigo-200/0 dark:from-indigo-500/0 dark:via-indigo-400/25 dark:to-indigo-500/0 lg:block" aria-hidden />
+      <div className="pointer-events-none absolute inset-y-0 right-0 w-px bg-gradient-to-b from-indigo-200/0 via-indigo-200/40 to-indigo-200/0 dark:from-indigo-500/0 dark:via-indigo-400/25 dark:to-indigo-500/0" aria-hidden />
       <Link
         href="/dashboard"
         className="mb-6 flex shrink-0 items-center gap-3 rounded-xl px-1 py-0.5 transition motion-safe:duration-200 hover:opacity-90 active:scale-[0.99] lg:mb-8"
@@ -28,7 +28,7 @@ export default function Sidebar({ agencyBrand }: { agencyBrand?: AgencyBrand | n
             alt=""
             className="h-11 w-11 shrink-0 rounded-xl object-contain ring-1 ring-slate-200/80 dark:ring-slate-600"
           />
-        ) : (
+        ) : branded ? (
           <div
             className={cn(
               'flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-white shadow-lg shadow-indigo-600/30 ring-1 ring-white/20',
@@ -36,15 +36,17 @@ export default function Sidebar({ agencyBrand }: { agencyBrand?: AgencyBrand | n
             )}
             style={agencyBrand?.primaryColor ? { backgroundColor: agencyBrand.primaryColor } : undefined}
           >
-            {branded ? (
-              <span className="text-sm font-bold text-white">{agencyBrand!.name.slice(0, 1).toUpperCase()}</span>
-            ) : (
-              <Building2 className="h-5 w-5" />
-            )}
+            <span className="text-sm font-bold text-white">{agencyBrand!.name.slice(0, 1).toUpperCase()}</span>
           </div>
+        ) : (
+          <AppMark size={44} priority className="rounded-xl ring-1 ring-slate-200/80 dark:ring-slate-600" />
         )}
-        <div>
-          <p className="font-heading text-base font-bold tracking-tight text-slate-900 dark:text-slate-50">{title}</p>
+        <div className="min-w-0">
+          {branded ? (
+            <p className="font-heading truncate text-base font-bold tracking-tight text-slate-900 dark:text-slate-50">{title}</p>
+          ) : (
+            <p className="sr-only">{title}</p>
+          )}
           <p className="text-xs font-medium text-slate-500 dark:text-slate-400">{subtitle}</p>
         </div>
       </Link>
@@ -53,7 +55,7 @@ export default function Sidebar({ agencyBrand }: { agencyBrand?: AgencyBrand | n
         <SidebarNav />
       </div>
 
-      <div className="mt-4 hidden shrink-0 pt-4 lg:mt-auto lg:block lg:pt-8">
+      <div className="mt-4 shrink-0 border-t border-slate-200/70 pt-4 dark:border-slate-700/80 lg:mt-auto lg:pt-8">
         {!branded ? (
           <a
             href="mailto:support@reviewpulse.in"

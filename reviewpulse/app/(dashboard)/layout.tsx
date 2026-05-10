@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation'
+import DashboardAppShell from '@/components/layout/DashboardAppShell'
 import Sidebar from '@/components/layout/Sidebar'
 import TopBar from '@/components/layout/TopBar'
 import { AUTH_DISABLED_FOR_DEV } from '@/lib/auth-dev'
@@ -12,7 +13,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const agencyBrand = await getAgencyBrandFromHeaders()
 
   return (
-    <div className="relative flex h-[100dvh] max-h-[100dvh] flex-col overflow-hidden bg-gradient-to-br from-[#eef2fb] via-[#f2f5fc] to-[#e8efff] dark:from-slate-950 dark:via-slate-950 dark:to-slate-950 lg:flex-row">
+    <div className="relative flex h-[100dvh] max-h-[100dvh] flex-col overflow-hidden bg-gradient-to-br from-[#eef2fb] via-[#f2f5fc] to-[#e8efff] dark:from-slate-950 dark:via-slate-950 dark:to-slate-950">
       <div
         className="pointer-events-none absolute inset-0 opacity-[0.55] dark:opacity-[0.35]"
         aria-hidden
@@ -31,15 +32,14 @@ export default async function DashboardLayout({ children }: { children: React.Re
             radial-gradient(at 80% 100%, rgb(88 28 135 / 0.28) 0px, transparent 42%)`,
         }}
       />
-      <Sidebar agencyBrand={agencyBrand} />
-      <div className="relative z-[1] flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-        <TopBar session={session} agencyBrand={agencyBrand} />
-        <main className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-y-contain touch-pan-y px-4 py-6 sm:px-6 lg:px-8 [-webkit-overflow-scrolling:touch]">
-          <div className="mx-auto max-w-7xl rounded-2xl border border-slate-200/70 bg-white/90 p-4 shadow-[0_12px_40px_-20px_rgba(15,23,42,0.1)] ring-1 ring-white/70 backdrop-blur-[2px] dark:border-slate-700/50 dark:bg-slate-900/35 dark:shadow-black/25 dark:ring-0 sm:p-6 lg:rounded-3xl lg:p-8">
-            {children}
-          </div>
-        </main>
-      </div>
+      <DashboardAppShell
+        session={session}
+        agencyBrand={agencyBrand}
+        sidebar={<Sidebar agencyBrand={agencyBrand} />}
+        header={<TopBar session={session} agencyBrand={agencyBrand} />}
+      >
+        {children}
+      </DashboardAppShell>
     </div>
   )
 }

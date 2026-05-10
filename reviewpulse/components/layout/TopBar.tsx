@@ -3,6 +3,7 @@ import type { Session } from 'next-auth'
 import { signOut } from '@/lib/auth'
 import { AUTH_DISABLED_FOR_DEV } from '@/lib/auth-dev'
 import type { AgencyBrand } from '@/lib/agency-branding'
+import { MobileSidebarTrigger } from '@/components/layout/MobileSidebarTrigger'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { ThemeToggle } from '@/components/theme/ThemeToggle'
@@ -35,24 +36,29 @@ export default function TopBar({
     <header className="sticky top-0 z-10 border-b border-slate-200/70 bg-white/80 px-4 py-3 backdrop-blur-xl dark:border-slate-700/70 dark:bg-slate-900/85 sm:px-6 lg:px-8">
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-indigo-300/50 to-transparent dark:via-indigo-500/30" aria-hidden />
       <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4">
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-indigo-600 dark:text-indigo-400">
-              {eyebrow}
-            </p>
-            {!branded ? (
-              <Link
-                href="/"
-                className="hidden text-[11px] font-medium text-slate-400 transition hover:text-indigo-600 dark:hover:text-indigo-400 sm:inline"
-              >
-                Marketing site →
-              </Link>
-            ) : null}
+        <div className="flex min-w-0 flex-1 items-start gap-3">
+          <div className="pt-0.5">
+            <MobileSidebarTrigger />
           </div>
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-indigo-600 dark:text-indigo-400">
+                {eyebrow}
+              </p>
+              {!branded ? (
+                <Link
+                  href="/"
+                  className="hidden text-[11px] font-medium text-slate-400 transition hover:text-indigo-600 dark:hover:text-indigo-400 sm:inline"
+                >
+                  Marketing site →
+                </Link>
+              ) : null}
+            </div>
           <h1 className="font-heading truncate text-xl font-bold tracking-tight text-slate-900 dark:text-slate-50 sm:text-2xl">
             {title}
           </h1>
           <p className="mt-0.5 text-sm text-slate-600 dark:text-slate-400">{description}</p>
+          </div>
         </div>
 
         <div className="flex flex-wrap items-center gap-3">

@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
-import { Building2, Lock, Sparkles } from 'lucide-react'
+import { Lock, Sparkles } from 'lucide-react'
+import { AppMark } from '@/components/brand/AppMark'
 import { signIn } from '@/lib/auth'
 import { getAppSession } from '@/lib/auth-helpers'
 import { Button } from '@/components/ui/button'
@@ -44,12 +45,11 @@ export default async function LoginPage({
         <div className="pointer-events-none absolute -inset-1 rounded-[1.35rem] bg-gradient-to-br from-indigo-500/20 via-violet-500/15 to-blue-500/20 blur-xl" aria-hidden />
         <div className="relative overflow-hidden rounded-3xl border border-slate-200/90 bg-white/95 p-8 shadow-2xl shadow-slate-900/10 backdrop-blur-md dark:border-slate-700/90 dark:bg-slate-900/90 dark:shadow-black/40 sm:p-10">
           <div className="mb-6 flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-600 to-blue-600 text-white shadow-lg shadow-indigo-600/30">
-              <Building2 className="h-6 w-6" />
-            </div>
+            <AppMark size={48} priority className="rounded-2xl ring-1 ring-slate-200/80 shadow-md dark:ring-slate-600" />
             <div>
-              <h1 className="font-heading text-xl font-bold tracking-tight text-slate-900 dark:text-slate-50">ReviewPulse</h1>
-              <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Secure sign-in</p>
+              <h1 className="sr-only">ReviewPulse</h1>
+              <p className="font-heading text-xl font-bold tracking-tight text-slate-900 dark:text-slate-50">Sign in</p>
+              <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Secure OAuth · Google Business</p>
             </div>
           </div>
 

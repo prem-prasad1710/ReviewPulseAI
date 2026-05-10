@@ -2,7 +2,8 @@
 
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
-import { Building2, Menu, X } from 'lucide-react'
+import { Menu, X } from 'lucide-react'
+import { AppMark } from '@/components/brand/AppMark'
 import { Button } from '@/components/ui/button'
 import { ThemeToggle } from '@/components/theme/ThemeToggle'
 import { cn } from '@/lib/utils'
@@ -39,10 +40,8 @@ export default function LandingNav() {
           href="/"
           className="flex items-center gap-2.5 text-sm font-bold text-slate-900 transition hover:opacity-90 active:scale-[0.98] dark:text-white"
         >
-          <div className="rounded-xl bg-gradient-to-br from-indigo-600 to-blue-600 p-2 text-white shadow-md shadow-indigo-600/30 ring-1 ring-white/20">
-            <Building2 className="h-4 w-4" />
-          </div>
-          <span className="font-heading tracking-tight drop-shadow-sm dark:drop-shadow-[0_1px_2px_rgba(0,0,0,0.4)]">ReviewPulse</span>
+          <AppMark size={36} priority className="rounded-xl ring-1 ring-slate-200/80 shadow-sm dark:ring-white/10" />
+          <span className="sr-only">ReviewPulse</span>
         </Link>
 
         <nav className="hidden items-center gap-1 text-sm font-medium text-slate-600 dark:text-slate-300 md:flex md:gap-0.5">
