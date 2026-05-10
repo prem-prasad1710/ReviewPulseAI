@@ -3,13 +3,17 @@ import { ArrowRight, MapPin, MessageSquare, Sparkles } from 'lucide-react'
 import AiStudioTeaser from '@/components/dashboard/AiStudioTeaser'
 import DevSampleNotice from '@/components/dashboard/DevSampleNotice'
 import InsightRail from '@/components/dashboard/InsightRail'
+import OwnerCoachCard from '@/components/dashboard/OwnerCoachCard'
 import ProductHighlights from '@/components/dashboard/ProductHighlights'
 import RecentReviews from '@/components/dashboard/RecentReviews'
+import ReputationRecoveryCard from '@/components/dashboard/ReputationRecoveryCard'
 import SentimentChart from '@/components/dashboard/SentimentChart'
 import StatsCards from '@/components/dashboard/StatsCards'
+import WhyCustomersLeaveCard from '@/components/dashboard/WhyCustomersLeaveCard'
 import { Reveal } from '@/components/motion/Reveal'
 import { Card, CardDescription } from '@/components/ui/card'
 import { MOCK_LOCATIONS, MOCK_REVIEWS, shouldUseDashboardMocks } from '@/lib/dev-mock-dashboard'
+import { bucketNegativeReviewThemes } from '@/lib/reputation-themes'
 import { getAppSession } from '@/lib/auth-helpers'
 import { connectDB } from '@/lib/mongodb'
 import Review from '@/models/Review'
@@ -76,6 +80,21 @@ export default async function DashboardPage() {
     const t = new Date(r.reviewCreatedAt).getTime()
     return t >= weekCutoffMs
   }).length
+
+  const lowStarPending = reviews.filter(
+    (r) => r.rating <= 2 && (r.status === 'pending' || r.status === 'scheduled')
+  ).length
+  const recoveredCount = reviews.filter((r) => Boolean((r as { ratingRecovered?: boolean }).ratingRecovered)).length
+  const negComments = reviews
+    .filter((r) => (r.rating <= 3 || r.sentiment === 'negative') && (r.comment || '').trim().length > 4)
+    .map((r) => String(r.comment))
+  const themeBuckets = useMocks
+    ? [
+        { id: 'wait_time', label: 'Waiting / queue', count: 4 },
+        { id: 'staff', label: 'Staff attitude', count: 2 },
+        { id: 'food_quality', label: 'Taste / food quality', count: 2 },
+      ]
+    : bucketNegativeReviewThemes(negComments)
 
   return (
     <div className="space-y-8 pb-4">
@@ -145,10 +164,10 @@ export default async function DashboardPage() {
       {!useMocks && userId && locationCount === 0 ? (
         <Reveal delay={55}>
           <Card className="border-indigo-200/80 bg-indigo-50/50 p-5 dark:border-indigo-500/30 dark:bg-indigo-950/25 sm:p-6">
-            <h3 className="font-heading text-lg font-bold text-slate-900 dark:text-slate-50">Connect Google Business Profile</h3>
+            <h3 className="font-heading text-lg font-bold text-slate-900 dark:text-slate-50">Connect Google Business in ~90 seconds</h3>
             <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
-              Metrics stay at zero until we import your outlets. Use the same Google account that owns your Business
-              Profile listings (we request the Business Profile permission).
+              Same Google account that owns your listings. We import outlets, sync reviews, and surface AI drafts fast
+              so you feel momentum quickly.
             </p>
             <div className="mt-4 flex flex-wrap gap-2">
               <Link
@@ -188,6 +207,16 @@ export default async function DashboardPage() {
         qrScansTotal={qrScansTotal}
         bridgeVisitsTotal={bridgeVisitsTotal}
       />
+      </Reveal>
+
+      <Reveal delay={82}>
+        {useMocks || (userId && locationCount > 0) ? (
+          <div className="grid gap-4 lg:grid-cols-3">
+            <ReputationRecoveryCard lowStarPending={lowStarPending} recoveredCount={recoveredCount} />
+            <WhyCustomersLeaveCard buckets={themeBuckets} />
+            <OwnerCoachCard />
+          </div>
+        ) : null}
       </Reveal>
 
       <Reveal delay={90}>

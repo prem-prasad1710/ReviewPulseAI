@@ -57,3 +57,23 @@ export const syncAllLimiter = redis
       prefix: 'reviewpulse:sync-all',
     })
   : null
+
+/** SEO / acquisition — free reply preview (no auth). Tight limit without Redis. */
+export const publicFreeReplyLimiter = redis
+  ? new Ratelimit({
+      redis,
+      limiter: Ratelimit.slidingWindow(12, '1 h'),
+      analytics: true,
+      prefix: 'reviewpulse:public-free-reply',
+    })
+  : null
+
+/** Public embed widget JSON — per slug + IP. */
+export const publicWidgetLimiter = redis
+  ? new Ratelimit({
+      redis,
+      limiter: Ratelimit.slidingWindow(200, '1 h'),
+      analytics: true,
+      prefix: 'reviewpulse:public-widget',
+    })
+  : null

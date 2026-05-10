@@ -99,6 +99,9 @@ export default function Home() {
             <span className="font-heading tracking-tight drop-shadow-sm dark:drop-shadow-[0_1px_2px_rgba(0,0,0,0.4)]">ReviewPulse</span>
           </Link>
           <nav className="hidden items-center gap-8 text-sm font-medium text-slate-600 dark:text-slate-300 md:flex">
+            <Link href="/tools/free-reply" className="transition hover:text-indigo-700 dark:hover:text-white">
+              Free reply tool
+            </Link>
             <a href="#features" className="transition hover:text-indigo-700 dark:hover:text-white">
               Features
             </a>
@@ -139,12 +142,16 @@ export default function Home() {
                 Built for Indian SMB owners
               </p>
               <h1 className="font-heading mb-4 text-4xl font-bold leading-[1.08] tracking-tight text-slate-900 dark:text-slate-50 md:text-6xl">
-                Reply to every Google review in{' '}
-                <span className="text-gradient-brand">minutes</span>, not days
+                Turn ignored reviews into{' '}
+                <span className="text-gradient-brand">growth</span>, not churn
               </h1>
+              <p className="mb-3 max-w-xl text-base font-medium text-slate-800 dark:text-slate-200 md:text-lg">
+                “You have 217 unanswered reviews.” Restaurants lose bookings when bad feedback sits silent.
+              </p>
               <p className="mb-8 max-w-xl text-base leading-relaxed text-slate-600 dark:text-slate-400 md:text-lg">
-                ReviewPulse connects your locations, syncs reviews on a schedule, drafts bilingual AI replies you
-                approve, and publishes to Google Business Profile in one streamlined flow.
+                ReviewPulse is the India-first reputation layer: connect Google Business in about a minute, see
+                sentiment and themes instantly, and ship professional replies—including a free public generator for
+                tough reviews.
               </p>
 
               <div className="mb-8 flex flex-wrap gap-3">
@@ -152,6 +159,11 @@ export default function Home() {
                   <Button size="lg" className="gap-2 rounded-xl shadow-lg shadow-indigo-600/25">
                     Start 14-day trial
                     <ArrowRight className="h-4 w-4" />
+                  </Button>
+                </Link>
+                <Link href="/tools/free-reply">
+                  <Button size="lg" variant="outline" className="rounded-xl border-slate-200 bg-white/80 dark:border-slate-600 dark:bg-slate-800/60">
+                    Free AI reply — no login
                   </Button>
                 </Link>
                 <Link href="/dashboard">
@@ -178,7 +190,7 @@ export default function Home() {
                 {[
                   { label: 'Total reviews', value: '1,274', tone: 'text-slate-900 dark:text-slate-100' },
                   { label: 'Avg rating', value: '4.6', tone: 'text-slate-900 dark:text-slate-100' },
-                  { label: 'Pending', value: '18', tone: 'text-rose-600 dark:text-rose-400' },
+                  { label: 'Unanswered', value: '217', tone: 'text-rose-600 dark:text-rose-400' },
                 ].map((m) => (
                   <div
                     key={m.label}
