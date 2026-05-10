@@ -1,0 +1,24 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/sync-reviews",
+      "schedule": "0 2 * * *"
+    },
+    {
+      "path": "/api/cron/publish-scheduled-replies",
+      "schedule": "30 3 * * *"
+    },
+    {
+      "path": "/api/cron/monthly-reports",
+      "schedule": "0 4 1 * *"
+    },
+    {
+      "path": "/api/cron/menu-insights",
+      "schedule": "30 1 1 * *"
+    },
+    {
+      "path": "/api/cron/v2-campaigns",
+      "schedule": "0 9 * * 1"
+    }
+  ]
+}

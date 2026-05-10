@@ -1,0 +1,90 @@
+'use client'
+
+import { useRouter } from 'next/navigation'
+import { useEffect, useState } from 'react'
+import { toast } from 'sonner'
+import { Button } from '@/components/ui/button'
+import {
+  confirmSubscriptionWithServer,
+  ensureRazorpayCheckoutReady,
+  loadRazorpayScript,
+  openRazorpaySubscriptionModal,
+  type RazorpayPrefill,
+} from '@/components/billing/razorpay-subscription'
+
+type Props = {
+  razorpayKeyId: string
+  subscriptionId: string
+  label?: string
+  description: string
+  brandName?: string
+  prefill?: RazorpayPrefill
+}
+
+export default function BillingResumeButton({
+  razorpayKeyId,
+  subscriptionId,
+  label = 'Open checkout',
+  description,
+  brandName = 'ReviewPulse',
+  prefill,
+}: Props) {
+  const router = useRouter()
+  const [busy, setBusy] = useState(false)
+
+  useEffect(() => {
+    loadRazorpayScript().catch(() => {})
+  }, [])
+
+  const run = async () => {
+    setBusy(true)
+    let loadToast: string | number | undefined
+    try {
+      const res = await fetch('/api/subscriptions/resume', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ subscriptionId }),
+      })
+      const json = await res.json()
+      if (!res.ok) {
+        toast.error(json?.error || 'Could not resume checkout')
+        return
+      }
+      loadToast = toast.loading('Opening Razorpay payment…')
+      const sid = (json?.data?.subscriptionId as string | undefined) || subscriptionId
+      /* Avoid redirect to hosted /t/subscriptions/… — use Checkout modal (see PlanCheckoutButtons). */
+      await ensureRazorpayCheckoutReady()
+      toast.dismiss(loadToast)
+      toast.message('Complete payment in the Razorpay window (overlay).')
+      openRazorpaySubscriptionModal({
+        key: razorpayKeyId,
+        subscriptionId: sid,
+        name: brandName,
+        description,
+        prefill,
+        onSuccess: async (checkout) => {
+          try {
+            await confirmSubscriptionWithServer(checkout)
+            toast.success('Payment confirmed — billing updated.')
+            router.refresh()
+          } catch (e) {
+            toast.error(e instanceof Error ? e.message : 'Sync failed — try refresh shortly.')
+            router.refresh()
+          }
+        },
+        onDismiss: () => toast.message('Checkout closed — you can resume anytime from Billing.'),
+      })
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Checkout error')
+    } finally {
+      if (loadToast !== undefined) toast.dismiss(loadToast)
+      setBusy(false)
+    }
+  }
+
+  return (
+    <Button type="button" size="sm" variant="secondary" className="rounded-xl" disabled={busy} onClick={run}>
+      {busy ? '…' : label}
+    </Button>
+  )
+}
