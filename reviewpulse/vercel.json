@@ -5,6 +5,10 @@
       "schedule": "0 2 * * *"
     },
     {
+      "path": "/api/cron/sync-competitors",
+      "schedule": "15 3 * * *"
+    },
+    {
       "path": "/api/cron/publish-scheduled-replies",
       "schedule": "30 3 * * *"
     },

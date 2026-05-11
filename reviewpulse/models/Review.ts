@@ -26,6 +26,8 @@ export interface IReview extends Document {
   originalLanguage?: string
   detectedLanguage?: string
   translatedText?: string
+  /** SHA-256 of `${detectedLanguage}|${comment}` — skip repeat Translate API calls when unchanged. */
+  translationSourceFingerprint?: string
   sentiment: 'positive' | 'neutral' | 'negative'
   sentimentScore: number
   /** A1 — primary emotion (Growth+). */
@@ -68,6 +70,7 @@ const ReviewSchema = new Schema<IReview>(
     originalLanguage: String,
     detectedLanguage: String,
     translatedText: String,
+    translationSourceFingerprint: { type: String, index: true },
     sentiment: { type: String, enum: ['positive', 'neutral', 'negative'], default: 'neutral' },
     sentimentScore: { type: Number, min: -1, max: 1, default: 0 },
     emotion: {

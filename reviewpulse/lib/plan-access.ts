@@ -7,7 +7,14 @@ export function planAllowsToneTrainer(plan: string): boolean {
 }
 
 export function planAllowsCompetitorSpy(plan: string): boolean {
-  return plan === 'scale'
+  return plan === 'growth' || plan === 'scale' || plan === 'agency'
+}
+
+/** How long a Google Places snapshot for a competitor stays “fresh” before cron may refresh it. */
+export function competitorPlacesRefreshTtlMs(plan: string): number {
+  if (plan === 'growth') return 7 * 24 * 60 * 60 * 1000
+  if (plan === 'scale' || plan === 'agency') return 24 * 60 * 60 * 1000
+  return Number.POSITIVE_INFINITY
 }
 
 export function planAllowsWhatsApp(plan: string): boolean {
@@ -31,7 +38,7 @@ export function planAllowsMonthlyPdfAuto(plan: string): boolean {
 }
 
 export function competitorLimitForPlan(plan: string): number {
-  if (plan === 'scale') return 5
+  if (plan === 'scale' || plan === 'agency') return 10
   if (plan === 'growth') return 3
   return 0
 }

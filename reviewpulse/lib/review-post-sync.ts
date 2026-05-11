@@ -1,6 +1,7 @@
 import { Resend } from 'resend'
 import type { Types } from 'mongoose'
 import { detectReviewLanguageIso1 } from '@/lib/language-detect'
+import { translationContentFingerprint } from '@/lib/translation-fingerprint'
 import { planAllowsKeywordAlerts, planAllowsMoodHeatmap, planAllowsVoiceWhatsAppReply, planAllowsWhatsApp } from '@/lib/plan-access'
 import { classifyReviewEmotion } from '@/lib/review-emotion'
 import { sendWhatsAppAlertWithOptionalContent } from '@/lib/twilio-whatsapp'
@@ -59,11 +60,28 @@ export async function processReviewAfterSync(reviewDbId: Types.ObjectId): Promis
   const comment = review.comment || ''
   const detected = detectReviewLanguageIso1(comment)
   const setDoc: Record<string, string> = { detectedLanguage: detected }
-  if (detected !== 'en' && comment.length > 10) {
-    const translated = await translateToEnglish(comment, detected)
-    if (translated) setDoc.translatedText = translated
+  const unsetFields: Record<string, 1> = {}
+
+  if (comment.length <= 10 || detected === 'en') {
+    if (review.translatedText) {
+      unsetFields.translatedText = 1
+      unsetFields.translationSourceFingerprint = 1
+    }
+  } else {
+    const fp = translationContentFingerprint(detected, comment)
+    const already = Boolean(review.translatedText) && review.translationSourceFingerprint === fp
+    if (!already) {
+      const translated = await translateToEnglish(comment, detected)
+      if (translated) {
+        setDoc.translatedText = translated
+        setDoc.translationSourceFingerprint = fp
+      }
+    }
   }
-  await Review.findByIdAndUpdate(review._id, { $set: setDoc })
+
+  const update: { $set: typeof setDoc; $unset?: typeof unsetFields } = { $set: setDoc }
+  if (Object.keys(unsetFields).length) update.$unset = unsetFields
+  await Review.findByIdAndUpdate(review._id, update)
 
   const plan = user.plan as string
 

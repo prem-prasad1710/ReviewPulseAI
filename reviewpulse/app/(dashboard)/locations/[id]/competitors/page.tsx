@@ -14,6 +14,9 @@ interface CompetitorRow {
   name: string
   address?: string
   placeId: string
+  placesSnapshotFetchedAt?: string
+  placeRating?: number
+  placeUserRatingsTotal?: number
   lastAnalyzedAt?: string
   themes?: { positive: string[]; negative: string[] }
 }
@@ -104,14 +107,16 @@ export default function CompetitorsPage() {
           Competitor Review Spy
         </h1>
         <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-          Scale plan: up to {limit} rivals per location. Refresh analysis once per 24 hours.
+          Growth &amp; Scale: up to {limit} rivals per location. Google Places data is cached in MongoDB and refreshed on a
+          schedule (Growth ~weekly, Scale daily) — this page does not call Google on every load. Theme analysis: at most once
+          per 24 hours per competitor.
         </p>
       </div>
 
       {!planOk ? (
         <Card className="border-amber-200/80 bg-amber-50/60 p-6 dark:border-amber-800/50 dark:bg-amber-950/30">
-          <CardTitle className="text-base">Scale only</CardTitle>
-          <CardDescription>Upgrade to Scale to track nearby competitors via Google Places.</CardDescription>
+          <CardTitle className="text-base">Growth or Scale required</CardTitle>
+          <CardDescription>Upgrade to Growth or Scale to track competitors using cached Google Places snapshots.</CardDescription>
         </Card>
       ) : (
         <Card className="space-y-3 p-6 dark:border-slate-700 dark:bg-slate-900/60">
@@ -136,6 +141,19 @@ export default function CompetitorsPage() {
                 <CardTitle className="text-lg dark:text-slate-100">{c.name}</CardTitle>
                 <CardDescription>{c.address}</CardDescription>
                 <p className="mt-1 text-xs text-slate-500">Place ID: {c.placeId}</p>
+                {typeof c.placeRating === 'number' ? (
+                  <p className="mt-0.5 text-xs text-slate-500">
+                    Google snapshot: {c.placeRating.toFixed(1)}★
+                    {typeof c.placeUserRatingsTotal === 'number' ? ` · ${c.placeUserRatingsTotal} ratings` : null}
+                    {c.placesSnapshotFetchedAt
+                      ? ` · cached ${new Date(c.placesSnapshotFetchedAt).toLocaleDateString('en-IN')}`
+                      : null}
+                  </p>
+                ) : c.placesSnapshotFetchedAt ? (
+                  <p className="mt-0.5 text-xs text-slate-500">
+                    Places cache: {new Date(c.placesSnapshotFetchedAt).toLocaleString('en-IN')}
+                  </p>
+                ) : null}
               </div>
               <div className="flex flex-wrap gap-2">
                 <Button size="sm" className="rounded-xl" disabled={!planOk} onClick={() => analyze(c._id)}>

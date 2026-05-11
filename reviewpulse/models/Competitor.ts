@@ -6,6 +6,16 @@ export interface ICompetitor extends Document {
   placeId: string
   name: string
   address?: string
+  /** Cached Google Places Details snapshot — dashboard reads this; cron refreshes. */
+  placesSnapshotFetchedAt?: Date
+  placeRating?: number
+  placeUserRatingsTotal?: number
+  cachedReviewSnippets?: Array<{
+    author_name?: string
+    rating?: number
+    text?: string
+    time?: number
+  }>
   lastAnalyzedAt?: Date
   themes: { positive: string[]; negative: string[] }
   createdAt: Date
@@ -19,6 +29,20 @@ const CompetitorSchema = new Schema<ICompetitor>(
     placeId: { type: String, required: true },
     name: { type: String, required: true },
     address: String,
+    placesSnapshotFetchedAt: { type: Date, index: true },
+    placeRating: { type: Number, min: 1, max: 5 },
+    placeUserRatingsTotal: { type: Number, min: 0 },
+    cachedReviewSnippets: {
+      type: [
+        {
+          author_name: String,
+          rating: { type: Number, min: 1, max: 5 },
+          text: String,
+          time: Number,
+        },
+      ],
+      default: [],
+    },
     lastAnalyzedAt: Date,
     themes: {
       positive: { type: [String], default: [] },

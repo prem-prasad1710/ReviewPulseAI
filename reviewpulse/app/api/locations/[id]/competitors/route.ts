@@ -3,6 +3,7 @@ import mongoose from 'mongoose'
 import { err, ok } from '@/lib/api'
 import { requireAuth } from '@/lib/auth-helpers'
 import { connectDB } from '@/lib/mongodb'
+import { buildSnapshotFromPlaceDetails } from '@/lib/competitor-places-snapshot'
 import { extractPlaceIdFromMapsUrl } from '@/lib/extract-place-id'
 import { fetchPlaceDetailsWithReviews } from '@/lib/places-details'
 import { competitorLimitForPlan, planAllowsCompetitorSpy } from '@/lib/plan-access'
@@ -38,7 +39,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   try {
     const user = await requireAuth()
     if (!planAllowsCompetitorSpy(user.plan as string)) {
-      return err('Competitor Review Spy is available on Scale plan only.', 403)
+      return err('Competitor Review Spy is available on Growth and Scale plans.', 403)
     }
     const body = await request.json()
     const parsed = postSchema.safeParse(body)
@@ -58,8 +59,12 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     if (count >= limit) return err(`Maximum ${limit} competitors for your plan.`, 400)
 
     const details = await fetchPlaceDetailsWithReviews(placeId)
-    const name = details?.name || 'Competitor'
-    const address = details?.formatted_address
+    if (!details) {
+      return err('Google Places is not configured or the place could not be loaded. Set GOOGLE_PLACES_API_KEY.', 503)
+    }
+    const snap = buildSnapshotFromPlaceDetails(details)
+    const name = details.name || 'Competitor'
+    const address = details.formatted_address
 
     const doc = await Competitor.findOneAndUpdate(
       { locationId: location._id, placeId },
@@ -68,6 +73,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
           userId: user._id,
           name,
           address,
+          ...(snap || {}),
         },
         $setOnInsert: { themes: { positive: [], negative: [] } },
       },

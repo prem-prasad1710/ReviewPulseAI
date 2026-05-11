@@ -8,6 +8,8 @@ export interface PlaceReviewSnippet {
 export interface PlaceDetailsResult {
   name?: string
   formatted_address?: string
+  rating?: number
+  user_ratings_total?: number
   reviews?: PlaceReviewSnippet[]
 }
 
@@ -21,7 +23,7 @@ export async function fetchPlaceDetailsWithReviews(
   }
   const url = new URL('https://maps.googleapis.com/maps/api/place/details/json')
   url.searchParams.set('place_id', placeId)
-  url.searchParams.set('fields', 'name,formatted_address,reviews')
+  url.searchParams.set('fields', 'name,formatted_address,rating,user_ratings_total,reviews')
   url.searchParams.set('key', key)
 
   const res = await fetch(url.toString())
