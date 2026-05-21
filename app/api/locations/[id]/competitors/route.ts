@@ -2,6 +2,8 @@ import { z } from 'zod'
 import mongoose from 'mongoose'
 import { err, ok } from '@/lib/api'
 import { requireAuth } from '@/lib/auth-helpers'
+import { allowCompetitorPlacesForUser } from '@/lib/google-api-guards'
+import { GooglePlacesRateLimitedError } from '@/lib/google-rate-limit-error'
 import { connectDB } from '@/lib/mongodb'
 import { buildSnapshotFromPlaceDetails } from '@/lib/competitor-places-snapshot'
 import { extractPlaceIdFromMapsUrl } from '@/lib/extract-place-id'
@@ -58,9 +60,24 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     const count = await Competitor.countDocuments({ locationId: location._id, userId: user._id })
     if (count >= limit) return err(`Maximum ${limit} competitors for your plan.`, 400)
 
-    const details = await fetchPlaceDetailsWithReviews(placeId)
+    if (!(await allowCompetitorPlacesForUser(String(user._id)))) {
+      return err('Too many competitor Google Places lookups this hour. Try again later.', 429)
+    }
+
+    let details
+    try {
+      details = await fetchPlaceDetailsWithReviews(placeId)
+    } catch (error) {
+      if (error instanceof GooglePlacesRateLimitedError) {
+        return err('Google Places rate limit reached. Wait a minute and try again.', 429)
+      }
+      throw error
+    }
     if (!details) {
-      return err('Google Places is not configured or the place could not be loaded. Set GOOGLE_PLACES_API_KEY.', 503)
+      return err(
+        'Google Places is not configured or the place could not be loaded. Set GOOGLE_PLACES_API_KEY (or GOOGLE_MAPS_API_KEY) and enable Places API.',
+        503
+      )
     }
     const snap = buildSnapshotFromPlaceDetails(details)
     const name = details.name || 'Competitor'

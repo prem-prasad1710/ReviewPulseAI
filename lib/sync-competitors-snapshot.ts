@@ -1,5 +1,6 @@
 import type { Types } from 'mongoose'
 import { buildSnapshotFromPlaceDetails, isCompetitorPlacesSnapshotStale } from '@/lib/competitor-places-snapshot'
+import { GooglePlacesRateLimitedError } from '@/lib/google-rate-limit-error'
 import { connectDB } from '@/lib/mongodb'
 import { fetchPlaceDetailsWithReviews } from '@/lib/places-details'
 import { planAllowsCompetitorSpy } from '@/lib/plan-access'
@@ -28,7 +29,15 @@ export async function refreshCompetitorPlacesSnapshot(
   const c = await Competitor.findById(competitorId)
   if (!c) return { ok: false, error: 'not_found' }
 
-  const details = await fetchPlaceDetailsWithReviews(c.placeId)
+  let details
+  try {
+    details = await fetchPlaceDetailsWithReviews(c.placeId)
+  } catch (e) {
+    if (e instanceof GooglePlacesRateLimitedError) {
+      return { ok: false, error: 'rate_limited' }
+    }
+    throw e
+  }
   const snap = buildSnapshotFromPlaceDetails(details)
   if (!snap) return { ok: false, error: 'places_unavailable' }
 
@@ -89,6 +98,7 @@ export async function syncStaleCompetitorPlacesSnapshots(
 
     const out = await refreshCompetitorPlacesSnapshot(String(row._id), plan)
     if (out.ok) refreshed += 1
+    else if (out.error === 'rate_limited') skipped += 1
     else errors += 1
   }
 

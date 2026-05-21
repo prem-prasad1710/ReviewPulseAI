@@ -279,7 +279,18 @@ MONGODB_URI=your_mongodb_uri
 
 # App
 NEXT_PUBLIC_BASE_URL=https://yourapp.com
+
+# Google — server-side only (do NOT prefix with NEXT_PUBLIC_*)
+GOOGLE_PLACES_API_KEY=
+GOOGLE_MAPS_API_KEY=
+GOOGLE_TRANSLATE_API_KEY=
+
+# Rate limiting across instances (recommended in production)
+# UPSTASH_REDIS_REST_URL=
+# UPSTASH_REDIS_REST_TOKEN=
 ```
+
+> Full reference: see **Google Cloud APIs (Places, Maps Static & Translation)** below.
 
 ### 3. Initialize Background Jobs
 
@@ -317,6 +328,101 @@ export default function InsightsPage() {
   )
 }
 ```
+
+---
+
+## Google Cloud APIs (Places, Maps Static & Translation)
+
+ReviewPulse talks to Google **only from the Node server**. Keys stay in `.env*` / hosting secrets — never expose them via `NEXT_PUBLIC_*` or embed them in browser JavaScript.
+
+### Environment variables
+
+| Variable | Purpose in this codebase |
+|---------|---------------------------|
+| `GOOGLE_PLACES_API_KEY` | **Preferred** for Place Details (`lib/places-details.ts`): competitor snapshots, cron refreshes. Uses **Places API (New)** with `X-Goog-Api-Key`; falls back to legacy JSON if needed. |
+| `GOOGLE_MAPS_API_KEY` | **Maps Static API** proxy: `GET /api/locations/[id]/map-thumb` (`lib/google-api-keys.ts`). Also **fallback** Places key when `GOOGLE_PLACES_API_KEY` is unset. |
+| `GOOGLE_TRANSLATE_API_KEY` | **Cloud Translation v2**: non‑English review text → English during sync (`lib/translate-review.ts`, `processReviewAfterSync`). |
+| `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` | **Optional but recommended**: distributed rate limits (`lib/rate-limit.ts`). Without Redis, in-memory guards apply **per server process**. |
+
+Duplicate `.env` keys shown in-repo: `.env.example`.
+
+### GCP setup checklist
+
+1. [Google Cloud Console](https://console.cloud.google.com/) — project selected, **billing enabled**.
+2. **APIs & Services → Library** — enable:
+   - **Places API** (legacy Place Details fallback).
+   - **Places API (New)** (primary `places.googleapis.com` Details call).
+   - **Maps Static API** (thumbnail proxy).
+   - **Cloud Translation API**.
+3. **APIs & Services → Credentials** — restrict keys **by enabled API**; for pure server‑side routes prefer **application restriction: None** plus **API restriction** lists (not HTTP referrers). Optionally use separate keys per vendor surface.
+
+### SKU / billing notes (approximate)
+
+Google renames tiers occasionally; validate in **[Maps billing & pricing](https://developers.google.com/maps/billing-and-pricing)** and **Cloud Translation pricing** after your first requests.
+
+| In-app usage | Surface | Typical meter |
+|--------------|---------|----------------|
+| Competitor add + nightly `/api/cron/sync-competitors` | Place Details (New) first, legacy Details fallback | Place Details‑related SKUs; review fields typically map to richer “Enterprise / atmosphere” style SKUs |
+| Location hub map image | Maps Static API | Static map requests per load |
+| Multilingual reviews after GBP sync | `translation.googleapis.com` … `/v2` | Characters translated |
+
+Costs appear under **Billing → Reports** filtered by SKU and API.
+
+### Rate limits enforced in-app
+
+Defined in **`lib/rate-limit.ts`** (Upstash) and **`lib/google-api-guards.ts`** + **`lib/memory-sliding-window.ts`** (fallback). Examples when Redis is configured: global Places outbound (per minute), per‑user competitor Places lookups (per hour), Translate global + per user, Static Maps per user. See source for exact sliders.
+
+---
+
+### How to test that Places, Maps, and Translation APIs work
+
+**Prerequisite:** `npm run dev` (or staging URL), MongoDB reachable, keys in `.env.local`, rebuilt/restarted after edits.
+
+#### 1) Places API — product flow
+
+Requires **Growth or Scale** (`planAllowsCompetitorSpy`). Steps:
+
+1. Sign in → **Dashboard** → choose a location → **Competitors** (`/locations/<locationMongoId>/competitors`).
+2. Paste a real **Maps place URL** → **Save competitor**.
+   - **Success:** new row with name, address, star snapshot → Places path is alive.
+   - **503:** key missing / API disabled / invalid place resolution — check terminal logs (`places-details` / HTTP status snippets; no keys are logged).
+   - **429:** app rate limits (wait or adjust Upstash thresholds).
+
+Cron path (optional): invoke your deployed **`POST /api/cron/sync-competitors`** using the secret your project expects (`CRON_SECRET` or equivalent in `route.ts`). Confirm responses and that competitor `placesSnapshotFetchedAt` refreshes.
+
+#### 2) Maps Static API — product flow
+
+1. Set **`GOOGLE_MAPS_API_KEY`** and enable **Maps Static API** in GCP.
+2. Open the **location hub** (`/locations/<locationMongoId>`).
+3. You should see the **map preview** card (skipped for mock/demo locations).
+
+Sanity checks:
+
+- Browser **Network**: request **`/api/locations/<id>/map-thumb`** should return **200** and `Content-Type: image/png` (or related image).
+  - **401** — not logged in.
+  - **429** — Static Maps rate limit hit.
+  - **503** — Maps key missing.
+  - **502** — Google rejected the Static Maps request (billing, key restrictions, quota) — check server stderr.
+
+#### 3) Translation API — product + quick curl
+
+**In-product:** ensure **`GOOGLE_TRANSLATE_API_KEY`** is set and **Cloud Translation API** enabled. After a GBP **sync**, new reviews in a non‑English language (with comment **longer than 10 characters**) should get `translatedText` populated where applicable (see **`processReviewAfterSync`**). Short comments and `detectedLanguage === 'en'` skip Translation by design.
+
+**Direct API check (avoid logging keys):**
+
+```bash
+export GOOGLE_TRANSLATE_API_KEY="YOUR_KEY_HERE"   # Prefer loading from `.env.local` manually in dev
+
+# Key only from env — do not expose in screenshots or commits.
+curl -sS -X POST \
+  "https://translation.googleapis.com/language/translate/v2?key=${GOOGLE_TRANSLATE_API_KEY}" \
+  -H "Content-Type: application/json" \
+  -d '{"q":"नमस्ते दुनिया","source":"hi","target":"en","format":"text"}'
+```
+
+Expect JSON with **`translatedText`** (and no `403`/`400` quota errors).
+
+**GCP dashboards:** **APIs & Services → Metrics** (or Billing → Cost table) spikes when you exercise each flow above.
 
 ---
 
@@ -493,6 +599,10 @@ Track these metrics to measure MVP success:
 - Verify initialization in layout
 - Check server logs for job execution
 - Ensure database connection is active
+
+### Google Places, Maps Static, or Translation?
+- See **Google Cloud APIs (Places, Maps Static & Translation)** earlier in this document (setup, SKU notes, step-by-step tests).
+- Typical causes: wrong **API restriction** on the key, **`REQUEST_DENIED`** (billing/quota), Maps Static restricted by **credential type**, or Translate key not enabled for **Cloud Translation API**.
 
 ---
 

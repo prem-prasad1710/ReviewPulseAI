@@ -71,7 +71,9 @@ export async function processReviewAfterSync(reviewDbId: Types.ObjectId): Promis
     const fp = translationContentFingerprint(detected, comment)
     const already = Boolean(review.translatedText) && review.translationSourceFingerprint === fp
     if (!already) {
-      const translated = await translateToEnglish(comment, detected)
+      const translated = await translateToEnglish(comment, detected, {
+        userIdForQuota: String(review.userId),
+      })
       if (translated) {
         setDoc.translatedText = translated
         setDoc.translationSourceFingerprint = fp

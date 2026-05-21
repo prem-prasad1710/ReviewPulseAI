@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import mongoose from 'mongoose'
@@ -6,6 +7,7 @@ import LocationSyncButton from '@/components/locations/LocationSyncButton'
 import { Card, CardDescription, CardTitle } from '@/components/ui/card'
 import { MOCK_LOCATIONS, shouldUseDashboardMocks } from '@/lib/dev-mock-dashboard'
 import { getAppSession } from '@/lib/auth-helpers'
+import { getGoogleMapsApiKey } from '@/lib/google-api-keys'
 import { hrefForLocationHubSegment, LOCATION_HUB_LINKS } from '@/lib/location-hub-features'
 import { connectDB } from '@/lib/mongodb'
 import Location from '@/models/Location'
@@ -39,6 +41,9 @@ export default async function LocationHubPage({ params }: Props) {
   if (!location) notFound()
 
   const last = location.lastSyncedAt ? new Date(location.lastSyncedAt).toLocaleString('en-IN') : 'Never'
+
+  const showMapsPreview =
+    Boolean(getGoogleMapsApiKey()) && Boolean(location.address?.trim()) && !fromMock
 
   return (
     <div className="mx-auto max-w-5xl space-y-8 pb-10">
@@ -89,6 +94,23 @@ export default async function LocationHubPage({ params }: Props) {
           <p className="mt-1 text-lg font-semibold text-slate-900 dark:text-slate-50">{location.category || '—'}</p>
         </Card>
       </div>
+
+      {showMapsPreview ? (
+        <div className="overflow-hidden rounded-2xl border border-slate-200/90 dark:border-slate-700">
+          <p className="border-b border-slate-100 bg-slate-50 px-4 py-2 text-xs font-medium text-slate-600 dark:border-slate-800 dark:bg-slate-950/80 dark:text-slate-400">
+            Map preview (Static Maps · API key stays on server)
+          </p>
+          <div className="relative h-52 w-full md:h-64">
+            <Image
+              src={`/api/locations/${id}/map-thumb`}
+              alt={`Map preview centered on ${location.name}`}
+              fill
+              className="object-cover"
+              sizes="(max-width:768px) 100vw, 896px"
+            />
+          </div>
+        </div>
+      ) : null}
 
       <div>
         <h2 className="font-heading text-lg font-bold text-slate-900 dark:text-slate-50">All features for this outlet</h2>

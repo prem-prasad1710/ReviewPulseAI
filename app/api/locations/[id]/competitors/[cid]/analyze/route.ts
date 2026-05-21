@@ -2,6 +2,7 @@ import { err, ok } from '@/lib/api'
 import { requireAuth } from '@/lib/auth-helpers'
 import { analyzeCompetitorThemes } from '@/lib/competitor-themes'
 import { reviewTextsFromSnippets } from '@/lib/competitor-places-snapshot'
+import { allowCompetitorPlacesForUser } from '@/lib/google-api-guards'
 import { connectDB } from '@/lib/mongodb'
 import { planAllowsCompetitorSpy } from '@/lib/plan-access'
 import { refreshCompetitorPlacesSnapshot } from '@/lib/sync-competitors-snapshot'
@@ -33,10 +34,16 @@ export async function POST(_request: Request, { params }: { params: Promise<{ id
 
     let texts = reviewTextsFromSnippets(competitor.cachedReviewSnippets)
     if (texts.length === 0) {
+      if (!(await allowCompetitorPlacesForUser(String(user._id)))) {
+        return err('Too many competitor Google Places lookups this hour. Try again later.', 429)
+      }
       const backfill = await refreshCompetitorPlacesSnapshot(String(competitor._id), user.plan as string)
       if (!backfill.ok) {
+        if (backfill.error === 'rate_limited') {
+          return err('Too many Google Places requests. Wait briefly and try again.', 429)
+        }
         return err(
-          'No cached competitor reviews yet. Configure GOOGLE_PLACES_API_KEY and wait for the nightly Places sync, or try again after adding the competitor.',
+          'No cached competitor reviews yet. Configure GOOGLE_PLACES_API_KEY (or GOOGLE_MAPS_API_KEY), enable Places API, wait for Places sync, or try again after adding the competitor.',
           503
         )
       }

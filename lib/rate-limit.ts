@@ -77,3 +77,51 @@ export const publicWidgetLimiter = redis
       prefix: 'reviewpulse:public-widget',
     })
   : null
+
+/** Competitor Spy — authenticated Places lookups per user (add + analyze backfill). */
+export const competitorPlacesUserLimiter = redis
+  ? new Ratelimit({
+      redis,
+      limiter: Ratelimit.slidingWindow(32, '1 h'),
+      analytics: true,
+      prefix: 'reviewpulse:competitor-places-user',
+    })
+  : null
+
+/** Bound total Places outbound calls per minute (cron + dashboards). */
+export const googlePlacesGlobalLimiter = redis
+  ? new Ratelimit({
+      redis,
+      limiter: Ratelimit.slidingWindow(200, '1 m'),
+      analytics: true,
+      prefix: 'reviewpulse:google-places-global',
+    })
+  : null
+
+export const googleTranslateUserLimiter = redis
+  ? new Ratelimit({
+      redis,
+      limiter: Ratelimit.slidingWindow(140, '1 h'),
+      analytics: true,
+      prefix: 'reviewpulse:google-translate-user',
+    })
+  : null
+
+export const googleTranslateGlobalLimiter = redis
+  ? new Ratelimit({
+      redis,
+      limiter: Ratelimit.slidingWindow(2_800, '1 h'),
+      analytics: true,
+      prefix: 'reviewpulse:google-translate-global',
+    })
+  : null
+
+/** Static Maps thumbnail proxy — per authenticated user. */
+export const googleStaticMapUserLimiter = redis
+  ? new Ratelimit({
+      redis,
+      limiter: Ratelimit.slidingWindow(80, '1 h'),
+      analytics: true,
+      prefix: 'reviewpulse:google-static-map-user',
+    })
+  : null
