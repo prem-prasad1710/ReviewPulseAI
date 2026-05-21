@@ -356,6 +356,25 @@ Duplicate `.env` keys shown in-repo: `.env.example`.
    - **Cloud Translation API**.
 3. **APIs & Services → Credentials** — restrict keys **by enabled API**; for pure server‑side routes prefer **application restriction: None** plus **API restriction** lists (not HTTP referrers). Optionally use separate keys per vendor surface.
 
+#### ⚠️ Why “Website restrictions” (HTTP referrers) break Competitor Spy / cron
+
+Places, Static Maps proxy, and Translation in this repo are called from **`fetch()` inside Next.js API routes** (your **Node server on Vercel or localhost), not from a browser tab.
+
+- Browser calls send an **HTTP Referer** (e.g. `https://review-pulse-ai-sigma.vercel.app`). **Server-side `fetch()` does not** send that referer correctly for these APIs → Google treats it as **`referer <empty>`** and responds **`403 PERMISSION_DENIED`** (“Requests from referer &lt;empty&gt; are blocked”).
+- **Legacy Places Web Service**: keys with referer (“website”) restrictions are **rejected outright** (`REQUEST_DENIED` — *API keys with referer restrictions cannot be used with this API*).
+
+Adding `http://localhost:3000/` and your Vercel URL to **Website restrictions** therefore **cannot** fix server-to-Google calls.
+
+**Correct pattern for ReviewPulse:**
+
+1. For keys in **`GOOGLE_PLACES_API_KEY`**, **`GOOGLE_MAPS_API_KEY`**, **`GOOGLE_TRANSLATE_API_KEY`**:  
+   **Application restrictions → None** (“Don’t restrict key”) **or**, if Google offers it for your workload, **IP addresses** pointing at stable server egress IPs.  
+   **Do not use “HTTP referrers (websites)”** for these backend keys.
+
+2. **API restrictions**: set **Restrict key → “Restrict key”** and allow only what you need, for example **Places API**, **Places API (New)** (may appear as Places API naming in console), **Maps Static API**, **Cloud Translation API**. That reduces blast radius without referrers.
+
+3. *(Optional)* If you later add **Maps JavaScript** in the **browser**, create a **second** API key restricted to **HTTP referrers** for that frontend use — keep it separate from `.env` server keys.
+
 ### SKU / billing notes (approximate)
 
 Google renames tiers occasionally; validate in **[Maps billing & pricing](https://developers.google.com/maps/billing-and-pricing)** and **Cloud Translation pricing** after your first requests.
@@ -603,6 +622,7 @@ Track these metrics to measure MVP success:
 ### Google Places, Maps Static, or Translation?
 - See **Google Cloud APIs (Places, Maps Static & Translation)** earlier in this document (setup, SKU notes, step-by-step tests).
 - Typical causes: wrong **API restriction** on the key, **`REQUEST_DENIED`** (billing/quota), Maps Static restricted by **credential type**, or Translate key not enabled for **Cloud Translation API**.
+- **`Requests from referer <empty>`** or **referer restrictions cannot be used with this API**: you applied **Website (HTTP referrer) restrictions** to a **server-side** key. Remove referrer restrictions from that key (see the warning subsection under **GCP setup checklist**) and rely on **API restrictions** instead.
 
 ---
 

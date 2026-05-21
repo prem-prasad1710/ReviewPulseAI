@@ -6,7 +6,7 @@ import { allowCompetitorPlacesForUser } from '@/lib/google-api-guards'
 import { GooglePlacesRateLimitedError } from '@/lib/google-rate-limit-error'
 import { connectDB } from '@/lib/mongodb'
 import { buildSnapshotFromPlaceDetails } from '@/lib/competitor-places-snapshot'
-import { extractPlaceIdFromMapsUrl } from '@/lib/extract-place-id'
+import { extractOrResolvePlaceIdFromMapsUrl } from '@/lib/resolve-maps-url-place-id'
 import { fetchPlaceDetailsWithReviews } from '@/lib/places-details'
 import { competitorLimitForPlan, planAllowsCompetitorSpy } from '@/lib/plan-access'
 import Competitor from '@/models/Competitor'
@@ -46,10 +46,18 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     const body = await request.json()
     const parsed = postSchema.safeParse(body)
     if (!parsed.success) return err('Invalid input', 400)
-    const placeId =
-      parsed.data.placeId?.trim() ||
-      (parsed.data.mapsUrl ? extractPlaceIdFromMapsUrl(parsed.data.mapsUrl) : null)
-    if (!placeId) return err('Could not resolve Google Place ID from URL', 400)
+    const trimmedPid = parsed.data.placeId?.trim()
+    const mapsUrlRaw = parsed.data.mapsUrl?.trim()
+    let placeId: string | null = trimmedPid || null
+    if (!placeId && mapsUrlRaw) {
+      placeId = await extractOrResolvePlaceIdFromMapsUrl(mapsUrlRaw)
+    }
+    if (!placeId) {
+      return err(
+        'Could not resolve Google Place ID from URL. Paste a full maps.google.com share link or an explicit Place ID (ChIJ…). Short links sometimes need a browser-opened expanded URL.',
+        400
+      )
+    }
 
     await connectDB()
     const { id } = await params
