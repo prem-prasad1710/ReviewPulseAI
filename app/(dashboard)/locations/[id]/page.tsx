@@ -1,4 +1,3 @@
-import Image from 'next/image'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import mongoose from 'mongoose'
@@ -100,15 +99,13 @@ export default async function LocationHubPage({ params }: Props) {
           <p className="border-b border-slate-100 bg-slate-50 px-4 py-2 text-xs font-medium text-slate-600 dark:border-slate-800 dark:bg-slate-950/80 dark:text-slate-400">
             Map preview (Static Maps · API key stays on server)
           </p>
-          <div className="relative h-52 w-full md:h-64">
-            <Image
-              src={`/api/locations/${id}/map-thumb`}
-              alt={`Map preview centered on ${location.name}`}
-              fill
-              className="object-cover"
-              sizes="(max-width:768px) 100vw, 896px"
-            />
-          </div>
+          {/* Do not use next/image here: its optimizer loads same-origin URLs without session cookies → map-thumb rejects with UNAUTHORIZED. */}
+          <img
+            src={`/api/locations/${id}/map-thumb`}
+            alt={`Map preview centered on ${location.name}`}
+            className="h-52 w-full object-cover md:h-64"
+            loading="lazy"
+          />
         </div>
       ) : null}
 

@@ -404,6 +404,7 @@ Requires **Growth or Scale** (`planAllowsCompetitorSpy`). Steps:
 1. Sign in → **Dashboard** → choose a location → **Competitors** (`/locations/<locationMongoId>/competitors`).
 2. Paste a real **Maps place URL** → **Save competitor**.
    - **Success:** new row with name, address, star snapshot → Places path is alive.
+   - **400 / INVALID_ARGUMENT (“Place ID … is not valid”):** rare when a share URL only exposes an embedded **`0x…:0x…`** CAD-style fragment (not **`ChIJ…`**). ReviewPulse parses **`ChIJ…`** when present and otherwise resolves a canonical ID via **Find Place from Text** using **`/maps/place/Business+Name/`** and optional **`@lat,lng`**. If lookup still mismatches or fails, paste the **canonical share link from “Share → Copy link”** on desktop Maps, or set **`placeId`** explicitly (e.g. from Google Place ID Finder).
    - **503:** key missing / API disabled / invalid place resolution — check terminal logs (`places-details` / HTTP status snippets; no keys are logged).
    - **429:** app rate limits (wait or adjust Upstash thresholds).
 
@@ -417,7 +418,7 @@ Cron path (optional): invoke your deployed **`POST /api/cron/sync-competitors`**
 
 Sanity checks:
 
-- Browser **Network**: request **`/api/locations/<id>/map-thumb`** should return **200** and `Content-Type: image/png` (or related image).
+- Browser **Network**: request **`/api/locations/<id>/map-thumb`** should return **200** and `Content-Type: image/png` (or related image). Use a normal `<img src="…">` in the dashboard (not **`next/image`** default optimization): the image optimizer loads the URL **server‑side without the user’s cookies**, which trips **`401 UNAUTHORIZED`** on this route.
   - **401** — not logged in.
   - **429** — Static Maps rate limit hit.
   - **503** — Maps key missing.
