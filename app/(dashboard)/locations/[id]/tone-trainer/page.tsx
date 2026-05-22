@@ -8,6 +8,7 @@ import { ArrowLeft, Sparkles } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardDescription, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
+import { isMongoObjectIdString } from '@/lib/utils'
 
 export default function ToneTrainerPage() {
   const params = useParams()
@@ -52,8 +53,15 @@ export default function ToneTrainerPage() {
   }
 
   const runPreview = async (skipToneExamples: boolean) => {
-    if (!reviewId.trim()) {
-      toast.message('Paste a review ID from your inbox for preview')
+    const rid = reviewId.trim()
+    if (!rid) {
+      toast.message('Paste a review id for preview.')
+      return
+    }
+    if (!isMongoObjectIdString(rid)) {
+      toast.error(
+        'That is not a valid review id. Open /reviews, open a row (or Reply), then copy the 24-character hex string from ?review=… in the browser bar — not the reviewer name.'
+      )
       return
     }
     setBusy(true)
@@ -62,7 +70,7 @@ export default function ToneTrainerPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          reviewId: reviewId.trim(),
+          reviewId: rid,
           language: 'english',
           tone: 'professional',
           skipToneExamples,
@@ -176,9 +184,12 @@ export default function ToneTrainerPage() {
         <input
           value={reviewId}
           onChange={(e) => setReviewId(e.target.value)}
-          placeholder="Review Mongo _id from /reviews"
+          placeholder="24-char hex from /reviews …?review=THIS_PART"
           className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-950/50"
         />
+        <p className="text-xs text-slate-500 dark:text-slate-400">
+          Paste only the Mongo id after <code className="rounded bg-slate-100 px-1 dark:bg-slate-800">review=</code> in the Reviews page URL—not the reviewer’s name (“Review Mongo” is not an id).
+        </p>
         <div className="flex flex-wrap gap-2">
           <Button type="button" className="rounded-xl" disabled={busy} onClick={() => runPreview(false)}>
             Preview with tone

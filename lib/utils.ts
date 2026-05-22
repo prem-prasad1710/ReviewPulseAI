@@ -1,6 +1,13 @@
 import { clsx, type ClassValue } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 
+/** MongoDB ObjectId as lowercase/upper hex string (without optional quotes). */
+export const MONGO_OBJECT_ID_HEX_RE = /^[a-f0-9]{24}$/i
+
+export function isMongoObjectIdString(value: string): boolean {
+  return MONGO_OBJECT_ID_HEX_RE.test(value.trim())
+}
+
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }

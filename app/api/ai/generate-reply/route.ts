@@ -8,12 +8,20 @@ import { generateReplyLimiter } from '@/lib/rate-limit'
 import { generateReviewReply } from '@/lib/openai'
 import { mergeReplySchedule, nextAvailableSlot } from '@/lib/reply-schedule'
 import { planAllowsReplyScheduler, planAllowsToneTrainer } from '@/lib/plan-access'
+import { isMongoObjectIdString } from '@/lib/utils'
 import Review from '@/models/Review'
 import Location from '@/models/Location'
 import User from '@/models/User'
 
 const bodySchema = z.object({
-  reviewId: z.string().min(1),
+  reviewId: z
+    .string()
+    .trim()
+    .min(1, 'Missing review id')
+    .refine((id) => isMongoObjectIdString(id), {
+      message:
+        "reviewId must be the review Mongo id (24 hex characters). Open Reviews, click a review, copy the id from ?review= in the URL. Do not paste the reviewer name.",
+    }),
   language: z.enum(['hindi', 'english', 'hinglish']),
   tone: z
     .enum(['professional', 'friendly', 'formal', 'grateful', 'concise'])
@@ -166,6 +174,12 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error('POST /api/ai/generate-reply failed:', error)
     if (error instanceof Error && error.message === 'UNAUTHORIZED') return err('Unauthorized', 401)
+    if (typeof error === 'object' && error !== null && (error as { name?: string }).name === 'CastError') {
+      return err(
+        'Invalid review id. Use the 24-character hex id from the Reviews page URL (?review=…).',
+        400
+      )
+    }
     return err('Failed to generate reply', 500)
   }
 }

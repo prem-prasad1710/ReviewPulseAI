@@ -633,6 +633,10 @@ Track these metrics to measure MVP success:
 - Typical causes: wrong **API restriction** on the key, **`REQUEST_DENIED`** (billing/quota), Maps Static restricted by **credential type**, or Translate key not enabled for **Cloud Translation API**.
 - **`Requests from referer <empty>`** or **referer restrictions cannot be used with this API**: you applied **Website (HTTP referrer) restrictions** to a **server-side** key. Remove referrer restrictions from that key (see the warning subsection under **GCP setup checklist**) and rely on **API restrictions** instead.
 
+### AI shows `invalid_api_key` referencing `platform.openai.com` but my key is **`gsk_…`**?
+
+That is a **Groq** key for OpenAI-compatible chat at **`api.groq.com`**. The app now detects **`gsk_`** in **`OPENAI_API_KEY`** or any **`GROQ_API_KEY`** and routes **`chat.completions`** to Groq. Prefer **`GROQ_API_KEY=…`** in `.env` and keep **`OPENAI_API_KEY`** for a real **`sk-…`** key if you also use Whisper (voice transcription) — Whisper still requires OpenAI (**`OPENAI_WHISPER_API_KEY`** recommended). Optionally set **`LLM_CHAT_MODEL`** to a slug from Groq's model list.
+
 ---
 
 ## 📚 Additional Resources

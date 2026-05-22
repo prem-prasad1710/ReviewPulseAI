@@ -40,7 +40,7 @@ export default function OwnerCoachCard() {
         <div className="min-w-0 flex-1">
           <CardTitle className="text-base font-bold text-slate-900 dark:text-slate-50">Owner coach</CardTitle>
           <CardDescription className="mt-1 text-sm text-slate-700 dark:text-slate-300">
-            Three operational improvements from your last 30 days of critical reviews (one AI pass, gpt-4o-mini).
+            Three operational improvements from your last 30 days of critical reviews (one AI pass).
           </CardDescription>
           {err ? <p className="mt-2 text-sm text-rose-600">{err}</p> : null}
           {tips ? (
