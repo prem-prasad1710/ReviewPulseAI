@@ -271,8 +271,16 @@ TWILIO_AUTH_TOKEN=your_twilio_auth_token
 TWILIO_PHONE_NUMBER=+1234567890
 TWILIO_WHATSAPP_NUMBER=+1234567890
 
-# OpenAI (for sentiment & replies)
-OPENAI_API_KEY=your_openai_api_key
+# AI — chat (Groq or OpenAI, via OpenAI-compatible SDK)
+# Groq (`gsk_…`): preferred — set GROQ_API_KEY, or paste gsk_* into OPENAI_API_KEY (auto-routed to Groq).
+GROQ_API_KEY=
+OPENAI_API_KEY=
+
+# Whisper voice notes — OpenAI only (sk-…).
+OPENAI_WHISPER_API_KEY=
+
+# Override model id — default Groq: llama-3.3-70b-versatile; OpenAI: gpt-4o-mini
+# LLM_CHAT_MODEL=
 
 # Database
 MONGODB_URI=your_mongodb_uri

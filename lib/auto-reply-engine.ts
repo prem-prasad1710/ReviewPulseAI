@@ -4,7 +4,7 @@
  * Supports Hindi, English, and Hinglish
  */
 
-import { getOpenAI } from '@/lib/openai'
+import { getOpenAI, resolveLlmChatModel } from '@/lib/openai'
 import { buildAiCacheKey, defaultAiCacheTtlSeconds, withCachedAiJson } from '@/lib/ai-redis-cache'
 
 export type ReplyTone = 'professional' | 'friendly' | 'formal' | 'grateful' | 'concise'
@@ -68,14 +68,14 @@ FINANCIAL COMPLIANCE:
     try {
       const prompt = this.buildReplyPrompt(request)
       const system = this.getSystemPrompt(request)
-      const cacheKey = buildAiCacheKey('auto-reply-engine', 'gpt-4o-mini', system, prompt)
+      const cacheKey = buildAiCacheKey('auto-reply-engine', resolveLlmChatModel(), system, prompt)
 
       return await withCachedAiJson({
         cacheKey,
         ttlSeconds: defaultAiCacheTtlSeconds(),
         produce: async () => {
           const response = await getOpenAI().chat.completions.create({
-            model: 'gpt-4o-mini',
+            model: resolveLlmChatModel(),
             messages: [
               {
                 role: 'system',
@@ -302,7 +302,7 @@ Hinglish Guidelines:
   async extractKeyConcerns(reviewText: string): Promise<string[]> {
     try {
       const response = await getOpenAI().chat.completions.create({
-        model: 'gpt-4o-mini',
+        model: resolveLlmChatModel(),
         messages: [
           {
             role: 'user',

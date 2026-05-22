@@ -1,4 +1,4 @@
-import { getOpenAI } from '@/lib/openai'
+import { getOpenAI, resolveLlmChatModel } from '@/lib/openai'
 import {
   buildAiCacheKey,
   normalizeGenericTextInput,
@@ -9,7 +9,7 @@ import {
 export type PublicReplyLanguage = 'english' | 'hindi' | 'hinglish'
 
 /**
- * One-off reply for the public free tool (no DB, no quota). Always gpt-4o-mini per product rules.
+ * One-off reply for the public free tool (model from resolveLlmChatModel / LLM_CHAT_MODEL).
  */
 export async function generatePublicFreeReply(params: {
   reviewText: string
@@ -33,7 +33,7 @@ export async function generatePublicFreeReply(params: {
 
   const cacheKey = buildAiCacheKey(
     'public-free-reply',
-    'gpt-4o-mini',
+    resolveLlmChatModel(),
     normalizeGenericTextInput(text).slice(0, 4000),
     String(rating),
     language,
@@ -45,7 +45,7 @@ export async function generatePublicFreeReply(params: {
     ttlSeconds: publicFreeReplyCacheTtlSeconds(),
     produce: async () => {
       const completion = await openai.chat.completions.create({
-        model: 'gpt-4o-mini',
+        model: resolveLlmChatModel(),
         temperature: 0.45,
         max_tokens: 500,
         messages: [

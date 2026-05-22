@@ -3,7 +3,7 @@ import mongoose from 'mongoose'
 import { err, ok } from '@/lib/api'
 import { requireAuth } from '@/lib/auth-helpers'
 import { connectDB } from '@/lib/mongodb'
-import { getOpenAI } from '@/lib/openai'
+import { getOpenAI, resolveLlmChatModel } from '@/lib/openai'
 import Review from '@/models/Review'
 
 const bodySchema = z.object({
@@ -11,7 +11,7 @@ const bodySchema = z.object({
 })
 
 /**
- * Owner Coach — three operational improvements from recent negative/neutral review text (gpt-4o-mini, batched).
+ * Owner Coach — three operational improvements (LLM_CHAT_MODEL / Groq or OpenAI defaults).
  */
 export async function POST(request: Request) {
   try {
@@ -58,7 +58,7 @@ export async function POST(request: Request) {
 
     const openai = getOpenAI()
     const completion = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
+      model: resolveLlmChatModel(),
       temperature: 0.35,
       max_tokens: 400,
       response_format: { type: 'json_object' },

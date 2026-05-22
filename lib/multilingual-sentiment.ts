@@ -3,7 +3,7 @@
  * Supports English, Hindi, and Hinglish with nuanced emotion detection
  */
 
-import { getOpenAI } from '@/lib/openai'
+import { getOpenAI, resolveLlmChatModel } from '@/lib/openai'
 import {
   buildAiCacheKey,
   normalizeGenericTextInput,
@@ -42,7 +42,7 @@ class MultilingualSentimentAnalyzer {
       const prompt = this.buildAnalysisPrompt(text, language)
       const cacheKey = buildAiCacheKey(
         'multilingual-sentiment',
-        'gpt-4o-mini',
+        resolveLlmChatModel(),
         normalizeGenericTextInput(text).slice(0, 8000),
         language || 'auto'
       )
@@ -51,7 +51,7 @@ class MultilingualSentimentAnalyzer {
         ttlSeconds: sentimentCacheTtlSeconds(),
         produce: async () => {
           const response = await getOpenAI().chat.completions.create({
-            model: 'gpt-4o-mini',
+            model: resolveLlmChatModel(),
             messages: [
               {
                 role: 'user',

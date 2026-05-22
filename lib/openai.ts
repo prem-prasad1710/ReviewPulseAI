@@ -9,18 +9,93 @@ import {
 } from '@/lib/ai-redis-cache'
 import { getCurrentFestival } from '@/lib/festivals'
 
-let cachedOpenAI: OpenAI | null = null
+/** Groq keys begin with `gsk_` and must use Groq's OpenAI-compatible host (not api.openai.com). */
+export function isGroqApiKey(key: string): boolean {
+  return key.startsWith('gsk_')
+}
 
-/** Lazy client so `next build` does not require OPENAI_API_KEY at module load (e.g. on Vercel). */
-export function getOpenAI(): OpenAI {
-  const apiKey = process.env.OPENAI_API_KEY?.trim()
+/** Chat model for `chat.completions` (Groq vs OpenAI). Override with LLM_CHAT_MODEL. */
+export function resolveLlmChatModel(): string {
+  const explicit = process.env.LLM_CHAT_MODEL?.trim()
+  if (explicit) return explicit
+
+  const groqKey = process.env.GROQ_API_KEY?.trim()
+  const openAiKey = process.env.OPENAI_API_KEY?.trim()
+  const base = process.env.OPENAI_BASE_URL?.trim()?.toLowerCase() ?? ''
+
+  const routesToGroq =
+    Boolean(groqKey) ||
+    Boolean(openAiKey && isGroqApiKey(openAiKey)) ||
+    base.includes('groq.com')
+
+  /** Default aligns with Groq's popular fast model slug; tweak via LLM_CHAT_MODEL per console.groq.com. */
+  return routesToGroq ? 'llama-3.3-70b-versatile' : 'gpt-4o-mini'
+}
+
+function resolveOpenAICompatibleClientConfig(): { apiKey: string; baseURL?: string } {
+  const groqKey = process.env.GROQ_API_KEY?.trim()
+  const openAiKey = process.env.OPENAI_API_KEY?.trim()
+  const explicitBase = process.env.OPENAI_BASE_URL?.trim()
+
+  const apiKey = groqKey || openAiKey
   if (!apiKey) {
-    throw new Error('OPENAI_API_KEY is not configured')
+    throw new Error('Set GROQ_API_KEY (Groq gsk_…) or OPENAI_API_KEY (OpenAI sk-…) for AI features.')
   }
-  if (!cachedOpenAI) {
-    cachedOpenAI = new OpenAI({ apiKey })
+
+  let baseURL = explicitBase || undefined
+  const inferGroq = Boolean(groqKey) || Boolean(openAiKey && isGroqApiKey(openAiKey))
+  if (!baseURL && inferGroq) {
+    baseURL = 'https://api.groq.com/openai/v1'
+  }
+
+  return { apiKey, baseURL }
+}
+
+let cachedOpenAI: OpenAI | null = null
+let cachedOpenAISig: string | null = null
+
+/**
+ * Chat completions (reviews, sentiment, competitor themes, etc.).
+ * Lazy client so `next build` does not require keys at module load.
+ */
+export function getOpenAI(): OpenAI {
+  const cfg = resolveOpenAICompatibleClientConfig()
+  const sig = `${cfg.apiKey}:${cfg.baseURL ?? 'openai-default'}`
+  if (!cachedOpenAI || cachedOpenAISig !== sig) {
+    cachedOpenAISig = sig
+    cachedOpenAI = new OpenAI({
+      apiKey: cfg.apiKey,
+      ...(cfg.baseURL ? { baseURL: cfg.baseURL } : {}),
+    })
   }
   return cachedOpenAI
+}
+
+/** Whisper-only; Groq keys are not valid here — use OPENAI_WHISPER_API_KEY or a plain OpenAI OPENAI_API_KEY. */
+let whisperCached: OpenAI | null = null
+let whisperSig: string | null = null
+
+export function getOpenAIWhisperClient(): OpenAI {
+  const whisperEnv = process.env.OPENAI_WHISPER_API_KEY?.trim()
+  const openAi = process.env.OPENAI_API_KEY?.trim()
+
+  const key =
+    whisperEnv ||
+    (openAi && !isGroqApiKey(openAi) ? openAi : null)
+
+  if (!key) {
+    throw new Error(
+      'Voice transcription needs an OpenAI API key from platform.openai.com. Set OPENAI_WHISPER_API_KEY to an sk-… key, ' +
+        'or use OPENAI_API_KEY with OpenAI sk-… and put Groq in GROQ_API_KEY instead of replacing OPENAI_API_KEY.'
+    )
+  }
+
+  const sig = `whisper:${key}`
+  if (!whisperCached || whisperSig !== sig) {
+    whisperSig = sig
+    whisperCached = new OpenAI({ apiKey: key })
+  }
+  return whisperCached
 }
 
 export type ReplyComplianceMode = 'standard' | 'healthcare' | 'legal' | 'finance'
@@ -141,13 +216,13 @@ INSTRUCTIONS:
 - End with a warm closing that fits the business type.
 - Write ONLY the reply text. No preamble, labels, or explanation.${fewShot}${sameLanguageNote}${complianceNote}${abNote}${festiveNote}`
 
-  const cacheKey = buildAiCacheKey('review-reply', 'gpt-4o-mini', prompt)
+  const cacheKey = buildAiCacheKey('review-reply', resolveLlmChatModel(), prompt)
   return withCachedAiText({
     cacheKey,
     ttlSeconds: defaultAiCacheTtlSeconds(),
     produce: async () => {
       const response = await getOpenAI().chat.completions.create({
-        model: 'gpt-4o-mini',
+        model: resolveLlmChatModel(),
         messages: [{ role: 'user', content: prompt }],
         max_tokens: 250,
         temperature: 0.7,
@@ -160,13 +235,13 @@ INSTRUCTIONS:
 export async function analyzeSentiment(reviewText: string, stars: number) {
   const prompt = `Rate the sentiment of this review on a scale from -1.0 (very negative) to 1.0 (very positive). Reply with ONLY a number.\nReview: "${reviewText}"\nRating: ${stars}/5`
 
-  const cacheKey = buildAiCacheKey('sentiment-number', 'gpt-4o-mini', prompt)
+  const cacheKey = buildAiCacheKey('sentiment-number', resolveLlmChatModel(), prompt)
   return withCachedAiJson({
     cacheKey,
     ttlSeconds: sentimentCacheTtlSeconds(),
     produce: async () => {
       const response = await getOpenAI().chat.completions.create({
-        model: 'gpt-4o-mini',
+        model: resolveLlmChatModel(),
         messages: [{ role: 'user', content: prompt }],
         max_tokens: 10,
         temperature: 0,
@@ -206,12 +281,12 @@ Identify:
 
 Return JSON only: {"rootCause": string, "suggestedFix": string}`
 
-  const cacheKey = buildAiCacheKey('autopsy', 'gpt-4o-mini', prompt)
+  const cacheKey = buildAiCacheKey('autopsy', resolveLlmChatModel(), prompt)
   return withCachedAiJsonAllowNull({
     cacheKey,
     produce: async () => {
       const response = await getOpenAI().chat.completions.create({
-        model: 'gpt-4o-mini',
+        model: resolveLlmChatModel(),
         messages: [{ role: 'user', content: prompt }],
         max_tokens: 150,
         temperature: 0.3,
@@ -245,12 +320,12 @@ Review: '${reviewText.replace(/'/g, "\\'")}'
 Return JSON array only: [{"name": string, "sentiment": "positive"|"negative"|"neutral", "quote": string}]
 If no staff names found, return [].`
 
-  const cacheKey = buildAiCacheKey('staff-mentions', 'gpt-4o-mini', prompt)
+  const cacheKey = buildAiCacheKey('staff-mentions', resolveLlmChatModel(), prompt)
   return withCachedAiJson({
     cacheKey,
     produce: async () => {
       const response = await getOpenAI().chat.completions.create({
-        model: 'gpt-4o-mini',
+        model: resolveLlmChatModel(),
         messages: [{ role: 'user', content: prompt }],
         max_tokens: 300,
         temperature: 0.2,
@@ -306,12 +381,12 @@ Generate social media content to celebrate this positive feedback:
 
 Return JSON only: {"instagram": string, "whatsapp": string, "googlePost": string}`
 
-  const cacheKey = buildAiCacheKey('social-formats', 'gpt-4o-mini', prompt)
+  const cacheKey = buildAiCacheKey('social-formats', resolveLlmChatModel(), prompt)
   return withCachedAiJsonAllowNull({
     cacheKey,
     produce: async () => {
       const response = await getOpenAI().chat.completions.create({
-        model: 'gpt-4o-mini',
+        model: resolveLlmChatModel(),
         messages: [{ role: 'user', content: prompt }],
         max_tokens: 500,
         temperature: 0.6,
@@ -351,13 +426,13 @@ Include a sample quote for context.
 Reviews batch: ${params.reviewsBatch}
 Return JSON only: {"items": [{"name": string, "positiveCount": number, "negativeCount": number, "sampleQuote": string}]}`
 
-  const cacheKey = buildAiCacheKey('menu-insights-batch', 'gpt-4o-mini', prompt)
+  const cacheKey = buildAiCacheKey('menu-insights-batch', resolveLlmChatModel(), prompt)
   return withCachedAiJson({
     cacheKey,
     ttlSeconds: defaultAiCacheTtlSeconds(),
     produce: async () => {
       const response = await getOpenAI().chat.completions.create({
-        model: 'gpt-4o-mini',
+        model: resolveLlmChatModel(),
         messages: [{ role: 'user', content: prompt }],
         max_tokens: 2000,
         temperature: 0.3,

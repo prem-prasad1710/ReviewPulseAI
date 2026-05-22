@@ -1,4 +1,4 @@
-import { getOpenAI } from '@/lib/openai'
+import { getOpenAI, resolveLlmChatModel } from '@/lib/openai'
 
 export async function analyzeCompetitorThemes(reviewTexts: string[]): Promise<{
   positive: string[]
@@ -13,7 +13,7 @@ export async function analyzeCompetitorThemes(reviewTexts: string[]): Promise<{
   const prompt = `Given these reviews, identify the top 3 most praised aspects and top 3 most complained-about issues. Return JSON only: {"positive": string[], "negative": string[]}\n\nReviews:\n${joined || '(none)'}`
 
   const response = await getOpenAI().chat.completions.create({
-    model: 'gpt-4o-mini',
+    model: resolveLlmChatModel(),
     messages: [{ role: 'user', content: prompt }],
     max_tokens: 300,
     temperature: 0.3,

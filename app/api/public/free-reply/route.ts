@@ -51,7 +51,13 @@ export async function POST(request: Request) {
     return ok({ reply })
   } catch (e) {
     console.error('public/free-reply:', e)
-    if (e instanceof Error && e.message.includes('OPENAI_API_KEY')) {
+    if (
+      e instanceof Error &&
+      (e.message.includes('GROQ_API_KEY') ||
+        e.message.includes('OPENAI_API_KEY') ||
+        e.message.includes('AI features') ||
+        e.message.includes('Set GROQ'))
+    ) {
       return err('AI preview is temporarily unavailable.', 503)
     }
     return err('Something went wrong.', 500)

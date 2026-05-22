@@ -1,6 +1,6 @@
 import type { Types } from 'mongoose'
 import { toFile } from 'openai/uploads'
-import { getOpenAI } from '@/lib/openai'
+import { getOpenAI, getOpenAIWhisperClient, resolveLlmChatModel } from '@/lib/openai'
 import { planAllowsVoiceWhatsAppReply } from '@/lib/plan-access'
 import { publishUserReviewToGbp } from '@/lib/review-publish-internal'
 import Location from '@/models/Location'
@@ -59,7 +59,7 @@ async function fetchTwilioMedia(mediaUrl: string): Promise<{ buffer: Buffer; con
 }
 
 async function transcribeAudio(buffer: Buffer, contentType: string): Promise<string> {
-  const openai = getOpenAI()
+  const openai = getOpenAIWhisperClient()
   const ext = extensionForMime(contentType)
   const file = await toFile(buffer, `voice.${ext}`, { type: contentType })
   const tr = await openai.audio.transcriptions.create({
@@ -88,7 +88,7 @@ async function polishDraftForGbp(params: {
           : ''
 
   const completion = await openai.chat.completions.create({
-    model: 'gpt-4o-mini',
+    model: resolveLlmChatModel(),
     temperature: 0.4,
     messages: [
       {

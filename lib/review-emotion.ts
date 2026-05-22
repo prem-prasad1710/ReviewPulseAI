@@ -1,4 +1,4 @@
-import { getOpenAI } from '@/lib/openai'
+import { getOpenAI, resolveLlmChatModel } from '@/lib/openai'
 
 export type ReviewEmotion =
   | 'joy'
@@ -19,7 +19,7 @@ const ALLOWED = new Set<string>([
   'neutral',
 ])
 
-/** A1 — Classify primary emotion (gpt-4o-mini, ≤150 tokens). */
+/** A1 — Classify primary emotion (LLM_CHAT_MODEL / default provider). */
 export async function classifyReviewEmotion(comment: string): Promise<ReviewEmotion | null> {
   const text = comment.trim()
   if (!text) return 'neutral'
@@ -27,7 +27,7 @@ export async function classifyReviewEmotion(comment: string): Promise<ReviewEmot
   try {
     const openai = getOpenAI()
     const res = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
+      model: resolveLlmChatModel(),
       max_tokens: 15,
       temperature: 0.2,
       messages: [
