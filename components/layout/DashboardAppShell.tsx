@@ -87,26 +87,29 @@ export default function DashboardAppShell({
   const showDesktopSidebar = isDesktop && desktopOpen
   const showMobileDrawer = mobileOpen
 
+  /**
+   * Mobile drawer stacking: backdrop and sidebar MUST be siblings (not sidebar inside a low-z subtree),
+   * or the scrim paints above the panel and looks like opacity/fade on the sidebar.
+   */
   return (
-    <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+    <div className="relative flex min-h-0 flex-1 flex-col">
       <DashboardShellContext.Provider value={shellValue}>
-        {!isDesktop && mobileOpen ? (
-          <button
-            type="button"
-            aria-label="Close navigation menu"
-            /** Solid scrim avoids iOS stacking-blur bleed on content under the drawer. */
-            className="fixed inset-0 z-40 bg-slate-900/55 dark:bg-black/60"
-            onClick={() => setMobileOpen(false)}
-          />
-        ) : null}
+        <div className="relative flex min-h-0 flex-1 flex-col lg:flex-row">
+          {!isDesktop && mobileOpen ? (
+            <button
+              type="button"
+              aria-label="Close navigation menu"
+              className="fixed inset-0 z-[45] bg-slate-900/55 dark:bg-black/60"
+              onClick={() => setMobileOpen(false)}
+            />
+          ) : null}
 
-        <div className="relative z-[1] flex min-h-0 flex-1 flex-col overflow-hidden lg:z-10 lg:flex-row">
           <div
             suppressHydrationWarning
             className={cn(
               'flex min-h-0 flex-col overflow-hidden border-transparent transition-[transform,width,opacity,border-color,padding] duration-300 ease-out dark:border-slate-700/70',
-              // Mobile drawer
-              'max-lg:fixed max-lg:inset-y-0 max-lg:left-0 max-lg:z-50 max-lg:w-[min(18rem,88vw)] max-lg:max-w-[18rem]',
+              // Mobile drawer: above backdrop (same parent = z-index compares correctly)
+              'max-lg:fixed max-lg:inset-y-0 max-lg:left-0 max-lg:z-[55] max-lg:w-[min(18rem,88vw)] max-lg:max-w-[18rem]',
               showMobileDrawer
                 ? 'max-lg:translate-x-0 max-lg:border-r max-lg:border-slate-200/80 max-lg:bg-white max-lg:shadow-xl max-lg:shadow-slate-900/12 dark:max-lg:border-slate-700/80 dark:max-lg:bg-slate-900 dark:max-lg:shadow-black/35'
                 : 'max-lg:pointer-events-none max-lg:-translate-x-full',
@@ -120,7 +123,7 @@ export default function DashboardAppShell({
             {sidebar}
           </div>
 
-          <div className="relative z-[1] flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+          <div className="relative z-10 flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden lg:z-[1]">
             {header}
             <main className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-y-contain touch-pan-y px-3 py-4 sm:px-6 sm:py-6 lg:px-8 [-webkit-overflow-scrolling:touch]">
               {/** On small screens avoid backdrop-blur on content chrome (blurry text on some mobile GPUs). */}
