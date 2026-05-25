@@ -26,6 +26,9 @@ export interface IUser extends Document {
   whatsappBotInteractions?: number
   /** G1 — public REST API bearer key. */
   publicApiKey?: string
+  /** Outbound Zapier/partner webhook (subscription + HMAC signing). */
+  partnerWebhookUrl?: string
+  partnerWebhookSecret?: string
   /** H4 — partner referral code for this account. */
   partnerReferralCode?: string
   referredByUserId?: mongoose.Types.ObjectId
@@ -75,6 +78,8 @@ const UserSchema = new Schema<IUser>(
     whatsappBotDayKey: String,
     whatsappBotInteractions: { type: Number, default: 0 },
     publicApiKey: { type: String, sparse: true, unique: true, index: true },
+    partnerWebhookUrl: { type: String, trim: true },
+    partnerWebhookSecret: { type: String, select: false },
     partnerReferralCode: { type: String, sparse: true, unique: true, index: true },
     referredByUserId: { type: Schema.Types.ObjectId, ref: 'User' },
     superFanFestivalSentAt: Date,

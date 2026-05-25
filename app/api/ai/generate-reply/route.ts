@@ -24,7 +24,7 @@ const bodySchema = z.object({
     }),
   language: z.enum(['hindi', 'english', 'hinglish']),
   tone: z
-    .enum(['professional', 'friendly', 'formal', 'grateful', 'concise'])
+    .enum(['professional', 'friendly', 'formal', 'grateful', 'concise', 'apologetic'])
     .default('professional'),
   /** When true, skip few-shot tone examples (for A/B preview on Tone Trainer). */
   skipToneExamples: z.boolean().optional(),
@@ -51,7 +51,9 @@ function buildMockAiReply(
         ? 'We are truly grateful that you chose us and shared your experience.'
         : tone === 'concise'
           ? 'Thanks for the note — noted and actioned.'
-          : 'Thank you for the thoughtful review.'
+          : tone === 'apologetic'
+            ? 'We are genuinely sorry things did not match the experience we aim to deliver.'
+            : 'Thank you for the thoughtful review.'
   if (rating >= 4) {
     const snippet = text ? `—especially "${text.slice(0, 72)}${text.length > 72 ? '…' : ''}"` : ''
     return `${toneBit} ${first}, we are delighted you enjoyed your visit${snippet}. We look forward to welcoming you again soon. Warmly, the team.`

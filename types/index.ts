@@ -28,7 +28,7 @@ export interface IUserLean {
 }
 
 export type ReplyLanguage = 'hindi' | 'english' | 'hinglish'
-export type ReplyTone = 'professional' | 'friendly' | 'formal'
+export type ReplyTone = 'professional' | 'friendly' | 'formal' | 'grateful' | 'concise' | 'apologetic'
 
 export interface SessionUser {
   id: string

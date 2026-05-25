@@ -1,5 +1,7 @@
 # ReviewPulse MVP Feature Implementation Guide
 
+> **Catalog & ops docs:** inventories of routes, REST APIs, cron jobs, probes, env keys, and go-live checklist live under **`docs/`** (`FEATURE_CATALOG.md`, `ENVIRONMENT_VARIABLES.md`, `PRODUCTION_CHECKLIST.md`) plus the in-app **`/docs`** dashboard page.
+
 ## Overview
 
 This document covers the implementation of ReviewPulse's **MVP (Minimum Viable Product)** features for the India-first AI review assistant platform. These features directly address core user pain-points and market gaps.

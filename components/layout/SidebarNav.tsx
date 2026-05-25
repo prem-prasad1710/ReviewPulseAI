@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
+  AlertTriangle,
+  BookOpen,
   Building2,
   ChevronRight,
   FileText,
@@ -26,7 +28,9 @@ import { cn } from '@/lib/utils'
 
 const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/docs', label: 'Docs', icon: BookOpen },
   { href: '/reviews', label: 'Reviews', icon: MessageSquare },
+  { href: '/escalations', label: 'Escalations', icon: AlertTriangle },
   { href: '/locations', label: 'Locations', icon: MapPin },
   { href: '/v2', label: 'v2 Hub', icon: Rocket },
   { href: '/analytics', label: 'Analytics', icon: Sparkles },

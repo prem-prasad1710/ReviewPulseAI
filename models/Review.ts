@@ -50,6 +50,13 @@ export interface IReview extends Document {
   /** Z4 Potentially inauthentic pattern score 0–100. */
   fakeScore?: number
   fakeSignals?: string[]
+  /** LLM advisory authenticity (PDF fake-review workflow; does not replace fakeScore). */
+  llmAuthenticity?: {
+    verdict: 'likely_genuine' | 'likely_inauthentic'
+    briefReason: string
+    confidence: number
+    analyzedAt: Date
+  }
   /** Z2 Staff extraction completed for this review. */
   staffMentionsExtracted?: boolean
   reviewCreatedAt: Date
@@ -102,6 +109,16 @@ const ReviewSchema = new Schema<IReview>(
     },
     fakeScore: { type: Number, min: 0, max: 100 },
     fakeSignals: [{ type: String }],
+    llmAuthenticity: {
+      type: {
+        verdict: { type: String, enum: ['likely_genuine', 'likely_inauthentic'] },
+        briefReason: String,
+        confidence: { type: Number, min: 0, max: 1 },
+        analyzedAt: Date,
+      },
+      required: false,
+      _id: false,
+    },
     staffMentionsExtracted: { type: Boolean, default: false },
     reviewCreatedAt: { type: Date, required: true, index: true },
     syncedAt: { type: Date, required: true },

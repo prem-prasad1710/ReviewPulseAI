@@ -29,6 +29,8 @@ export interface SentimentAnalysisResult {
   emotionConfidence: number // 0-1
   detectedLanguage: Language
   keyPhrases: string[]
+  /** Theme labels aligned with PDF "topic analysis" wording. */
+  topics: string[]
   urgency: 'low' | 'medium' | 'high' // For alerting
   summary: string
 }
@@ -67,13 +69,18 @@ class MultilingualSentimentAnalyzer {
 
           const parsed = JSON.parse(content)
 
+          const topics = Array.isArray(parsed.topics) ? parsed.topics.filter(Boolean).slice(0, 12) : []
+          const keyPhrasesRaw = Array.isArray(parsed.keyPhrases) ? parsed.keyPhrases.filter(Boolean) : []
+          const keyPhrases = (keyPhrasesRaw.length > 0 ? keyPhrasesRaw : topics).slice(0, 15)
+
           return {
             sentiment: parsed.sentiment,
             sentimentScore: parsed.sentimentScore,
             emotion: parsed.emotion,
             emotionConfidence: parsed.emotionConfidence,
             detectedLanguage: parsed.detectedLanguage,
-            keyPhrases: parsed.keyPhrases,
+            topics,
+            keyPhrases,
             urgency: this.calculateUrgency(parsed.sentiment, parsed.sentimentScore),
             summary: parsed.summary,
           }
@@ -111,7 +118,8 @@ Respond with a JSON object containing:
   "emotion": "joy" | "frustration" | "gratitude" | "disappointment" | "anger" | "surprise" | "neutral",
   "emotionConfidence": number between 0 and 1,
   "detectedLanguage": "english" | "hindi" | "hinglish",
-  "keyPhrases": array of important phrases from the review,
+  "topics": Short theme labels such as ["food_quality","pricing","cleanliness","staff"],
+  "keyPhrases": array of important verbatim phrases from the review,
   "summary": one-line summary of the key issue or praise
 }
 
@@ -169,6 +177,7 @@ Return ONLY valid JSON, no markdown or extra text.
       emotion,
       emotionConfidence: 0.6,
       detectedLanguage: this.detectLanguage(text),
+      topics: [],
       keyPhrases: [],
       urgency: this.calculateUrgency(sentiment, sentimentScore),
       summary: `Review is ${sentiment}`,
@@ -201,7 +210,7 @@ Return ONLY valid JSON, no markdown or extra text.
   }> {
     const sentiments = reviews.map(r => r.sentiment)
     const emotions = reviews.map(r => r.emotion)
-    const keyPhrases = reviews.flatMap(r => r.keyPhrases)
+    const keyPhrases = reviews.flatMap((r) => [...r.keyPhrases, ...(r.topics ?? [])])
 
     // Count sentiments
     const sentimentCounts: Record<string, number> = {}
@@ -218,7 +227,7 @@ Return ONLY valid JSON, no markdown or extra text.
     // Find top issues (negative key phrases)
     const issuePhrases = reviews
       .filter(r => r.sentiment === 'negative')
-      .flatMap(r => r.keyPhrases)
+      .flatMap((r) => [...r.keyPhrases, ...(r.topics ?? [])])
       .slice(0, 5)
 
     return {

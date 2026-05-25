@@ -9,6 +9,8 @@ const complianceEnum = z.enum(['standard', 'healthcare', 'legal', 'finance'])
 
 const putSchema = z.object({
   googlePlaceId: z.string().min(5).max(256).optional(),
+  /** Yelp Fusion `/v3/businesses/{id}/reviews`; optional per PDF integrations. */
+  yelpBusinessId: z.union([z.string().trim().min(3).max(128), z.literal('')]).optional(),
   logoUrl: z.string().url().max(2000).optional().or(z.literal('')),
   festiveAutoMode: z.boolean().optional(),
   businessType: businessTypeEnum.optional(),
@@ -23,7 +25,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     const { id } = await params
     const location = await Location.findOne({ _id: id, userId: user._id })
       .select(
-        'googlePlaceId logoUrl name festiveAutoMode locationSlug businessType complianceMode crisisMode averageRating totalReviews'
+        'googlePlaceId yelpBusinessId logoUrl name festiveAutoMode locationSlug businessType complianceMode crisisMode averageRating totalReviews'
       )
       .lean()
     if (!location) return err('Location not found', 404)
@@ -45,6 +47,8 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     const { id } = await params
     const $set: Record<string, string | boolean | undefined> = {}
     if (parsed.data.googlePlaceId !== undefined) $set.googlePlaceId = parsed.data.googlePlaceId
+    if (parsed.data.yelpBusinessId !== undefined)
+      $set.yelpBusinessId = parsed.data.yelpBusinessId || undefined
     if (parsed.data.logoUrl !== undefined) $set.logoUrl = parsed.data.logoUrl || undefined
     if (parsed.data.festiveAutoMode !== undefined) $set.festiveAutoMode = parsed.data.festiveAutoMode
     if (parsed.data.businessType !== undefined) $set.businessType = parsed.data.businessType
@@ -57,7 +61,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       { new: true }
     )
       .select(
-        'googlePlaceId logoUrl name festiveAutoMode locationSlug businessType complianceMode crisisMode averageRating totalReviews'
+        'googlePlaceId yelpBusinessId logoUrl name festiveAutoMode locationSlug businessType complianceMode crisisMode averageRating totalReviews'
       )
       .lean()
     if (!location) return err('Location not found', 404)

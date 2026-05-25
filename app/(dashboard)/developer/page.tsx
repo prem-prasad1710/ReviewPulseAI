@@ -38,6 +38,16 @@ export default function DeveloperApiPage() {
         Bearer <code className="rounded bg-slate-100 px-1 dark:bg-slate-800">rp_live_…</code> —{' '}
         <code className="text-xs">GET /api/v1/locations/&lt;id&gt;/reviews</code>
       </p>
+      <p className="mt-3 text-sm text-slate-600 dark:text-slate-400">
+        Partner webhooks live under{' '}
+        <a href="/integrations" className="text-primary underline underline-offset-2">
+          Integrations
+        </a>
+        : HTTPS POST JSON with{' '}
+        <code className="text-xs rounded bg-slate-100 px-1 dark:bg-slate-800">X-ReviewPulse-Signature</code>{' '}
+        (optional HMAC). Settings API:{' '}
+        <code className="text-xs">GET/PATCH /api/user/webhook-settings</code>.
+      </p>
       {!planOk ? <p className="mt-4 text-sm text-amber-800">Growth+ required to mint keys.</p> : null}
       {hasKey && masked ? <p className="mt-4 text-sm">Current key (masked): {masked}</p> : null}
       {newKey ? (

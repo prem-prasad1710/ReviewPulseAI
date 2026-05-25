@@ -7,7 +7,7 @@
 import { getOpenAI, resolveLlmChatModel } from '@/lib/openai'
 import { buildAiCacheKey, defaultAiCacheTtlSeconds, withCachedAiJson } from '@/lib/ai-redis-cache'
 
-export type ReplyTone = 'professional' | 'friendly' | 'formal' | 'grateful' | 'concise'
+export type ReplyTone = 'professional' | 'friendly' | 'formal' | 'grateful' | 'concise' | 'apologetic'
 export type Language = 'english' | 'hindi' | 'hinglish'
 export type Compliance = 'standard' | 'healthcare' | 'legal' | 'finance'
 
@@ -235,6 +235,7 @@ Hinglish Guidelines:
       grateful: `TONE: Thankful and appreciative. Lead with gratitude, show genuine appreciation, be humble.`,
       formal: `TONE: Very formal and respectful. Use formal titles, maintain professionalism, be concise.`,
       concise: `TONE: Brief and to-the-point. Cut fluff, use short sentences, direct action items.`,
+      apologetic: `TONE: Sincere apology and accountability. Acknowledge shortfall, avoid excuses, offer concrete remedy or follow-up.`,
     }
 
     return contexts[tone]

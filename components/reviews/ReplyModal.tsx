@@ -12,9 +12,10 @@ const languages = [
   { id: 'hinglish' as const, label: 'Hinglish' },
 ]
 
-const tones: { id: 'professional' | 'friendly' | 'formal' | 'grateful' | 'concise'; label: string }[] = [
+const tones: { id: 'professional' | 'friendly' | 'formal' | 'grateful' | 'concise' | 'apologetic'; label: string }[] = [
   { id: 'professional', label: 'Professional' },
   { id: 'friendly', label: 'Friendly' },
+  { id: 'apologetic', label: 'Apologetic' },
   { id: 'formal', label: 'Formal' },
   { id: 'grateful', label: 'Grateful' },
   { id: 'concise', label: 'Concise' },
@@ -27,6 +28,12 @@ type ReviewDetail = {
   comment?: string
   fakeScore?: number
   fakeSignals?: string[]
+  llmAuthenticity?: {
+    verdict: string
+    briefReason: string
+    confidence: number
+    analyzedAt?: string
+  }
   autopsy?: { rootCause: string; suggestedFix: string; generatedAt: string }
 }
 
@@ -42,13 +49,17 @@ export default function ReplyModal({
   const [reply, setReply] = useState('')
   const [loading, setLoading] = useState(false)
   const [language, setLanguage] = useState<'hindi' | 'english' | 'hinglish'>('english')
-  const [tone, setTone] = useState<'professional' | 'friendly' | 'formal' | 'grateful' | 'concise'>('professional')
+  const [tone, setTone] = useState<
+    'professional' | 'friendly' | 'formal' | 'grateful' | 'concise' | 'apologetic'
+  >('professional')
   const [detailLoading, setDetailLoading] = useState(false)
   const [detail, setDetail] = useState<ReviewDetail | null>(null)
   const [gates, setGates] = useState<{ autopsy?: boolean; socialFull?: boolean; fakeScore?: boolean }>({})
   const [locationName, setLocationName] = useState('')
   const [autopsyOpen, setAutopsyOpen] = useState(true)
   const [socialOpen, setSocialOpen] = useState(false)
+  const [authBusy, setAuthBusy] = useState(false)
+  const [authErr, setAuthErr] = useState<string | null>(null)
 
   useEffect(() => {
     queueMicrotask(() => {
@@ -72,6 +83,29 @@ export default function ReplyModal({
       })()
     })
   }, [open, reviewId])
+
+  const runAuth = async () => {
+    if (!reviewId) return
+    setAuthBusy(true)
+    setAuthErr(null)
+    try {
+      const res = await fetch('/api/ai/analyze-authenticity', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reviewId, persist: true }),
+      })
+      const j = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        setAuthErr((j?.error as string) || 'Authenticity analysis failed')
+        return
+      }
+      const refreshed = await fetch(`/api/reviews/${reviewId}`)
+      const jr = await refreshed.json().catch(() => ({}))
+      setDetail(jr?.data?.review ?? null)
+    } finally {
+      setAuthBusy(false)
+    }
+  }
 
   if (!open || !reviewId) return null
 
@@ -248,6 +282,40 @@ export default function ReplyModal({
             </div>
           </div>
 
+          {gates.fakeScore && detail ? (
+            <div className="mb-4 rounded-xl border border-violet-200/80 bg-violet-50/40 p-3 dark:border-violet-900/50 dark:bg-violet-950/25">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className="text-xs font-semibold uppercase tracking-wide text-violet-800 dark:text-violet-100">
+                  LLM authenticity advisory
+                </p>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-8 rounded-lg text-xs"
+                  disabled={authBusy}
+                  onClick={() => void runAuth()}
+                >
+                  {authBusy ? 'Analyzing…' : 'Run PDF-style check'}
+                </Button>
+              </div>
+              <p className="mt-1 text-[11px] text-violet-900/85 dark:text-violet-200/90">
+                Non-binding signal for compliance-minded teams—pair with platform policies before reporting reviewers.
+              </p>
+              {detail.llmAuthenticity ? (
+                <p className="mt-2 text-xs font-medium text-violet-950 dark:text-violet-100">
+                  <span className="capitalize">{detail.llmAuthenticity.verdict.replace(/_/g, ' ')}</span>
+                  {' — '}
+                  {detail.llmAuthenticity.briefReason}{' '}
+                  <span className="text-violet-700/70 dark:text-violet-300/80">
+                    (confidence {(detail.llmAuthenticity.confidence * 100).toFixed(0)}%)
+                  </span>
+                </p>
+              ) : null}
+              {authErr ? <p className="mt-2 text-xs text-rose-600 dark:text-rose-400">{authErr}</p> : null}
+            </div>
+          ) : null}
+
           <div className="space-y-3">
             <textarea
               value={reply}
@@ -267,7 +335,7 @@ export default function ReplyModal({
               </Button>
             </div>
             <p className="text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">
-              Tip: For sensitive 1★ reviews, switch to Formal or Concise, then add your direct contact line before publishing.
+              Tip: For sensitive 1★ reviews, try Apologetic or Formal, then add your direct contact line before publishing.
             </p>
           </div>
         </div>

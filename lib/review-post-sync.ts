@@ -10,6 +10,8 @@ import Location from '@/models/Location'
 import Review from '@/models/Review'
 import ReviewAlert from '@/models/ReviewAlert'
 import User from '@/models/User'
+import { maybeCreateEscalationFromReview } from '@/lib/escalation-tasks'
+import { deliverPartnerReviewWebhook } from '@/lib/partner-webhook'
 import { enqueueZeroOneAfterSync } from '@/lib/review-zero-one'
 import { setWhatsAppVoicePinForReview } from '@/lib/whatsapp-voice-reply'
 
@@ -47,7 +49,10 @@ async function sendEmailAlert(to: string, subject: string, html: string) {
   await resend.emails.send({ from, to, subject, html })
 }
 
-export async function processReviewAfterSync(reviewDbId: Types.ObjectId): Promise<void> {
+export async function processReviewAfterSync(
+  reviewDbId: Types.ObjectId,
+  opts?: { isNewReview?: boolean }
+): Promise<void> {
   const review = await Review.findById(reviewDbId)
   if (!review) return
 
@@ -173,6 +178,39 @@ ${reviewUrl}`
           }
         }
       }
+    }
+  }
+
+  if (opts?.isNewReview) {
+    await maybeCreateEscalationFromReview({
+      reviewId: review._id as Types.ObjectId,
+      userId: review.userId as Types.ObjectId,
+      locationId: review.locationId as Types.ObjectId,
+      rating: review.rating,
+      comment: review.comment,
+      isNewReview: true,
+    })
+
+    const wh = await User.findById(review.userId)
+      .select('+partnerWebhookSecret partnerWebhookUrl email')
+      .lean()
+    const url = (wh?.partnerWebhookUrl ?? '').trim()
+    if (url) {
+      void deliverPartnerReviewWebhook({
+        url,
+        secret: wh?.partnerWebhookSecret as string | undefined,
+        event: 'review.new',
+        payload: {
+          reviewMongoId: String(review._id),
+          locationMongoId: String(review.locationId),
+          googleReviewId: review.googleReviewId,
+          rating: review.rating,
+          reviewerName: review.reviewerName,
+          commentSnippet: (review.comment ?? '').slice(0, 800),
+          reviewCreatedAt: review.reviewCreatedAt,
+          sentiment: review.sentiment,
+        },
+      }).catch(() => {})
     }
   }
 

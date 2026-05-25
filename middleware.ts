@@ -14,6 +14,8 @@ function requiresDashboardSession(pathname: string): boolean {
   }
   const prefixes = [
     '/dashboard',
+    '/docs',
+    '/escalations',
     '/settings',
     '/reviews',
     '/locations',

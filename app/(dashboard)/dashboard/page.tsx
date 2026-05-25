@@ -6,6 +6,7 @@ import InsightRail from '@/components/dashboard/InsightRail'
 import OwnerCoachCard from '@/components/dashboard/OwnerCoachCard'
 import ProductHighlights from '@/components/dashboard/ProductHighlights'
 import RecentReviews from '@/components/dashboard/RecentReviews'
+import ReviewSummaryCard from '@/components/dashboard/ReviewSummaryCard'
 import ReputationRecoveryCard from '@/components/dashboard/ReputationRecoveryCard'
 import SentimentChart from '@/components/dashboard/SentimentChart'
 import StatsCards from '@/components/dashboard/StatsCards'
@@ -208,6 +209,12 @@ export default async function DashboardPage() {
         bridgeVisitsTotal={bridgeVisitsTotal}
       />
       </Reveal>
+
+      {userId && !useMocks ? (
+        <Reveal delay={81}>
+          <ReviewSummaryCard />
+        </Reveal>
+      ) : null}
 
       <Reveal delay={82}>
         {useMocks || (userId && locationCount > 0) ? (

@@ -107,7 +107,8 @@ export async function syncLocationReviewsForUser(
       }
 
       if (reviewDoc?._id) {
-        await processReviewAfterSync(reviewDoc._id)
+        const isNewReview = !prior
+        await processReviewAfterSync(reviewDoc._id, { isNewReview })
       }
     }
 

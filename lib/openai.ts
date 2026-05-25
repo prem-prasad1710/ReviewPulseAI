@@ -130,7 +130,7 @@ interface GenerateReplyParams {
   rating: number
   reviewerName: string
   language: 'hindi' | 'english' | 'hinglish'
-  tone: 'professional' | 'friendly' | 'formal' | 'grateful' | 'concise'
+  tone: 'professional' | 'friendly' | 'formal' | 'grateful' | 'concise' | 'apologetic'
   toneExamples?: string[]
   /** ISO 639-1 from review detection; when not English, reply should match customer language. */
   detectedLanguageIso1?: string
@@ -171,6 +171,8 @@ export async function generateReviewReply(params: GenerateReplyParams): Promise<
     formal: 'Be formal and respectful. Suitable for clinics and legal or financial services.',
     grateful: 'Lead with sincere gratitude. Sound genuinely thankful without being salesy.',
     concise: 'Be brief and direct: 2–3 short sentences maximum. No filler.',
+    apologetic:
+      'Lead with a sincere apology for where we fell short. Acknowledge their specific points without excuses. Offer a concrete next step and invite them to connect offline. Sound human and accountable—never defensive.',
   }[tone]
 
   const sentimentContext =

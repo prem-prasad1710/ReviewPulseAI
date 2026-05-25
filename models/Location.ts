@@ -65,6 +65,8 @@ export interface ILocation extends Document {
   averageRating: number
   isActive: boolean
   googlePlaceId?: string
+  /** Yelp Fusion businesses/{id}; optional multi-channel ingestion (PDF). */
+  yelpBusinessId?: string
   locationSlug?: string
   qrScans: number
   logoUrl?: string
@@ -156,6 +158,7 @@ const LocationSchema = new Schema<ILocation>(
     averageRating: { type: Number, default: 0 },
     isActive: { type: Boolean, default: true },
     googlePlaceId: String,
+    yelpBusinessId: { type: String, trim: true, sparse: true, index: true },
     locationSlug: { type: String, unique: true, sparse: true, index: true },
     qrScans: { type: Number, default: 0 },
     logoUrl: String,
