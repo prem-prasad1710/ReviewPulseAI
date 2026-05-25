@@ -33,10 +33,10 @@ export default function TopBar({
     : 'Sentiment, inbox health, and reply velocity in one place.'
 
   return (
-    <header className="sticky top-0 z-10 border-b border-slate-200/70 bg-white/80 px-4 py-3 backdrop-blur-xl dark:border-slate-700/70 dark:bg-slate-900/85 sm:px-6 lg:px-8">
+    <header className="sticky top-0 z-20 shrink-0 border-b border-slate-200/80 bg-white/95 px-3 py-2.5 dark:border-slate-700/80 dark:bg-slate-900/98 sm:px-6 sm:py-3 lg:z-30 lg:bg-white/80 lg:px-8 lg:backdrop-blur-xl dark:lg:bg-slate-900/85">
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-indigo-300/50 to-transparent dark:via-indigo-500/30" aria-hidden />
-      <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4">
-        <div className="flex min-w-0 flex-1 items-start gap-3">
+      <div className="mx-auto flex max-w-7xl flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-4">
+        <div className="flex min-w-0 flex-1 items-start gap-2 sm:gap-3">
           <div className="pt-0.5">
             <MobileSidebarTrigger />
           </div>
@@ -48,20 +48,20 @@ export default function TopBar({
               {!branded ? (
                 <Link
                   href="/"
-                  className="hidden text-[11px] font-medium text-slate-400 transition hover:text-indigo-600 dark:hover:text-indigo-400 sm:inline"
+                  className="hidden text-[11px] font-medium text-slate-400 transition hover:text-indigo-600 dark:hover:text-indigo-400 md:inline"
                 >
                   Marketing site →
                 </Link>
               ) : null}
             </div>
-          <h1 className="font-heading truncate text-xl font-bold tracking-tight text-slate-900 dark:text-slate-50 sm:text-2xl">
-            {title}
-          </h1>
-          <p className="mt-0.5 text-sm text-slate-600 dark:text-slate-400">{description}</p>
+            <h1 className="font-heading truncate text-lg font-bold tracking-tight text-slate-900 dark:text-slate-50 sm:text-xl md:text-2xl">
+              {title}
+            </h1>
+            <p className="mt-0.5 hidden text-sm text-slate-600 dark:text-slate-400 sm:block">{description}</p>
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex w-full shrink-0 flex-wrap items-center justify-between gap-2 sm:w-auto sm:justify-end sm:gap-3">
           <ThemeToggle />
           {AUTH_DISABLED_FOR_DEV ? (
             <Badge className="border border-amber-300/80 bg-amber-50 font-medium text-amber-900 dark:border-amber-700/60 dark:bg-amber-950/50 dark:text-amber-200">
@@ -91,7 +91,12 @@ export default function TopBar({
                 await signOut({ redirectTo: '/login' })
               }}
             >
-              <Button type="submit" variant="outline" size="sm" className="rounded-xl border-slate-200 dark:border-slate-600 dark:bg-slate-800/50 dark:hover:bg-slate-800">
+              <Button
+                type="submit"
+                variant="outline"
+                size="sm"
+                className="rounded-xl border-slate-200 text-xs sm:text-sm dark:border-slate-600 dark:bg-slate-800/50 dark:hover:bg-slate-800"
+              >
                 Sign out
               </Button>
             </form>

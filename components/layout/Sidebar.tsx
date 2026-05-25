@@ -1,6 +1,9 @@
+'use client'
+
 import Link from 'next/link'
 import { LifeBuoy } from 'lucide-react'
 import { AppMark } from '@/components/brand/AppMark'
+import SidebarCloseButton from '@/components/layout/SidebarCloseButton'
 import SidebarNav from '@/components/layout/SidebarNav'
 import type { AgencyBrand } from '@/lib/agency-branding'
 import { cn } from '@/lib/utils'
@@ -13,13 +16,16 @@ export default function Sidebar({ agencyBrand }: { agencyBrand?: AgencyBrand | n
   return (
     <aside
       className={cn(
-        'relative flex h-full min-h-0 w-full flex-col overflow-hidden border-slate-200/70 bg-gradient-to-b from-white/95 to-slate-50/90 p-4 shadow-[inset_-1px_0_0_rgba(99,102,241,0.04)] backdrop-blur-xl dark:border-slate-700/70 dark:from-slate-900/98 dark:to-slate-950/95 dark:shadow-[inset_-1px_0_0_rgba(99,102,241,0.08)]'
+        'relative flex h-full min-h-0 w-full flex-col overflow-hidden border-slate-200/70 bg-gradient-to-b from-white to-slate-50 p-4 shadow-[inset_-1px_0_0_rgba(99,102,241,0.04)] dark:border-slate-700/70 dark:from-slate-900 dark:to-slate-950 dark:shadow-[inset_-1px_0_0_rgba(99,102,241,0.08)]',
+        /* Avoid backdrop-filter on phones (blurry stacking with scrim + scrolling). Desktop keeps frost. */
+        'max-lg:backdrop-blur-none lg:from-white/95 lg:to-slate-50/90 lg:backdrop-blur-xl lg:dark:from-slate-900/98 lg:dark:to-slate-950/95'
       )}
     >
+      <SidebarCloseButton />
       <div className="pointer-events-none absolute inset-y-0 right-0 w-px bg-gradient-to-b from-indigo-200/0 via-indigo-200/40 to-indigo-200/0 dark:from-indigo-500/0 dark:via-indigo-400/25 dark:to-indigo-500/0" aria-hidden />
       <Link
         href="/dashboard"
-        className="mb-6 flex shrink-0 items-center gap-3 rounded-xl px-1 py-0.5 transition motion-safe:duration-200 hover:opacity-90 active:scale-[0.99] lg:mb-8"
+        className="mb-6 flex shrink-0 items-center gap-3 rounded-xl pr-10 px-1 py-0.5 transition motion-safe:duration-200 hover:opacity-90 active:scale-[0.99] lg:mb-8 lg:pr-1"
       >
         {branded && agencyBrand?.logoUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
