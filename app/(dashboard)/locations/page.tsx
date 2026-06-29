@@ -5,6 +5,7 @@ import { getAppSession } from '@/lib/auth-helpers'
 import { hrefForLocationHubSegment, LOCATION_HUB_LINKS } from '@/lib/location-hub-features'
 import { connectDB } from '@/lib/mongodb'
 import Location from '@/models/Location'
+import Review from '@/models/Review'
 import LocationSyncButton from '@/components/locations/LocationSyncButton'
 import LocationsToolbar from '@/components/locations/LocationsToolbar'
 import DevSeedPanel from '@/components/dev/DevSeedPanel'
@@ -22,6 +23,68 @@ export default async function LocationsPage() {
     : userId
       ? await Location.find({ userId }).sort({ createdAt: -1 }).lean()
       : []
+
+  type LocHealth = 'excellent' | 'good' | 'attention' | 'critical'
+  const healthByLoc = new Map<string, { health: LocHealth; pending: number; label: string }>()
+
+  if (!useMocks && userId && locations.length > 0) {
+    const ids = locations.map((l) => (l as { _id: unknown })._id)
+    const stats = await Review.aggregate<{
+      _id: unknown
+      pending: number
+      lowStar: number
+      avg: number
+    }>([
+      { $match: { userId, locationId: { $in: ids } } },
+      {
+        $group: {
+          _id: '$locationId',
+          pending: {
+            $sum: { $cond: [{ $in: ['$status', ['pending', 'scheduled']] }, 1, 0] },
+          },
+          lowStar: {
+            $sum: {
+              $cond: [
+                {
+                  $and: [
+                    { $lte: ['$rating', 2] },
+                    { $in: ['$status', ['pending', 'scheduled']] },
+                  ],
+                },
+                1,
+                0,
+              ],
+            },
+          },
+          avg: { $avg: '$rating' },
+        },
+      },
+    ])
+    for (const row of stats) {
+      const pending = row.pending
+      const avg = row.avg ?? 0
+      let health: LocHealth = 'excellent'
+      let label = 'Healthy'
+      if (row.lowStar > 0 || avg < 3.5 || pending > 8) {
+        health = 'critical'
+        label = 'Needs attention'
+      } else if (pending > 3 || avg < 4.0) {
+        health = 'attention'
+        label = 'Watch'
+      } else if (pending > 0 || avg < 4.3) {
+        health = 'good'
+        label = 'Good'
+      }
+      healthByLoc.set(String(row._id), { health, pending, label })
+    }
+  }
+
+  const healthClass: Record<LocHealth, string> = {
+    excellent: 'bg-emerald-50 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300',
+    good: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300',
+    attention: 'bg-amber-50 text-amber-900 dark:bg-amber-950/50 dark:text-amber-200',
+    critical: 'bg-rose-50 text-rose-800 dark:bg-rose-950/50 dark:text-rose-300',
+  }
 
   return (
     <div className="space-y-8">
@@ -53,6 +116,7 @@ export default async function LocationsPage() {
             const slug = (location as { locationSlug?: string }).locationSlug
             const lastSyncedAt = (location as { lastSyncedAt?: Date }).lastSyncedAt
             const last = lastSyncedAt ? new Date(lastSyncedAt).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }) : 'Never'
+            const health = healthByLoc.get(id)
             return (
               <Card
                 key={id}
@@ -74,9 +138,19 @@ export default async function LocationsPage() {
                     </div>
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300">
-                      Live
-                    </span>
+                    {health ? (
+                      <span
+                        className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${healthClass[health.health]}`}
+                        title={health.pending > 0 ? `${health.pending} pending reviews` : undefined}
+                      >
+                        {health.label}
+                        {health.pending > 0 ? ` · ${health.pending}` : ''}
+                      </span>
+                    ) : (
+                      <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300">
+                        Live
+                      </span>
+                    )}
                     <LocationSyncButton locationId={id} label="Sync" disabled={useMocks} />
                   </div>
                 </div>
@@ -108,6 +182,15 @@ export default async function LocationsPage() {
                       <LayoutGrid className="h-3.5 w-3.5" />
                       Open hub
                     </Link>
+                    {slug ? (
+                      <Link
+                        href={`/score/${slug}`}
+                        target="_blank"
+                        className="inline-flex h-8 items-center justify-center rounded-lg border border-slate-200 bg-white px-3 text-xs font-medium text-slate-700 transition hover:border-indigo-200 hover:text-indigo-700 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200"
+                      >
+                        Public score
+                      </Link>
+                    ) : null}
                   </div>
                   <div className="flex max-h-[7.5rem] flex-wrap gap-1.5 overflow-y-auto pr-1 md:max-h-none">
                     {LOCATION_HUB_LINKS.map((item) => (

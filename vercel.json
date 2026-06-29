@@ -23,6 +23,10 @@
     {
       "path": "/api/cron/v2-campaigns",
       "schedule": "0 9 * * 1"
+    },
+    {
+      "path": "/api/cron/weekly-digest",
+      "schedule": "30 4 * * 1"
     }
   ]
 }

@@ -2,6 +2,7 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import { ArrowRight, Clock3, ShieldCheck, Sparkles } from 'lucide-react'
 import { AppMark } from '@/components/brand/AppMark'
+import LandingBusinessOwners from '@/components/marketing/LandingBusinessOwners'
 import LandingEdgeCards from '@/components/marketing/LandingEdgeCards'
 import LandingElectricFlow from '@/components/marketing/LandingElectricFlow'
 import LandingFaq from '@/components/marketing/LandingFaq'
@@ -232,6 +233,10 @@ export default function Home() {
 
         <Reveal delay={40}>
           <LandingEdgeCards />
+        </Reveal>
+
+        <Reveal delay={40}>
+          <LandingBusinessOwners />
         </Reveal>
 
         <Reveal delay={40}>

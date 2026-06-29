@@ -17,11 +17,15 @@ import { MOCK_LOCATIONS, MOCK_REVIEWS, shouldUseDashboardMocks } from '@/lib/dev
 import { bucketNegativeReviewThemes } from '@/lib/reputation-themes'
 import { getAppSession } from '@/lib/auth-helpers'
 import { connectDB } from '@/lib/mongodb'
+import { buildOwnerBrief } from '@/lib/owner-brief'
+import CrisisRadarCard from '@/components/dashboard/CrisisRadarCard'
+import OwnerBusinessBrief from '@/components/dashboard/OwnerBusinessBrief'
 import FirstRunChecklist from '@/components/onboarding/FirstRunChecklist'
 import TrialBanner from '@/components/billing/TrialBanner'
 import User from '@/models/User'
 import Review from '@/models/Review'
 import Location from '@/models/Location'
+import ReviewAlert from '@/models/ReviewAlert'
 import type { IUserLean } from '@/types'
 
 export default async function DashboardPage() {
@@ -40,6 +44,70 @@ export default async function DashboardPage() {
     ? MOCK_REVIEWS
     : userId
       ? await Review.find({ userId }).sort({ reviewCreatedAt: -1 }).limit(50).lean()
+      : []
+
+  const allReviewsForBrief =
+    !useMocks && userId
+      ? await Review.find({ userId })
+          .select('locationId rating sentiment status comment reviewCreatedAt')
+          .sort({ reviewCreatedAt: -1 })
+          .limit(500)
+          .lean()
+      : []
+
+  const locationDocs =
+    !useMocks && userId
+      ? await Location.find({ userId, isActive: true })
+          .select('_id name locationSlug lastSyncedAt')
+          .sort({ createdAt: -1 })
+          .lean()
+      : []
+
+  const ownerBrief =
+    !useMocks && userId && (allReviewsForBrief.length > 0 || locationDocs.length > 0)
+      ? buildOwnerBrief(
+          allReviewsForBrief.map((r) => ({
+            locationId: String(r.locationId),
+            rating: r.rating,
+            sentiment: r.sentiment,
+            status: r.status,
+            comment: r.comment,
+            reviewCreatedAt: r.reviewCreatedAt,
+          })),
+          locationDocs.map((l) => ({
+            _id: String(l._id),
+            name: l.name,
+            locationSlug: l.locationSlug,
+            lastSyncedAt: l.lastSyncedAt,
+          }))
+        )
+      : null
+
+  const crisisAlerts =
+    !useMocks && userId
+      ? await (async () => {
+          const since = new Date()
+          since.setDate(since.getDate() - 30)
+          const rows = await ReviewAlert.find({
+            userId,
+            type: 'crisis',
+            createdAt: { $gte: since },
+          })
+            .sort({ createdAt: -1 })
+            .limit(8)
+            .populate('locationId', 'name')
+            .lean()
+          return rows.map((r) => ({
+            id: String(r._id),
+            keyword: r.keyword,
+            locationName:
+              typeof r.locationId === 'object' && r.locationId && 'name' in r.locationId
+                ? String((r.locationId as { name: string }).name)
+                : 'Location',
+            reviewId: String(r.reviewId),
+            createdAt: r.createdAt,
+          }))
+        })()
       : []
 
   const locMetrics = useMocks
@@ -113,6 +181,18 @@ export default async function DashboardPage() {
           pendingCount={pendingReplies}
           whatsappConfigured={Boolean(dbUser.whatsappNumber && dbUser.whatsappAlertsEnabled !== false)}
         />
+      ) : null}
+
+      {!useMocks && ownerBrief ? (
+        <Reveal delay={20}>
+          <OwnerBusinessBrief brief={ownerBrief} />
+        </Reveal>
+      ) : null}
+
+      {!useMocks && crisisAlerts.length > 0 ? (
+        <Reveal delay={25}>
+          <CrisisRadarCard alerts={crisisAlerts} />
+        </Reveal>
       ) : null}
 
       <Reveal>

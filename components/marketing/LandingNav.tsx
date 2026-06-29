@@ -12,6 +12,7 @@ const NAV_LINKS = [
   { href: '/tools/free-reply', label: 'Free reply tool' },
   { href: '#electric-flow', label: 'Product map' },
   { href: '#features', label: 'Features' },
+  { href: '#for-business', label: 'For owners' },
   { href: '#pricing', label: 'Pricing' },
   { href: '#faq', label: 'FAQ' },
   { href: '#customers', label: 'Customers' },
