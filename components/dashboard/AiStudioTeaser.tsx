@@ -1,10 +1,11 @@
+import Link from 'next/link'
 import { Languages, Mic2, SlidersHorizontal, Sparkles, Wand2 } from 'lucide-react'
 
 const bullets = [
   { icon: Languages, title: 'Hindi · English · Hinglish', body: 'Match how your customer wrote—Roman or Devanagari, formal or casual.' },
   { icon: SlidersHorizontal, title: 'Tone & length controls', body: 'Professional, warm, formal, grateful, or concise—tuned for clinics, F&B, and retail.' },
   { icon: Wand2, title: 'One-click regenerate', body: 'Iterate drafts without losing context from the original review.' },
-  { icon: Mic2, title: 'Brand voice memory', body: 'Coming soon: save snippets and banned phrases per location.' },
+  { icon: Mic2, title: 'Brand voice trainer', body: 'Save tone examples per location and preview AI replies in your voice.' },
 ]
 
 export default function AiStudioTeaser() {
@@ -42,6 +43,12 @@ export default function AiStudioTeaser() {
           )
         })}
       </ul>
+      <Link
+        href="/locations"
+        className="mt-6 inline-flex text-sm font-semibold text-indigo-600 hover:underline dark:text-indigo-400"
+      >
+        Open Tone Trainer on any location →
+      </Link>
     </section>
   )
 }

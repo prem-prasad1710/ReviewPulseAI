@@ -17,6 +17,9 @@ export default function BoosterPage() {
   const [slug, setSlug] = useState('')
   const [name, setName] = useState('')
   const [placeId, setPlaceId] = useState('')
+  const [automationEnabled, setAutomationEnabled] = useState(false)
+  const [automationTemplate, setAutomationTemplate] = useState('')
+  const [automationSaving, setAutomationSaving] = useState(false)
 
   useEffect(() => {
     const run = async () => {
@@ -28,10 +31,45 @@ export default function BoosterPage() {
       setPlaceId(loc?.googlePlaceId || '')
       const p = loc?.viewerPlan as string | undefined
       setPlanOk(Boolean(p && p !== 'free'))
+
+      const v2 = await fetch(`/api/locations/${id}/v2-settings`)
+      const v2json = await v2.json().catch(() => ({}))
+      const auto = v2json?.data?.reviewRequestAutomation
+      if (auto) {
+        setAutomationEnabled(Boolean(auto.enabled))
+        setAutomationTemplate(
+          auto.bodyTemplate ||
+            `Gentle reminder: if you enjoyed ${loc?.name || 'our outlet'}, a quick Google review helps us grow. Thank you!`
+        )
+      }
       setLoading(false)
     }
     run()
   }, [id])
+
+  const saveAutomation = async () => {
+    setAutomationSaving(true)
+    try {
+      const res = await fetch(`/api/locations/${id}/v2-settings`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          reviewRequestAutomation: {
+            enabled: automationEnabled,
+            bodyTemplate: automationTemplate.trim(),
+          },
+        }),
+      })
+      const json = await res.json()
+      if (!res.ok) {
+        toast.error(json?.error || 'Save failed')
+        return
+      }
+      toast.success('Weekly owner nudge saved')
+    } finally {
+      setAutomationSaving(false)
+    }
+  }
 
   const savePlaceId = async () => {
     const res = await fetch(`/api/locations/${id}/meta`, {
@@ -104,7 +142,35 @@ export default function BoosterPage() {
       </Card>
 
       <Card className="space-y-3 p-6 dark:border-slate-700 dark:bg-slate-900/60">
-        <CardTitle className="text-base">WhatsApp template</CardTitle>
+        <CardTitle className="text-base">Weekly owner nudge (B2)</CardTitle>
+        <CardDescription>
+          Every Monday, ReviewPulse sends you a WhatsApp reminder on your saved number — so you can ask happy customers for Google reviews. This does not message customers directly (Twilio template rules).
+        </CardDescription>
+        <label className="flex cursor-pointer items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-3 py-2.5 dark:border-slate-600 dark:bg-slate-950/40">
+          <span className="text-sm font-medium text-slate-800 dark:text-slate-200">Enable weekly nudge</span>
+          <input
+            type="checkbox"
+            className="h-4 w-4 rounded border-slate-300 text-indigo-600"
+            checked={automationEnabled}
+            onChange={(e) => setAutomationEnabled(e.target.checked)}
+            disabled={!planOk}
+          />
+        </label>
+        <textarea
+          rows={3}
+          value={automationTemplate}
+          onChange={(e) => setAutomationTemplate(e.target.value)}
+          disabled={!planOk}
+          className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800/80"
+        />
+        <Button className="rounded-xl" disabled={!planOk || automationSaving} onClick={() => void saveAutomation()}>
+          {automationSaving ? 'Saving…' : 'Save automation'}
+        </Button>
+      </Card>
+
+      <Card className="space-y-3 p-6 dark:border-slate-700 dark:bg-slate-900/60">
+        <CardTitle className="text-base">Customer WhatsApp template</CardTitle>
+        <CardDescription>Copy-paste to ask customers directly for a Google review.</CardDescription>
         <textarea readOnly rows={4} value={waTemplate} className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800/80" />
         <Button
           type="button"

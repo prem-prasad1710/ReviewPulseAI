@@ -42,12 +42,12 @@ Restrictions: HTTP referrer locks break **server** calls — use IP/serverless-f
 |----------|---------|
 | `TWILIO_ACCOUNT_SID` | Twilio REST |
 | `TWILIO_AUTH_TOKEN` | Auth + webhook validation |
-| `TWILIO_WHATSAPP_FROM` | WhatsApp sender (`whatsapp:+`) |
-| `TWILIO_PHONE_NUMBER` | SMS-from for alerts (`lib/alerts.ts`) |
-| `TWILIO_WHATSAPP_NUMBER` | Alert WhatsApp from |
+| `TWILIO_WHATSAPP_FROM` | WhatsApp sender (`whatsapp:+`) — **primary** for alerts, digest bot, and campaigns |
 | `TWILIO_WEBHOOK_PUBLIC_URL` | Public base for webhook URLs (`lib/twilio-config.ts`) |
 | `TWILIO_SKIP_SIGNATURE_VERIFY` | Dev-only emergency (`true`) |
 | Various `*_CONTENT_SID` | Twilio template SIDs |
+
+**Legacy (deprecated — do not use):** `TWILIO_WHATSAPP_NUMBER`, `TWILIO_PHONE_NUMBER` were used by `lib/alerts.ts` only. Production alerts use `TWILIO_WHATSAPP_FROM` via `lib/review-post-sync.ts`.
 
 ## Email
 

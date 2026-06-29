@@ -34,17 +34,17 @@ export default function LandingFinalCta() {
               size="lg"
               className="landing-cta-primary gap-2 rounded-xl shadow-lg shadow-indigo-600/25 transition hover:shadow-xl hover:shadow-indigo-600/30 active:scale-[0.98]"
             >
-              Start free trial
+              Start 14-day trial
               <ArrowRight className="h-4 w-4" />
             </Button>
           </Link>
-          <Link href="/dashboard">
+          <Link href="/tools/free-reply">
             <Button
               size="lg"
               variant="outline"
               className="rounded-xl border-slate-200 bg-white/90 transition hover:bg-white active:scale-[0.98] dark:border-slate-600 dark:bg-slate-800/80 dark:hover:bg-slate-800"
             >
-              Explore product
+              Try free AI reply
             </Button>
           </Link>
         </div>

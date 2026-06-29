@@ -7,6 +7,7 @@ import { toast } from 'sonner'
 import { ArrowLeft, Bell } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardDescription, CardTitle } from '@/components/ui/card'
+import { UpgradeBanner } from '@/components/billing/UpgradeGate'
 import { Skeleton } from '@/components/ui/skeleton'
 
 interface Kw {
@@ -83,10 +84,11 @@ export default function KeywordsPage() {
       </div>
 
       {!planOk ? (
-        <Card className="border-amber-200/80 bg-amber-50/60 p-6 dark:border-amber-800/50 dark:bg-amber-950/30">
-          <CardTitle className="text-base">Upgrade to Growth or Scale</CardTitle>
-          <CardDescription>Keyword alerts are a paid growth feature.</CardDescription>
-        </Card>
+        <UpgradeBanner
+          title="Upgrade to Growth or Scale"
+          message="Keyword alerts are a paid growth feature — get email and WhatsApp when crisis or positive keywords appear in reviews."
+          plan="growth"
+        />
       ) : null}
 
       <Card className="space-y-3 p-6 dark:border-slate-700 dark:bg-slate-900/60">

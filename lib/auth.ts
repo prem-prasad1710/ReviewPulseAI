@@ -2,7 +2,9 @@ import NextAuth, { type NextAuthConfig } from 'next-auth'
 import Google from 'next-auth/providers/google'
 import { connectDB } from '@/lib/mongodb'
 import { provisionLocationsFromGoogleOAuth } from '@/lib/provision-google-locations'
+import { expireTrialIfNeeded, getEffectivePlan, trialEndsAtFromNow, TRIAL_PLAN } from '@/lib/trial'
 import User from '@/models/User'
+import type { IUserLean } from '@/types'
 
 if (process.env.NODE_ENV !== 'production' && process.env.ALLOW_INSECURE_TLS_FOR_DEV === 'true') {
   process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
@@ -53,7 +55,8 @@ export const authConfig: NextAuthConfig = {
               image: user.image,
             },
             $setOnInsert: {
-              plan: 'free',
+              plan: TRIAL_PLAN,
+              trialEndsAt: trialEndsAtFromNow(),
               subscriptionStatus: 'inactive',
               repliesUsedThisMonth: 0,
               repliesResetAt: new Date(),
@@ -96,10 +99,10 @@ export const authConfig: NextAuthConfig = {
     async jwt({ token, user }) {
       if (user?.email) {
         await connectDB()
-        const dbUser = await User.findOne({ email: user.email }).select('_id plan').lean()
+        const dbUser = await User.findOne({ email: user.email }).select('_id plan trialEndsAt subscriptionStatus').lean()
         if (dbUser) {
           token.id = String(dbUser._id)
-          token.plan = dbUser.plan
+          token.plan = getEffectivePlan(dbUser as IUserLean)
         }
       }
       return token
@@ -108,11 +111,12 @@ export const authConfig: NextAuthConfig = {
       if (session.user) {
         session.user.id = String(token.id ?? '')
         session.user.plan = (token.plan as string | undefined) ?? 'free'
-        if (process.env.NODE_ENV === 'development' && session.user.id) {
+        if (session.user.id) {
           try {
             await connectDB()
-            const u = await User.findById(session.user.id).select('plan').lean()
-            if (u?.plan) session.user.plan = u.plan as string
+            await expireTrialIfNeeded(session.user.id)
+            const u = await User.findById(session.user.id).select('plan trialEndsAt subscriptionStatus').lean()
+            if (u?.plan) session.user.plan = getEffectivePlan(u as IUserLean)
           } catch {
             /* ignore — session still valid with JWT plan */
           }

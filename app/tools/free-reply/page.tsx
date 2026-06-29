@@ -13,6 +13,9 @@ export const metadata: Metadata = {
     title: 'Free AI reply generator — ReviewPulse',
     description: 'Turn angry reviews into professional Google replies. SEO-friendly free tool.',
   },
+  alternates: {
+    canonical: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/tools/free-reply`,
+  },
 }
 
 export default function FreeReplyPage() {

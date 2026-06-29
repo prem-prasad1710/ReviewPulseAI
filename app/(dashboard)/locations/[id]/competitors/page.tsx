@@ -7,6 +7,7 @@ import { toast } from 'sonner'
 import { ArrowLeft, Radar } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardDescription, CardTitle } from '@/components/ui/card'
+import { UpgradeBanner } from '@/components/billing/UpgradeGate'
 import { Skeleton } from '@/components/ui/skeleton'
 
 interface CompetitorRow {
@@ -114,10 +115,11 @@ export default function CompetitorsPage() {
       </div>
 
       {!planOk ? (
-        <Card className="border-amber-200/80 bg-amber-50/60 p-6 dark:border-amber-800/50 dark:bg-amber-950/30">
-          <CardTitle className="text-base">Growth or Scale required</CardTitle>
-          <CardDescription>Upgrade to Growth or Scale to track competitors using cached Google Places snapshots.</CardDescription>
-        </Card>
+        <UpgradeBanner
+          title="Growth or Scale required"
+          message="Track nearby rivals with cached Google Places snapshots and theme analysis."
+          plan="growth"
+        />
       ) : (
         <Card className="space-y-3 p-6 dark:border-slate-700 dark:bg-slate-900/60">
           <CardTitle className="text-base">Add competitor</CardTitle>

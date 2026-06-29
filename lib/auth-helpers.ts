@@ -2,7 +2,9 @@ import type { Session } from 'next-auth'
 import { auth } from '@/lib/auth'
 import { AUTH_DISABLED_FOR_DEV } from '@/lib/auth-dev'
 import { connectDB } from '@/lib/mongodb'
+import { getEffectivePlan, expireTrialIfNeeded } from '@/lib/trial'
 import User from '@/models/User'
+import type { IUserLean } from '@/types'
 
 async function firstUserLean() {
   await connectDB()
@@ -22,7 +24,7 @@ export async function getAppSession(): Promise<Session | null> {
           email: u.email,
           name: u.name,
           image: u.image ?? null,
-          plan: u.plan,
+          plan: getEffectivePlan(u as IUserLean),
         },
       }
     }
@@ -44,6 +46,7 @@ export async function requireAuth() {
   if (AUTH_DISABLED_FOR_DEV) {
     const user = await firstUserLean()
     if (!user) throw new Error('UNAUTHORIZED')
+    user.plan = getEffectivePlan(user as IUserLean) as typeof user.plan
     return user
   }
 
@@ -51,8 +54,10 @@ export async function requireAuth() {
   if (!session?.user?.id) throw new Error('UNAUTHORIZED')
 
   await connectDB()
+  await expireTrialIfNeeded(session.user.id)
   const user = await User.findById(session.user.id).lean()
   if (!user) throw new Error('USER_NOT_FOUND')
 
+  user.plan = getEffectivePlan(user as IUserLean) as typeof user.plan
   return user
 }

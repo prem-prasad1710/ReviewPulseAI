@@ -5,6 +5,7 @@ import { defaultAlertKeywordsForCategory } from '@/lib/default-keywords'
 import { ensureUniqueLocationSlug } from '@/lib/location-slug'
 import { listGoogleBusinessAccounts, listGoogleLocations } from '@/lib/gbp'
 import { effectiveLocationLimit } from '@/lib/plans'
+import { syncLocationReviewsForUser } from '@/lib/sync-location-reviews'
 import type { IUserLean } from '@/types'
 import Location from '@/models/Location'
 import User from '@/models/User'
@@ -45,15 +46,17 @@ export async function provisionLocationsFromGoogleOAuth(params: {
   accessToken: string
   refreshToken: string
   expiresAtMs: number
-}): Promise<{ upserted: number; error?: string }> {
+}): Promise<{ upserted: number; skippedDueToLimit: number; error?: string }> {
   await connectDB()
   const user = await User.findById(params.userId).lean()
-  if (!user) return { upserted: 0, error: 'User not found' }
+  if (!user) return { upserted: 0, skippedDueToLimit: 0, error: 'User not found' }
 
   const limit = effectiveLocationLimit(user as unknown as IUserLean)
   const tokenExpiresAt = new Date(params.expiresAtMs)
 
   let upserted = 0
+  let skippedDueToLimit = 0
+  const syncedLocationIds: string[] = []
   try {
     const accounts = await listGoogleBusinessAccounts(params.accessToken, params.refreshToken)
 
@@ -70,7 +73,10 @@ export async function provisionLocationsFromGoogleOAuth(params: {
         const existing = await Location.findOne({ userId: params.userId, googleLocationId: ids.googleLocationId }).select('_id').lean()
         if (!existing) {
           const count = await Location.countDocuments({ userId: params.userId, isActive: true })
-          if (count >= limit) continue
+          if (count >= limit) {
+            skippedDueToLimit += 1
+            continue
+          }
         }
 
         const category =
@@ -110,14 +116,26 @@ export async function provisionLocationsFromGoogleOAuth(params: {
           await Location.updateOne({ _id: doc._id }, { $set: { locationSlug: slug } })
         }
 
+        if (!existing) {
+          syncedLocationIds.push(String(doc._id))
+        }
+
         upserted += 1
       }
     }
   } catch (e) {
     const message = e instanceof Error ? e.message : 'Provision failed'
     console.error('provisionLocationsFromGoogleOAuth:', e)
-    return { upserted, error: message }
+    return { upserted, skippedDueToLimit, error: message }
   }
 
-  return { upserted }
+  for (const locId of syncedLocationIds) {
+    try {
+      await syncLocationReviewsForUser(params.userId, locId)
+    } catch (syncErr) {
+      console.error(`Initial sync failed for location ${locId}:`, syncErr)
+    }
+  }
+
+  return { upserted, skippedDueToLimit }
 }

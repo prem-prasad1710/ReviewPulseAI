@@ -2,7 +2,8 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { Loader2, Sparkles } from 'lucide-react'
+import { Copy, Loader2, Sparkles } from 'lucide-react'
+import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 
 export default function FreeReplyTool() {
@@ -35,6 +36,9 @@ export default function FreeReplyTool() {
         return
       }
       setReply(String(j?.data?.reply || ''))
+      if (typeof window !== 'undefined' && (window as unknown as { va?: (event: string) => void }).va) {
+        ;(window as unknown as { va: (event: string) => void }).va('free_reply_generated')
+      }
     } catch {
       setError('Network error')
     } finally {
@@ -108,15 +112,31 @@ export default function FreeReplyTool() {
 
       {reply ? (
         <div className="rounded-2xl border border-indigo-200/80 bg-gradient-to-br from-indigo-50 to-white p-6 dark:border-indigo-500/30 dark:from-indigo-950/50 dark:to-slate-900/80">
-          <p className="text-xs font-semibold uppercase tracking-wide text-indigo-700 dark:text-indigo-300">Suggested reply</p>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="text-xs font-semibold uppercase tracking-wide text-indigo-700 dark:text-indigo-300">Suggested reply</p>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              className="h-8 rounded-lg text-xs"
+              onClick={() => {
+                void navigator.clipboard.writeText(reply)
+                toast.success('Reply copied')
+              }}
+            >
+              <Copy className="mr-1.5 h-3.5 w-3.5" />
+              Copy reply
+            </Button>
+          </div>
           <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-slate-900 dark:text-slate-100">{reply}</p>
-          <p className="mt-4 text-xs text-slate-500 dark:text-slate-400">
-            Copy, edit, and post on Google. For one-click publish from your phone,{' '}
-            <Link href="/login" className="font-semibold text-indigo-600 underline dark:text-indigo-400">
-              create a free account
+          <div className="mt-5 flex flex-wrap gap-2">
+            <Link href="/login?callbackUrl=%2Fdashboard">
+              <Button className="rounded-xl">Connect Google &amp; publish in 1 click</Button>
             </Link>
-            .
-          </p>
+            <Link href="/#pricing" className="inline-flex h-10 items-center rounded-xl border border-slate-200 px-4 text-sm font-medium text-slate-700 dark:border-slate-600 dark:text-slate-200">
+              View plans
+            </Link>
+          </div>
         </div>
       ) : null}
     </div>

@@ -15,7 +15,7 @@ const faqs = [
   },
   {
     q: 'How does billing work?',
-    a: 'Plans are billed monthly in INR through Razorpay. You can upgrade or adjust as you add locations and reply volume.',
+    a: 'New accounts get a 14-day Growth trial (no card required). After that, free tier includes 10 AI replies/month. Paid plans bill monthly in INR through Razorpay.',
   },
   {
     q: 'Is my Google Business data secure?',

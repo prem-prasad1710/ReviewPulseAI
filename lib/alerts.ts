@@ -1,7 +1,7 @@
 /**
- * Real-time Alert System for ReviewPulse
- * Sends email/SMS alerts for low-rating reviews (1-2 stars)
- * Supports multiple channels and escalation rules
+ * @deprecated Use lib/review-post-sync.ts (processReviewAfterSync) for production alerts.
+ * This module is kept for backward compatibility with /api/alerts/send only.
+ * Do not initialize background-jobs.ts — Vercel crons + review-post-sync handle alerts.
  */
 
 import { Resend } from 'resend'

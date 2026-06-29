@@ -132,6 +132,12 @@ export async function POST(request: Request) {
 
       const uid = user._id as import('mongoose').Types.ObjectId
 
+      const stopCmd = cmd.replace(/\s+/g, '').toUpperCase()
+      if (stopCmd === 'STOP' || stopCmd === 'UNSUBSCRIBE') {
+        await User.findByIdAndUpdate(uid, { $set: { whatsappAlertsEnabled: false } })
+        return twimlMessage('You are unsubscribed from ReviewPulse WhatsApp alerts. Re-enable anytime in Settings → WhatsApp.')
+      }
+
       const voiceConfirm = await tryHandleVoiceDraftConfirmOrCancel(uid, cmd)
       if (voiceConfirm !== null) {
         return replyWithOptionalContent(voiceConfirm)

@@ -1,10 +1,6 @@
 /**
- * Background Job Scheduler for ReviewPulse
- * Handles:
- * - Real-time alert triggers for new low-rating reviews
- * - Sentiment analysis batch processing
- * - Alert escalation for unreplied reviews
- * - Weekly report generation
+ * @deprecated Never initialized at runtime. Production uses Vercel crons (app/api/cron/*)
+ * and lib/review-post-sync.ts for alerts. Kept for documentation references only.
  */
 
 import { getDb } from '@/lib/mongodb'

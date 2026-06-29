@@ -9,10 +9,6 @@ type Loc = { _id: string; name?: string }
 export default function IntegrationsPage() {
   const [locations, setLocations] = useState<Loc[]>([])
   const [sel, setSel] = useState('')
-  const [z, setZ] = useState('disconnected')
-  const [g, setG] = useState('disconnected')
-  const [j, setJ] = useState('disconnected')
-
   const [webhookUrl, setWebhookUrl] = useState('')
   const [maskedSecret, setMaskedSecret] = useState<string | null>(null)
   const [webhookSecret, setWebhookSecret] = useState('')
@@ -51,13 +47,6 @@ export default function IntegrationsPage() {
   useEffect(() => {
     if (!sel) return
     void (async () => {
-      const res = await fetch(`/api/locations/${sel}/v2-settings`)
-      const j = await res.json().catch(() => ({}))
-      if (res.ok && j?.data?.integrations) {
-        setZ(j.data.integrations.zomato || 'disconnected')
-        setG(j.data.integrations.googleAds || 'disconnected')
-        setJ(j.data.integrations.justdial || 'disconnected')
-      }
       const mr = await fetch(`/api/locations/${sel}/meta`)
       const mj = await mr.json().catch(() => ({}))
       if (mr.ok && mj?.data) {
@@ -65,17 +54,6 @@ export default function IntegrationsPage() {
       }
     })()
   }, [sel])
-
-  const save = async () => {
-    await fetch(`/api/locations/${sel}/v2-settings`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        integrations: { zomato: z as 'disconnected', googleAds: g as 'disconnected', justdial: j as 'disconnected' },
-      }),
-    })
-    alert('Connector flags saved.')
-  }
 
   const saveWebhook = async () => {
     setWebhookMsg(null)
@@ -137,11 +115,6 @@ export default function IntegrationsPage() {
       setImportMsg(res.ok ? `Imported ${j?.data?.imported ?? 0} rows.` : j?.error || 'Import failed')
       if (res.ok) {
         setCsv('')
-        const s = await fetch(`/api/locations/${sel}/v2-settings`)
-        const sj = await s.json().catch(() => ({}))
-        if (s.ok && sj?.data?.integrations) {
-          setZ(sj.data.integrations.zomato || 'disconnected')
-        }
       }
     } finally {
       setImportBusy(false)
@@ -230,40 +203,6 @@ export default function IntegrationsPage() {
         </Button>
         {yelpMsg ? <p className="mt-2 text-xs text-slate-600 dark:text-slate-400">{yelpMsg}</p> : null}
       </div>
-
-      <p className="mt-10 text-xs font-semibold uppercase text-slate-500">Classic connectors</p>
-      <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
-        E1 Zomato/Swiggy · E2 Google Ads · E3 Justdial/IndiaMart. CSV import mirrors Zomato-style exports.
-      </p>
-      <div className="mt-4 space-y-3">
-        <label className="block text-sm">
-          Zomato / Swiggy
-          <select className="mt-1 w-full rounded-lg border px-2 py-1 text-sm" value={z} onChange={(e) => setZ(e.target.value)}>
-            <option value="disconnected">Disconnected</option>
-            <option value="connected_stub">Connected (demo stub)</option>
-            <option value="coming_soon">Coming soon</option>
-          </select>
-        </label>
-        <label className="block text-sm">
-          Google Ads
-          <select className="mt-1 w-full rounded-lg border px-2 py-1 text-sm" value={g} onChange={(e) => setG(e.target.value)}>
-            <option value="disconnected">Disconnected</option>
-            <option value="connected_stub">Connected (demo stub)</option>
-            <option value="coming_soon">Coming soon</option>
-          </select>
-        </label>
-        <label className="block text-sm">
-          Justdial / IndiaMart
-          <select className="mt-1 w-full rounded-lg border px-2 py-1 text-sm" value={j} onChange={(e) => setJ(e.target.value)}>
-            <option value="disconnected">Disconnected</option>
-            <option value="connected_stub">Connected (demo stub)</option>
-            <option value="coming_soon">Coming soon</option>
-          </select>
-        </label>
-      </div>
-      <Button className="mt-6" type="button" onClick={() => void save()}>
-        Save connector flags
-      </Button>
 
       <div className="mt-10 rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-950/50">
         <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">Zomato CSV import (E1)</h2>

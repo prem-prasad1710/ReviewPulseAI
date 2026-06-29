@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from 'react'
 import { AlertTriangle, ChevronDown, ChevronUp, Sparkles } from 'lucide-react'
+import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
+import { UpgradeBanner } from '@/components/billing/UpgradeGate'
 import { cn } from '@/lib/utils'
 import SocialPostModal from '@/components/reviews/SocialPostModal'
 
@@ -60,6 +62,7 @@ export default function ReplyModal({
   const [socialOpen, setSocialOpen] = useState(false)
   const [authBusy, setAuthBusy] = useState(false)
   const [authErr, setAuthErr] = useState<string | null>(null)
+  const [quotaError, setQuotaError] = useState<string | null>(null)
 
   useEffect(() => {
     queueMicrotask(() => {
@@ -111,6 +114,7 @@ export default function ReplyModal({
 
   const generate = async () => {
     setLoading(true)
+    setQuotaError(null)
     try {
       const res = await fetch('/api/ai/generate-reply', {
         method: 'POST',
@@ -118,6 +122,16 @@ export default function ReplyModal({
         body: JSON.stringify({ reviewId, language, tone }),
       })
       const json = await res.json()
+      if (!res.ok) {
+        const msg = (json?.error as string) || 'Could not generate reply'
+        if (res.status === 403) {
+          setQuotaError(msg)
+          toast.error(msg)
+        } else {
+          toast.error(msg)
+        }
+        return
+      }
       setReply(json?.data?.reply || '')
     } finally {
       setLoading(false)
@@ -317,6 +331,13 @@ export default function ReplyModal({
           ) : null}
 
           <div className="space-y-3">
+            {quotaError ? (
+              <UpgradeBanner
+                title="Monthly AI reply limit reached"
+                message={quotaError}
+                plan="growth"
+              />
+            ) : null}
             <textarea
               value={reply}
               onChange={(e) => setReply(e.target.value)}

@@ -55,6 +55,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           {children}
           <Toaster richColors position="top-right" closeButton />
         </Providers>
+        <Analytics />
       </body>
     </html>
   )

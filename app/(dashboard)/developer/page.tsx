@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
+import { UpgradeBanner } from '@/components/billing/UpgradeGate'
 
 export default function DeveloperApiPage() {
   const [masked, setMasked] = useState<string | null>(null)
@@ -48,7 +49,14 @@ export default function DeveloperApiPage() {
         (optional HMAC). Settings API:{' '}
         <code className="text-xs">GET/PATCH /api/user/webhook-settings</code>.
       </p>
-      {!planOk ? <p className="mt-4 text-sm text-amber-800">Growth+ required to mint keys.</p> : null}
+      {!planOk ? (
+        <UpgradeBanner
+          title="Growth+ required"
+          message="Mint bearer API keys and pull review JSON for your integrations."
+          plan="growth"
+          className="mt-4"
+        />
+      ) : null}
       {hasKey && masked ? <p className="mt-4 text-sm">Current key (masked): {masked}</p> : null}
       {newKey ? (
         <p className="mt-4 break-all rounded-lg bg-emerald-50 p-3 text-xs text-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-100">

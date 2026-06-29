@@ -38,6 +38,27 @@ export async function POST(request: Request) {
       return err('Agency location add-on requires an active Agency plan.', 403)
     }
 
+    const activeSub = await Subscription.findOne({
+      userId: user._id,
+      status: { $in: ['active', 'authenticated', 'created', 'pending'] },
+      plan: parsed.data.plan === 'agency_addon' ? 'agency_addon' : { $ne: 'agency_addon' },
+    })
+      .sort({ createdAt: -1 })
+      .lean()
+
+    if (activeSub && parsed.data.plan !== 'agency_addon') {
+      if (activeSub.plan === parsed.data.plan && ['active', 'authenticated'].includes(activeSub.status)) {
+        return err('You already have an active subscription for this plan. Check Settings → Billing.', 409)
+      }
+      if (['created', 'pending', 'authenticated'].includes(activeSub.status) && user.razorpaySubscriptionId) {
+        return ok({
+          subscriptionId: user.razorpaySubscriptionId,
+          shortUrl: undefined,
+          resumed: true,
+        })
+      }
+    }
+
     const razorpay = getRazorpayClient()
     const planKey = parsed.data.plan as RazorpayPlanKey
     const razorpayPlanId = getRazorpayPlanId(planKey)

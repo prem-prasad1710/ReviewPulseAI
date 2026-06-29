@@ -29,7 +29,7 @@ Boot-time logs from **`instrumentation.ts`** summarize missing optional integrat
 
 - [ ] Atlas IP allowlists / VPC for serverless egress
 - [ ] Google Places/Maps API quotas monitored
-- [ ] Twilio/message rate limits validated for alert fan-out (`lib/alerts.ts`)
+- [ ] Twilio/message rate limits validated for alert fan-out (`lib/review-post-sync.ts` via `TWILIO_WHATSAPP_FROM`)
 
 ## 5. Operational runbooks
 
@@ -37,10 +37,19 @@ Boot-time logs from **`instrumentation.ts`** summarize missing optional integrat
 - [ ] Rollback playbook (previous deployment + revert DB migrations if manual)
 - [ ] Document support contact + **docs/FEATURE_CATALOG.md** ownership
 
-## 6. Post-deploy smoke
+## 6. Post-deploy smoke (staging conversion funnel)
 
+- [ ] Landing → `/tools/free-reply` → copy reply → sign up with Google
+- [ ] First-run checklist on dashboard → locations sync reviews automatically after OAuth connect
+- [ ] Generate AI reply in inbox → publish to GBP
+- [ ] Pair WhatsApp in Settings → trigger ≤2★ alert on sync (or `/api/alerts/send` manual test)
+- [ ] Reply quota banner → `/subscribe?plan=growth` → Razorpay checkout → plan updates in Settings
+- [ ] Trial banner visible for new accounts; expires to free tier after 14 days
+- [ ] `GET /api/cron/sync-reviews` with `Authorization: Bearer $CRON_SECRET` succeeds
+- [ ] Vercel Analytics events visible (`free_reply_generated`, page views)
 - [ ] Sign-in flow (Google) end-to-end
 - [ ] Open `/reviews` & sync one GBP location (`/locations`)
 - [ ] Generate one AI reply — verify provider billing & logs
 - [ ] Hit `/docs` authenticated — documentation loads
 - [ ] Mobile sidebar open/close (stacking sanity)
+- [ ] `/privacy` and `/terms` load from landing footer

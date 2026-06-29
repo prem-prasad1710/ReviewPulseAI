@@ -17,6 +17,8 @@ export default function WhatsAppCard() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [testing, setTesting] = useState(false)
+  const [alertsSentToday, setAlertsSentToday] = useState(0)
+  const [alertsDailyLimit, setAlertsDailyLimit] = useState(10)
 
   const load = async () => {
     const res = await fetch('/api/user/whatsapp')
@@ -25,6 +27,8 @@ export default function WhatsAppCard() {
     setAlertsOn(json?.data?.whatsappAlertsEnabled !== false)
     setPlanOk(Boolean(json?.data?.planOk))
     setTwilioOk(Boolean(json?.data?.twilioConfigured))
+    setAlertsSentToday(Number(json?.data?.whatsappAlertsSentToday ?? 0))
+    setAlertsDailyLimit(Number(json?.data?.whatsappAlertsDailyLimit ?? 10))
   }
 
   useEffect(() => {
@@ -94,7 +98,7 @@ export default function WhatsAppCard() {
   const canTest = twilioOk && validE164
 
   return (
-    <Card className="border-slate-200/90 p-6 dark:border-slate-700/80 sm:p-7">
+    <Card id="whatsapp" className="scroll-mt-24 border-slate-200/90 p-6 dark:border-slate-700/80 sm:p-7">
       <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
         <div className="flex items-center gap-2">
           <MessageCircle className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
@@ -126,9 +130,20 @@ export default function WhatsAppCard() {
       </div>
 
       <CardDescription className="text-sm text-slate-600 dark:text-slate-400">
-        Server-side Twilio WhatsApp: instant pings for <strong>≤2★ reviews</strong> (pending) and{' '}
-        <strong>keyword matches</strong> (Growth+). Max 10 WhatsApp alerts per day per account.
+        Server-side Twilio WhatsApp: instant pings for <strong>≤2★ reviews</strong> on Starter+ and{' '}
+        <strong>keyword matches</strong> on Growth+. Today: {alertsSentToday}/{alertsDailyLimit} alerts sent.
       </CardDescription>
+
+      <p className="mt-3 rounded-xl border border-slate-200/90 bg-slate-50/80 px-3 py-2 text-xs text-slate-700 dark:border-slate-600 dark:bg-slate-900/50 dark:text-slate-300">
+        <strong className="font-semibold">Digest bot (paid)</strong> — text your linked number:{' '}
+        <code className="rounded bg-white px-1 dark:bg-slate-950">pending</code>,{' '}
+        <code className="rounded bg-white px-1 dark:bg-slate-950">stats</code>,{' '}
+        <code className="rounded bg-white px-1 dark:bg-slate-950">worst</code>,{' '}
+        <code className="rounded bg-white px-1 dark:bg-slate-950">best</code>,{' '}
+        <code className="rounded bg-white px-1 dark:bg-slate-950">score</code>,{' '}
+        <code className="rounded bg-white px-1 dark:bg-slate-950">help</code>. Reply{' '}
+        <code className="rounded bg-white px-1 dark:bg-slate-950">STOP</code> to unsubscribe.
+      </p>
 
       <p className="mt-3 rounded-xl border border-violet-200/90 bg-violet-50/70 px-3 py-2 text-xs text-violet-950 dark:border-violet-500/30 dark:bg-violet-950/35 dark:text-violet-100">
         <strong className="font-semibold">Voice reply (paid)</strong> — rare globally: after a low-star alert you can send a
@@ -138,8 +153,8 @@ export default function WhatsAppCard() {
       </p>
       {!planOk ? (
         <p className="mt-4 rounded-xl border border-amber-200/80 bg-amber-50/80 px-3 py-2 text-xs text-amber-900 dark:border-amber-800/50 dark:bg-amber-950/40 dark:text-amber-100">
-          Automatic alerts (≤2★, keywords) go out on <strong>Starter</strong> and above. You can still save your number
-          and send a <strong>test message</strong> on Free to verify Twilio.{' '}
+          ≤2★ WhatsApp alerts unlock on <strong>Starter</strong> and above. Keyword alerts need <strong>Growth</strong>.
+          You can still save your number and send a <strong>test message</strong> on Free.{' '}
           <Link href="/subscribe?plan=starter" className="font-semibold underline">
             View plans
           </Link>
@@ -235,11 +250,11 @@ export default function WhatsAppCard() {
           <p className="flex items-start gap-2">
             <RadioTower className="mt-0.5 h-4 w-4 shrink-0" />
             <span>
-              In Twilio Console → Messaging → Senders → WhatsApp sandbox, add your callback URL for status updates:{' '}
+              In Twilio Console → Messaging → WhatsApp sandbox, configure <strong>both</strong> webhooks to{' '}
               <code className="break-all rounded bg-white/80 px-1 dark:bg-slate-900/80">
                 https://YOUR_DOMAIN/api/webhooks/twilio
               </code>
-              . For signature checks in production, set{' '}
+              : &quot;When a message comes in&quot; (digest bot + voice) and status callback URL. For signature checks in production, set{' '}
               <code className="whitespace-nowrap rounded bg-white/80 px-1 dark:bg-slate-900/80">
                 TWILIO_WEBHOOK_PUBLIC_URL
               </code>{' '}

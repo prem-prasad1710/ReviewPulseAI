@@ -40,7 +40,14 @@ export async function syncLocationReviewsForUser(
   }
 
   try {
-    const refreshed = await refreshIfNeeded(location.accessToken, location.refreshToken, location.tokenExpiresAt)
+    let refreshed
+    try {
+      refreshed = await refreshIfNeeded(location.accessToken, location.refreshToken, location.tokenExpiresAt)
+    } catch (tokenError) {
+      const msg = tokenError instanceof Error ? tokenError.message : 'Token refresh failed'
+      console.error(`Token refresh error for location ${locationMongoId}:`, msg)
+      return { ok: false, error: `Token error: ${msg}. Please re-authorize Google access in settings.`, status: 401 }
+    }
 
     if (refreshed.encryptedAccessToken && refreshed.encryptedRefreshToken) {
       location.accessToken = refreshed.encryptedAccessToken
@@ -50,7 +57,14 @@ export async function syncLocationReviewsForUser(
     }
 
     const gbpLocationId = location.googleLocationId.split('/').pop() || location.googleLocationId
-    const reviews = await listLocationReviews(location.googleAccountId, gbpLocationId, refreshed.accessToken)
+    let reviews
+    try {
+      reviews = await listLocationReviews(location.googleAccountId, gbpLocationId, refreshed.accessToken)
+    } catch (apiError) {
+      const msg = apiError instanceof Error ? apiError.message : 'API call failed'
+      console.error(`GBP API error for location ${locationMongoId}:`, msg)
+      return { ok: false, error: `GBP access error: ${msg}. Check that your Google Business Profile permissions are active.`, status: 403 }
+    }
 
     const prevKnownCount = Math.max(
       location.lastKnownReviewCount ?? 0,

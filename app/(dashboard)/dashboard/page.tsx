@@ -17,13 +17,18 @@ import { MOCK_LOCATIONS, MOCK_REVIEWS, shouldUseDashboardMocks } from '@/lib/dev
 import { bucketNegativeReviewThemes } from '@/lib/reputation-themes'
 import { getAppSession } from '@/lib/auth-helpers'
 import { connectDB } from '@/lib/mongodb'
+import FirstRunChecklist from '@/components/onboarding/FirstRunChecklist'
+import TrialBanner from '@/components/billing/TrialBanner'
+import User from '@/models/User'
 import Review from '@/models/Review'
 import Location from '@/models/Location'
+import type { IUserLean } from '@/types'
 
 export default async function DashboardPage() {
   await connectDB()
   const session = await getAppSession()
   const userId = session?.user?.id
+  const dbUser = userId ? ((await User.findById(userId).lean()) as IUserLean | null) : null
   const firstName = session?.user?.name?.split(/\s+/)[0] ?? 'there'
   const serverNow = new Date()
   const hour = serverNow.getHours()
@@ -100,6 +105,15 @@ export default async function DashboardPage() {
   return (
     <div className="space-y-8 pb-4">
       {useMocks ? <DevSampleNotice /> : null}
+      {dbUser && !useMocks ? <TrialBanner user={dbUser} /> : null}
+      {!useMocks && userId && dbUser ? (
+        <FirstRunChecklist
+          hasLocations={locationCount > 0}
+          hasReviews={totalReviews > 0}
+          pendingCount={pendingReplies}
+          whatsappConfigured={Boolean(dbUser.whatsappNumber && dbUser.whatsappAlertsEnabled !== false)}
+        />
+      ) : null}
 
       <Reveal>
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">

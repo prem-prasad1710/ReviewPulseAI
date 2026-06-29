@@ -13,13 +13,10 @@ import {
   LayoutDashboard,
   LayoutGrid,
   MapPin,
-  Medal,
   MessageSquare,
   Plug,
-  Rocket,
   Settings,
   Sparkles,
-  UsersRound,
   Zap,
 } from 'lucide-react'
 import { LOCATION_HUB_LINKS, hrefForLocationHubSegment } from '@/lib/location-hub-features'
@@ -32,16 +29,13 @@ const navItems = [
   { href: '/reviews', label: 'Reviews', icon: MessageSquare },
   { href: '/escalations', label: 'Escalations', icon: AlertTriangle },
   { href: '/locations', label: 'Locations', icon: MapPin },
-  { href: '/v2', label: 'v2 Hub', icon: Rocket },
   { href: '/analytics', label: 'Analytics', icon: Sparkles },
-  { href: '/leaderboard', label: 'Leaderboard', icon: Medal },
   { href: '/reports', label: 'Reports', icon: FileText },
   { href: '/integrations', label: 'Integrations', icon: Plug },
   { href: '/templates', label: 'Templates', icon: LayoutGrid },
-  { href: '/partner', label: 'Partner', icon: UsersRound },
   { href: '/developer', label: 'API', icon: KeyRound },
   { href: '/agency', label: 'Agency', icon: Building2 },
-  { href: '/subscribe', label: 'Plans', icon: Zap },
+  { href: '/settings#billing', label: 'Plans', icon: Zap },
   { href: '/settings', label: 'Settings', icon: Settings },
 ]
 

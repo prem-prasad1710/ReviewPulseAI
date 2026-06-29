@@ -53,6 +53,8 @@ export async function PUT(request: Request) {
       whatsappAlertsEnabled: updated?.whatsappAlertsEnabled !== false,
       planOk: planAllowsWhatsApp((updated?.plan as string) || 'free'),
       twilioConfigured: isTwilioWhatsAppConfigured(),
+      whatsappAlertsSentToday: 0,
+      whatsappAlertsDailyLimit: 10,
     })
   } catch (error) {
     console.error('PUT whatsapp failed:', error)
@@ -65,12 +67,17 @@ export async function GET() {
   try {
     const user = await requireAuth()
     await connectDB()
-    const u = await User.findById(user._id).select('whatsappNumber whatsappAlertsEnabled plan').lean()
+    const u = await User.findById(user._id).select('whatsappNumber whatsappAlertsEnabled plan whatsappAlertsDayKey whatsappAlertsSent').lean()
+    const dayKey = new Date().toISOString().slice(0, 10)
+    const alertsSentToday =
+      u?.whatsappAlertsDayKey === dayKey ? (u?.whatsappAlertsSent ?? 0) : 0
     return ok({
       whatsappNumber: u?.whatsappNumber ?? '',
       whatsappAlertsEnabled: u?.whatsappAlertsEnabled !== false,
       planOk: planAllowsWhatsApp((u?.plan as string) || 'free'),
       twilioConfigured: isTwilioWhatsAppConfigured(),
+      whatsappAlertsSentToday: alertsSentToday,
+      whatsappAlertsDailyLimit: 10,
     })
   } catch (error) {
     console.error('GET whatsapp failed:', error)

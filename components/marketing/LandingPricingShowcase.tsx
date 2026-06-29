@@ -83,7 +83,7 @@ export default function LandingPricingShowcase({ plans }: { plans: LandingPlan[]
               </Button>
             </Link>
             <p className="text-center text-[10px] leading-snug text-slate-500 dark:text-slate-400">
-              Secured by Razorpay · Sign in required · Same checkout as Settings
+              14-day Growth trial on signup · Secured by Razorpay · Sign in required
             </p>
           </div>
         </article>

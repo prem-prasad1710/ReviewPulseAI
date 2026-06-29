@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import type { Metadata } from 'next'
 import { ArrowRight, Clock3, ShieldCheck, Sparkles } from 'lucide-react'
 import { AppMark } from '@/components/brand/AppMark'
 import LandingEdgeCards from '@/components/marketing/LandingEdgeCards'
@@ -16,7 +17,21 @@ import LandingTestimonialsSlider from '@/components/marketing/LandingTestimonial
 import { Reveal } from '@/components/motion/Reveal'
 import { Button } from '@/components/ui/button'
 
-const logos = ['Saffron Dine', 'The Skin Route', 'TrimCraft Salon', 'Namma Biryani', 'ClinicNova']
+const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+
+export const metadata: Metadata = {
+  title: 'Reply to every Google review in minutes',
+  description:
+    'ReviewPulse AI: Google Business review inbox, bilingual AI replies, WhatsApp alerts, and Razorpay billing — built for Indian SMBs. 14-day Growth trial.',
+  alternates: { canonical: appUrl },
+  openGraph: {
+    title: 'ReviewPulse AI — Google review operations for Indian SMBs',
+    description: 'Connect Google, sync reviews, draft Hindi/English replies, publish with full control.',
+    url: appUrl,
+  },
+}
+
+const logos = ['Restaurant · F&B', 'Clinic · Healthcare', 'Salon · Retail', 'Café · QSR', 'Multi-outlet brand']
 
 const features: LandingFeatureItem[] = [
   {
@@ -71,21 +86,53 @@ const plans = [
 const testimonials = [
   {
     quote:
-      'We cut review response time from two days to under one hour. Our 1-star escalations are now handled before they spread.',
-    name: 'Rhea Malhotra',
-    role: 'Founder, TrimCraft Salon',
+      'Example outcome: a 3-outlet F&B group cut median reply time from 48 hours to under 2 hours using the unified inbox and AI drafts.',
+    name: 'Multi-outlet restaurant operator',
+    role: 'Example workflow — Bangalore',
   },
   {
     quote:
-      'The Hindi replies feel natural and respectful. Patients now mention our responsiveness in new reviews.',
-    name: 'Dr. Nitin Sharma',
-    role: 'Owner, ClinicNova',
+      'Example outcome: a clinic owner uses Hinglish replies for patient feedback and WhatsApp alerts for ≤2★ reviews before they escalate online.',
+    name: 'Healthcare clinic owner',
+    role: 'Example workflow — Pune',
   },
 ]
 
 export default function Home() {
+  const faqJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: [
+      {
+        '@type': 'Question',
+        name: 'Does ReviewPulse post replies without my approval?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'No. You review and edit every AI draft before anything is published to Google.',
+        },
+      },
+      {
+        '@type': 'Question',
+        name: 'Which languages are supported for AI replies?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'ReviewPulse supports Hindi, English, and natural Hinglish replies.',
+        },
+      },
+      {
+        '@type': 'Question',
+        name: 'How does billing work?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'New accounts get a 14-day Growth trial. Paid plans bill monthly in INR through Razorpay.',
+        },
+      },
+    ],
+  }
+
   return (
     <div className="bg-mesh relative min-h-screen overflow-x-hidden">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,rgba(15,23,42,0.035)_1px,transparent_1px),linear-gradient(to_bottom,rgba(15,23,42,0.035)_1px,transparent_1px)] bg-[size:48px_48px] opacity-60 dark:bg-[linear-gradient(to_right,rgba(148,163,184,0.08)_1px,transparent_1px),linear-gradient(to_bottom,rgba(148,163,184,0.08)_1px,transparent_1px)] dark:opacity-100" />
 
       <main className="relative mx-auto max-w-7xl px-5 pb-28 pt-5 md:px-8">
@@ -120,12 +167,7 @@ export default function Home() {
                 </Link>
                 <Link href="/tools/free-reply">
                   <Button size="lg" variant="outline" className="rounded-xl border-slate-200 bg-white/80 dark:border-slate-600 dark:bg-slate-800/60">
-                    Free AI reply — no login
-                  </Button>
-                </Link>
-                <Link href="/dashboard">
-                  <Button size="lg" variant="outline" className="rounded-xl border-slate-200 bg-white/80 dark:border-slate-600 dark:bg-slate-800/60">
-                    Open demo dashboard
+                    Try free AI reply
                   </Button>
                 </Link>
               </div>
@@ -153,6 +195,40 @@ export default function Home() {
           <LandingElectricFlow />
         </Reveal>
 
+        <Reveal delay={30}>
+          <section id="demo" className="mb-20">
+            <div className="mb-6 text-center">
+              <p className="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-indigo-600 dark:text-indigo-400">Product tour</p>
+              <h2 className="font-heading text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-50 md:text-3xl">
+                See ReviewPulse in 90 seconds
+              </h2>
+              <p className="mx-auto mt-2 max-w-xl text-sm text-slate-600 dark:text-slate-400">
+                Connect Google → sync reviews → AI reply → publish. No mock data — your real inbox after signup.
+              </p>
+            </div>
+            <div className="overflow-hidden rounded-2xl border border-slate-200/90 bg-slate-900 shadow-xl dark:border-slate-700">
+              {process.env.NEXT_PUBLIC_DEMO_VIDEO_URL ? (
+                <iframe
+                  title="ReviewPulse product demo"
+                  src={process.env.NEXT_PUBLIC_DEMO_VIDEO_URL}
+                  className="aspect-video w-full"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              ) : (
+                <div className="flex aspect-video flex-col items-center justify-center gap-4 bg-gradient-to-br from-indigo-950 via-slate-900 to-violet-950 px-6 text-center">
+                  <p className="max-w-md text-sm text-indigo-100">
+                    Set <code className="rounded bg-white/10 px-1">NEXT_PUBLIC_DEMO_VIDEO_URL</code> to your Loom or YouTube embed URL for a hosted demo video.
+                  </p>
+                  <Link href="/login">
+                    <Button className="rounded-xl">Start 14-day trial — see your real inbox</Button>
+                  </Link>
+                </div>
+              )}
+            </div>
+          </section>
+        </Reveal>
+
         <Reveal delay={40}>
           <LandingEdgeCards />
         </Reveal>
@@ -160,7 +236,7 @@ export default function Home() {
         <Reveal delay={40}>
           <section id="customers" className="mb-20">
             <p className="mb-5 text-center text-xs font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">
-              Trusted by growing brands
+              Built for Indian SMB categories
             </p>
             <LandingLogoMarquee logos={logos} />
           </section>
@@ -201,8 +277,8 @@ export default function Home() {
         <Reveal delay={40}>
           <section className="mb-20">
             <div className="relative mb-8 text-center md:text-left">
-              <p className="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-indigo-600 dark:text-indigo-400">Stories</p>
-              <h2 className="font-heading text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-50 md:text-3xl">Teams that reply faster</h2>
+              <p className="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-indigo-600 dark:text-indigo-400">Example outcomes</p>
+              <h2 className="font-heading text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-50 md:text-3xl">How teams use ReviewPulse</h2>
               <p className="mx-auto mt-2 max-w-xl text-sm text-slate-600 dark:text-slate-400 md:mx-0">
                 Swipe on mobile or use arrows on desktop — same quotes, easier to browse.
               </p>
@@ -238,8 +314,17 @@ export default function Home() {
               <Link href="/login" className="transition hover:text-indigo-700 dark:hover:text-indigo-400">
                 Sign in
               </Link>
-              <a href="#electric-flow" className="transition hover:text-indigo-700 dark:hover:text-indigo-400">
-                Product map
+              <Link href="/tools/free-reply" className="transition hover:text-indigo-700 dark:hover:text-indigo-400">
+                Free AI reply
+              </Link>
+              <Link href="/privacy" className="transition hover:text-indigo-700 dark:hover:text-indigo-400">
+                Privacy
+              </Link>
+              <Link href="/terms" className="transition hover:text-indigo-700 dark:hover:text-indigo-400">
+                Terms
+              </Link>
+              <a href="#demo" className="transition hover:text-indigo-700 dark:hover:text-indigo-400">
+                Demo
               </a>
               <a href="#pricing" className="transition hover:text-indigo-700 dark:hover:text-indigo-400">
                 Pricing

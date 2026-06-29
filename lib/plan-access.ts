@@ -1,6 +1,13 @@
 import type { Plan } from '@/types'
+import { getEffectivePlan } from '@/lib/trial'
+import type { IUserLean } from '@/types'
 
 export type ExtendedPlan = Plan | 'agency'
+
+/** Resolve plan for feature gates (respects active trial). */
+export function planForUser(user: IUserLean | { plan: string; trialEndsAt?: Date; subscriptionStatus?: string }): string {
+  return getEffectivePlan(user as IUserLean)
+}
 
 export function planAllowsToneTrainer(plan: string): boolean {
   return plan === 'growth' || plan === 'scale'

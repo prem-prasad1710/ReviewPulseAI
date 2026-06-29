@@ -3,6 +3,7 @@ import type { Types } from 'mongoose'
 import { detectReviewLanguageIso1 } from '@/lib/language-detect'
 import { translationContentFingerprint } from '@/lib/translation-fingerprint'
 import { planAllowsKeywordAlerts, planAllowsMoodHeatmap, planAllowsVoiceWhatsAppReply, planAllowsWhatsApp } from '@/lib/plan-access'
+import { getEffectivePlan } from '@/lib/trial'
 import { classifyReviewEmotion } from '@/lib/review-emotion'
 import { sendWhatsAppAlertWithOptionalContent } from '@/lib/twilio-whatsapp'
 import { translateToEnglish } from '@/lib/translate-review'
@@ -90,7 +91,7 @@ export async function processReviewAfterSync(
   if (Object.keys(unsetFields).length) update.$unset = unsetFields
   await Review.findByIdAndUpdate(review._id, update)
 
-  const plan = user.plan as string
+  const plan = getEffectivePlan(user)
 
   if (planAllowsMoodHeatmap(plan) && comment.trim().length > 5 && !review.emotion) {
     try {
@@ -142,7 +143,11 @@ export async function processReviewAfterSync(
         const allow = await incrementWhatsAppDailyCount(user._id as Types.ObjectId)
         if (allow) {
           const body = `${subject}\n\n"${comment.slice(0, 200)}"\n— ${review.reviewerName}\n\nOpen: ${reviewUrl}`
-          await sendWhatsAppAlertWithOptionalContent(user.whatsappNumber, body)
+          const result = await sendWhatsAppAlertWithOptionalContent(user.whatsappNumber, body)
+          if (result.error) {
+            console.error('Keyword WhatsApp alert failed:', result.error)
+            await User.findByIdAndUpdate(user._id, { $inc: { whatsappAlertsSent: -1 } })
+          }
         }
       }
     }

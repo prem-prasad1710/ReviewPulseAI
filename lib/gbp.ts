@@ -32,23 +32,34 @@ export async function refreshIfNeeded(
   encryptedRefreshToken: string,
   tokenExpiresAt: Date
 ) {
-  const accessToken = decrypt(encryptedAccessToken)
-  const refreshToken = decrypt(encryptedRefreshToken)
+  let accessToken, refreshToken
+  try {
+    accessToken = decrypt(encryptedAccessToken)
+    refreshToken = decrypt(encryptedRefreshToken)
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : 'Token decryption failed'
+    throw new Error(`Cannot decrypt tokens: ${msg}. Ensure ENCRYPTION_KEY environment variable is set correctly.`)
+  }
 
   const expiresSoon = tokenExpiresAt.getTime() - Date.now() < 5 * 60 * 1000
   if (!expiresSoon) {
     return { accessToken, refreshToken, tokenExpiresAt }
   }
 
-  const oauth2Client = getOAuthClient(accessToken, refreshToken)
-  const { credentials } = await oauth2Client.refreshAccessToken()
+  try {
+    const oauth2Client = getOAuthClient(accessToken, refreshToken)
+    const { credentials } = await oauth2Client.refreshAccessToken()
 
-  return {
-    accessToken: credentials.access_token || accessToken,
-    refreshToken: credentials.refresh_token || refreshToken,
-    tokenExpiresAt: new Date(credentials.expiry_date || Date.now() + 3600 * 1000),
-    encryptedAccessToken: encrypt(credentials.access_token || accessToken),
-    encryptedRefreshToken: encrypt(credentials.refresh_token || refreshToken),
+    return {
+      accessToken: credentials.access_token || accessToken,
+      refreshToken: credentials.refresh_token || refreshToken,
+      tokenExpiresAt: new Date(credentials.expiry_date || Date.now() + 3600 * 1000),
+      encryptedAccessToken: encrypt(credentials.access_token || accessToken),
+      encryptedRefreshToken: encrypt(credentials.refresh_token || refreshToken),
+    }
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : 'Token refresh failed'
+    throw new Error(`Failed to refresh Google token: ${msg}. The user may need to re-authenticate.`)
   }
 }
 
@@ -97,7 +108,16 @@ export async function listLocationReviews(
   })
 
   if (!response.ok) {
-    throw new Error(`Failed to fetch reviews: ${response.status}`)
+    let errorDetail = `HTTP ${response.status}`
+    try {
+      const errorBody = await response.json()
+      if (errorBody.error?.message) {
+        errorDetail += ` - ${errorBody.error.message}`
+      }
+    } catch {
+      // If response body isn't JSON, just use status
+    }
+    throw new Error(`Failed to fetch reviews: ${errorDetail}`)
   }
 
   const data = (await response.json()) as { reviews?: GbpReview[] }

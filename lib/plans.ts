@@ -1,4 +1,5 @@
 import type { IUserLean } from '@/types'
+import { getEffectivePlan } from '@/lib/trial'
 
 export const PLAN_LIMITS = {
   free: { locations: 1, repliesPerMonth: 10, price: 0 },
@@ -19,14 +20,14 @@ export function effectiveAgencyLocationLimit(user: IUserLean): number {
 
 /** Location cap for any plan (used when enforcing max locations). */
 export function effectiveLocationLimit(user: IUserLean): number {
-  const plan = user.plan in PLAN_LIMITS ? user.plan : 'free'
+  const plan = getEffectivePlan(user)
   if (plan === 'agency') return effectiveAgencyLocationLimit(user)
   return PLAN_LIMITS[plan as keyof typeof PLAN_LIMITS].locations
 }
 
 export function canGenerateReply(user: IUserLean): { allowed: boolean; reason?: string } {
-  const plan = user.plan in PLAN_LIMITS ? user.plan : 'free'
-  const limit = PLAN_LIMITS[plan as keyof typeof PLAN_LIMITS].repliesPerMonth
+  const plan = getEffectivePlan(user)
+  const limit = PLAN_LIMITS[plan in PLAN_LIMITS ? plan : 'free'].repliesPerMonth
 
   if (limit === -1) return { allowed: true }
   if (user.repliesUsedThisMonth >= limit) {

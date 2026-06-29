@@ -7,7 +7,11 @@ import { getAppSession } from '@/lib/auth-helpers'
 import { connectDB } from '@/lib/mongodb'
 import User from '@/models/User'
 import PlanCheckoutButtons from '@/components/billing/PlanCheckoutButtons'
+import SettingsBillingPanel from '@/components/billing/SettingsBillingPanel'
+import TrialBanner from '@/components/billing/TrialBanner'
 import { PLAN_LIMITS, effectiveLocationLimit } from '@/lib/plans'
+import { getBillingSummary } from '@/lib/billing-summary'
+import { getEffectivePlan, isTrialActive } from '@/lib/trial'
 import { formatCurrencyINR } from '@/lib/utils'
 import type { IUserLean, Plan } from '@/types'
 import WhatsAppCard from '@/components/settings/WhatsAppCard'
@@ -37,13 +41,16 @@ export default async function SettingsPage() {
     )
   }
 
-  const plan = user.plan as Plan
+  const u = user as unknown as IUserLean
+  const plan = getEffectivePlan(u) as Plan
   const currentLimit = plan in PLAN_LIMITS ? PLAN_LIMITS[plan] : PLAN_LIMITS.free
-  const locationCap = effectiveLocationLimit(user as IUserLean)
+  const locationCap = effectiveLocationLimit(u)
   const replyLimit = currentLimit.repliesPerMonth
   const used = user.repliesUsedThisMonth ?? 0
   const pct = replyLimit === -1 ? 100 : Math.min(100, Math.round((used / replyLimit) * 100))
   const barPct = replyLimit === -1 ? 100 : pct
+  const billingSummary = session?.user?.id ? await getBillingSummary(session.user.id) : null
+  const onTrial = isTrialActive(u)
 
   return (
     <div className="space-y-8 pb-2">
@@ -57,7 +64,19 @@ export default async function SettingsPage() {
         </p>
       </div>
 
-      <div className="grid gap-5 lg:grid-cols-2">
+      {onTrial ? <TrialBanner user={u} /> : null}
+
+      <SettingsBillingPanel
+        summary={billingSummary}
+        razorpayKeyId={process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID}
+        prefill={{
+          email: user.email ?? undefined,
+          name: user.name ?? undefined,
+          contact: user.whatsappNumber ?? undefined,
+        }}
+      />
+
+      <div id="billing" className="grid gap-5 lg:grid-cols-2 scroll-mt-24">
         <Card className="relative overflow-hidden border-slate-200/90 p-0 dark:border-slate-700/80">
           <div className="border-b border-indigo-100/90 bg-gradient-to-br from-indigo-50 via-white to-violet-50/80 px-6 py-5 dark:border-indigo-500/20 dark:from-indigo-950/50 dark:via-slate-900 dark:to-violet-950/30">
             <div className="flex flex-wrap items-start justify-between gap-3">
@@ -136,9 +155,16 @@ export default async function SettingsPage() {
               />
             </div>
             {replyLimit !== -1 && pct >= 85 ? (
-              <p className="mt-3 text-xs font-medium text-amber-800 dark:text-amber-200/90">
-                You are close to your monthly limit—upgrade or pace AI drafts until reset.
-              </p>
+              <div className="mt-3 flex flex-wrap items-center gap-3">
+                <p className="text-xs font-medium text-amber-800 dark:text-amber-200/90">
+                  You are close to your monthly limit—upgrade or pace AI drafts until reset.
+                </p>
+                <Link href="/subscribe?plan=growth">
+                  <Button size="sm" variant="secondary" className="h-8 rounded-lg text-xs">
+                    Upgrade
+                  </Button>
+                </Link>
+              </div>
             ) : null}
           </div>
         </Card>
@@ -178,13 +204,13 @@ export default async function SettingsPage() {
             Growth and Scale unlock higher reply limits and more locations—same inbox, faster coverage.
           </CardDescription>
           <div className="mt-5 flex flex-wrap gap-2">
-            <Link href="/">
-              <Button variant="outline" size="sm" className="rounded-xl border-slate-200 dark:border-slate-600">
-                View pricing
+            <Link href="/subscribe?plan=growth">
+              <Button size="sm" className="rounded-xl">
+                Upgrade to Growth
               </Button>
             </Link>
             <Link href="/reviews">
-              <Button size="sm" className="rounded-xl">
+              <Button variant="outline" size="sm" className="rounded-xl border-slate-200 dark:border-slate-600">
                 Open inbox
               </Button>
             </Link>

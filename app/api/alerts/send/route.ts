@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { ObjectId } from 'mongodb'
 import { auth } from '@/lib/auth'
-import { alertManager } from '@/lib/alerts'
+import { processReviewAfterSync } from '@/lib/review-post-sync'
 import { getDb } from '@/lib/mongodb'
 
 /**
  * POST /api/alerts/send
- * Send real-time alerts for low-rating reviews
+ * Manually re-trigger post-sync alert pipeline for a review (WhatsApp/email via review-post-sync).
  */
 export async function POST(request: NextRequest) {
   try {
@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { locationId, reviewId, config } = body
+    const { locationId, reviewId } = body
 
     if (!locationId || !reviewId) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
@@ -47,31 +47,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Location does not match this review' }, { status: 400 })
     }
 
-    // Prepare alert payload
-    const alertPayload = {
-      locationId,
-      userId: session.user.id,
-      reviewId,
-      reviewerName: review.reviewerName || 'Anonymous',
-      rating: review.rating,
-      comment: review.comment || review.reviewText || 'No comment',
-      sentiment: review.sentiment || 'neutral',
-      language: review.detectedLanguage || 'english',
-    }
-
-    // Send alert
-    const alertConfig = config || {
-      enableEmailAlerts: true,
-      enableSMSAlerts: false,
-      minRatingThreshold: 2,
-      channels: ['email'],
-    }
-
-    await alertManager.sendLowRatingAlert(alertPayload, alertConfig)
+    await processReviewAfterSync(rid, { isNewReview: true })
 
     return NextResponse.json({
       success: true,
-      message: 'Alert sent successfully',
+      message: 'Alert pipeline triggered via review-post-sync',
       reviewId,
     })
   } catch (error) {
@@ -82,7 +62,7 @@ export async function POST(request: NextRequest) {
 
 /**
  * GET /api/alerts/config
- * Get user's alert configuration
+ * Get user's alert configuration (WhatsApp toggle lives in /api/user/whatsapp).
  */
 export async function GET(request: NextRequest) {
   try {
@@ -99,12 +79,11 @@ export async function GET(request: NextRequest) {
     const db = await getDb()
     const user = await db.collection('users').findOne({ _id: uid })
 
-    const config = user?.alertConfig || {
-      enableEmailAlerts: true,
-      enableSMSAlerts: false,
+    const config = {
+      enableWhatsAppAlerts: user?.whatsappAlertsEnabled !== false,
+      whatsappNumber: user?.whatsappNumber ?? null,
+      whatsappAlertsSentToday: user?.whatsappAlertsSent ?? 0,
       minRatingThreshold: 2,
-      channels: ['email'],
-      escalateAfterMinutes: 1440,
     }
 
     return NextResponse.json({

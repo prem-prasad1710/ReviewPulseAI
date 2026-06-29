@@ -7,6 +7,7 @@ import { toast } from 'sonner'
 import { ArrowLeft, Download, Radio, QrCode } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardDescription, CardTitle } from '@/components/ui/card'
+import { UpgradeBanner } from '@/components/billing/UpgradeGate'
 import { Skeleton } from '@/components/ui/skeleton'
 
 export default function OfflineBridgePage() {
@@ -81,10 +82,11 @@ export default function OfflineBridgePage() {
       </div>
 
       {!planOk ? (
-        <Card className="border-amber-200/80 bg-amber-50/60 p-6 dark:border-amber-800/50 dark:bg-amber-950/30">
-          <CardTitle className="text-base">Upgrade to a paid plan</CardTitle>
-          <CardDescription>Offline bridge analytics and printable cards unlock on Starter and above.</CardDescription>
-        </Card>
+        <UpgradeBanner
+          title="Upgrade to a paid plan"
+          message="Offline bridge analytics and printable NFC/QR cards unlock on Starter and above."
+          plan="starter"
+        />
       ) : null}
 
       <Card className="space-y-3 p-6 dark:border-slate-700 dark:bg-slate-900/60">
