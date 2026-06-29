@@ -12,6 +12,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Free AI reply generator — ReviewPulse',
     description: 'Turn angry reviews into professional Google replies. SEO-friendly free tool.',
+    images: [{ url: '/og.png', width: 1200, height: 630, alt: 'ReviewPulse free AI reply tool' }],
   },
   alternates: {
     canonical: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/tools/free-reply`,

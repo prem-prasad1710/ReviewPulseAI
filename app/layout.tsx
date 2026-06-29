@@ -38,11 +38,20 @@ export const metadata: Metadata = {
     description:
       'Connect locations, sync reviews, draft bilingual AI replies, and publish with full control.',
     url: appUrl,
+    images: [
+      {
+        url: '/og.png',
+        width: 1200,
+        height: 630,
+        alt: 'ReviewPulse AI — Google review inbox with Hindi and English AI replies',
+      },
+    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'ReviewPulse AI',
     description: 'Review operations for Indian SMBs—secure, fast, bilingual.',
+    images: ['/og.png'],
   },
   robots: { index: true, follow: true },
 }

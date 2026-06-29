@@ -28,6 +28,7 @@ export const metadata: Metadata = {
     title: 'ReviewPulse AI — Google review operations for Indian SMBs',
     description: 'Connect Google, sync reviews, draft Hindi/English replies, publish with full control.',
     url: appUrl,
+    images: [{ url: '/og.png', width: 1200, height: 630, alt: 'ReviewPulse AI' }],
   },
 }
 
