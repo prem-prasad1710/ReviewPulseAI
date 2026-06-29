@@ -11,7 +11,7 @@
  * After upgrading plan via seed, sign out and sign back in so the session JWT picks up the new plan.
  */
 import path from 'node:path'
-import { loadEnvConfig } from '@next/env'
+import { loadEnvConfig } from '../lib/load-env-config'
 
 loadEnvConfig(path.resolve(process.cwd()))
 

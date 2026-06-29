@@ -1,9 +1,11 @@
 import path from 'node:path'
+import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
-import { loadEnvConfig } from '@next/env'
 import type { NextConfig } from 'next'
 
 const appDir = path.dirname(fileURLToPath(import.meta.url))
+const require = createRequire(import.meta.url)
+const { loadEnvConfig } = require('@next/env') as { loadEnvConfig: (dir: string) => void }
 
 /** Remotion ships optional compositor binaries; webpack must not resolve other platforms. */
 function remotionCompositorPackageForHost(): string {
