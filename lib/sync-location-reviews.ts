@@ -5,6 +5,7 @@ import { connectDB } from '@/lib/mongodb'
 import { analyzeSentiment } from '@/lib/openai'
 import { listLocationReviews, refreshIfNeeded } from '@/lib/gbp'
 import type { GbpReview } from '@/lib/gbp'
+import { explainTokenDecryptFailure, isSeedGoogleLocationId } from '@/lib/location-tokens'
 import Location from '@/models/Location'
 import Review from '@/models/Review'
 
@@ -39,14 +40,27 @@ export async function syncLocationReviewsForUser(
     return { ok: false, error: 'Location not found', status: 404 }
   }
 
+  if (isSeedGoogleLocationId(location.googleLocationId)) {
+    return {
+      ok: false,
+      error: explainTokenDecryptFailure(location.googleLocationId),
+      status: 400,
+    }
+  }
+
   try {
     let refreshed
     try {
-      refreshed = await refreshIfNeeded(location.accessToken, location.refreshToken, location.tokenExpiresAt)
+      refreshed = await refreshIfNeeded(
+        location.accessToken,
+        location.refreshToken,
+        location.tokenExpiresAt,
+        { googleLocationId: location.googleLocationId }
+      )
     } catch (tokenError) {
       const msg = tokenError instanceof Error ? tokenError.message : 'Token refresh failed'
       console.error(`Token refresh error for location ${locationMongoId}:`, msg)
-      return { ok: false, error: `Token error: ${msg}. Please re-authorize Google access in settings.`, status: 401 }
+      return { ok: false, error: msg, status: 401 }
     }
 
     if (refreshed.encryptedAccessToken && refreshed.encryptedRefreshToken) {

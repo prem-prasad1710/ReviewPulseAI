@@ -10,6 +10,7 @@ import SocialPost from '@/models/SocialPost'
 import StaffMention from '@/models/StaffMention'
 import Survey from '@/models/Survey'
 import User from '@/models/User'
+import { encrypt } from '@/lib/crypto'
 
 /** Prefix for synthetic GBP rows — safe to delete without touching real OAuth locations. */
 export const SEED_GOOGLE_ID_PREFIX = 'rp-seed-'
@@ -165,7 +166,15 @@ export async function seedTestDataForUserId(
   }
 
   const tokenFar = new Date(Date.now() + 365 * 86400000)
-  const placeholderToken = `${SEED_GOOGLE_ID_PREFIX}oauth-placeholder`
+  const placeholderPlain = `${SEED_GOOGLE_ID_PREFIX}oauth-placeholder`
+  let placeholderAccess = placeholderPlain
+  let placeholderRefresh = placeholderPlain
+  try {
+    placeholderAccess = encrypt(placeholderPlain)
+    placeholderRefresh = encrypt(placeholderPlain)
+  } catch {
+    /* ENCRYPTION_KEY missing — leave plain; sync will show a clear reconnect message */
+  }
 
   const locSpecs = [
     {
@@ -206,8 +215,8 @@ export async function seedTestDataForUserId(
       category: spec.category,
       businessType: spec.businessType,
       phone: '+91 80 4000 0000',
-      accessToken: placeholderToken,
-      refreshToken: placeholderToken,
+      accessToken: placeholderAccess,
+      refreshToken: placeholderRefresh,
       tokenExpiresAt: tokenFar,
       isActive: true,
       totalReviews: 0,

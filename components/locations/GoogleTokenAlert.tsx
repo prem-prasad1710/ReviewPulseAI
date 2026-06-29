@@ -3,8 +3,9 @@ import { AlertTriangle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import type { TokenHealthIssue } from '@/lib/token-health'
 
-export default function GoogleTokenAlert({ issue }: { issue: TokenHealthIssue }) {
+export default function GoogleTokenAlert({ issue }: { issue: TokenHealthIssue | 'seed_data' }) {
   const isMissingKey = issue === 'missing_key'
+  const isSeed = issue === 'seed_data'
 
   return (
     <div className="rounded-2xl border border-amber-200/90 bg-amber-50/90 px-5 py-4 dark:border-amber-900/50 dark:bg-amber-950/30">
@@ -13,10 +14,20 @@ export default function GoogleTokenAlert({ issue }: { issue: TokenHealthIssue })
           <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-700 dark:text-amber-300" />
           <div>
             <p className="font-semibold text-amber-950 dark:text-amber-100">
-              {isMissingKey ? 'ENCRYPTION_KEY is not set on the server' : 'Google tokens need to be refreshed'}
+              {isSeed
+                ? 'Sample restaurants cannot sync to Google'
+                : isMissingKey
+                  ? 'ENCRYPTION_KEY is not set on the server'
+                  : 'Google tokens need to be refreshed'}
             </p>
             <p className="mt-1 text-sm text-amber-900/90 dark:text-amber-200/90">
-              {isMissingKey ? (
+              {isSeed ? (
+                <>
+                  You loaded demo outlets (Namma Kitchen, etc.). Sync only works for real Google Business locations.
+                  Use <strong>Reset &amp; reload sample data</strong> to clear them, or <strong>Reconnect Google</strong>{' '}
+                  to import your restaurant — then sync.
+                </>
+              ) : isMissingKey ? (
                 <>
                   Review sync cannot decrypt stored Google tokens without{' '}
                   <code className="rounded bg-white/60 px-1 text-xs dark:bg-black/20">ENCRYPTION_KEY</code>. Add the

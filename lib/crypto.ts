@@ -23,14 +23,24 @@ export function encrypt(text: string) {
 
 export function decrypt(encryptedValue: string) {
   const [ivHex, authTagHex, encrypted] = encryptedValue.split(':')
-  if (!ivHex || !authTagHex || !encrypted) throw new Error('Invalid encrypted payload')
+  if (!ivHex || !authTagHex || !encrypted) {
+    throw new Error('Invalid encrypted payload')
+  }
+
+  if (!process.env.ENCRYPTION_KEY?.trim()) {
+    throw new Error('Missing ENCRYPTION_KEY')
+  }
 
   const key = getKey()
   const iv = Buffer.from(ivHex, 'hex')
   const decipher = createDecipheriv(ALGORITHM, key, iv)
   decipher.setAuthTag(Buffer.from(authTagHex, 'hex'))
 
-  let decrypted = decipher.update(encrypted, 'hex', 'utf8')
-  decrypted += decipher.final('utf8')
-  return decrypted
+  try {
+    let decrypted = decipher.update(encrypted, 'hex', 'utf8')
+    decrypted += decipher.final('utf8')
+    return decrypted
+  } catch {
+    throw new Error('Decryption failed — ENCRYPTION_KEY may not match the key used when tokens were saved')
+  }
 }

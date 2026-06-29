@@ -1,6 +1,7 @@
 import { google } from 'googleapis'
 import type { mybusinessbusinessinformation_v1 } from 'googleapis'
 import { decrypt, encrypt } from '@/lib/crypto'
+import { explainTokenDecryptFailure } from '@/lib/location-tokens'
 
 export interface GbpReview {
   reviewId?: string
@@ -30,15 +31,20 @@ export function getOAuthClient(accessToken: string, refreshToken: string) {
 export async function refreshIfNeeded(
   encryptedAccessToken: string,
   encryptedRefreshToken: string,
-  tokenExpiresAt: Date
+  tokenExpiresAt: Date,
+  context?: { googleLocationId?: string }
 ) {
   let accessToken, refreshToken
   try {
     accessToken = decrypt(encryptedAccessToken)
     refreshToken = decrypt(encryptedRefreshToken)
   } catch (e) {
-    const msg = e instanceof Error ? e.message : 'Token decryption failed'
-    throw new Error(`Cannot decrypt tokens: ${msg}. Ensure ENCRYPTION_KEY environment variable is set correctly.`)
+    const hint = explainTokenDecryptFailure(
+      context?.googleLocationId,
+      encryptedAccessToken,
+      encryptedRefreshToken
+    )
+    throw new Error(hint)
   }
 
   const expiresSoon = tokenExpiresAt.getTime() - Date.now() < 5 * 60 * 1000

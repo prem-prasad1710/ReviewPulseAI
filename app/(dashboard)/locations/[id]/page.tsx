@@ -98,7 +98,7 @@ export default async function LocationHubPage({ params }: Props) {
       {showMapsPreview ? (
         <div className="overflow-hidden rounded-2xl border border-slate-200/90 dark:border-slate-700">
           <p className="border-b border-slate-100 bg-slate-50 px-4 py-2 text-xs font-medium text-slate-600 dark:border-slate-800 dark:bg-slate-950/80 dark:text-slate-400">
-            Map preview (Static Maps · API key stays on server)
+            Map preview (Static Maps)
           </p>
           {/* Do not use next/image here: its optimizer loads same-origin URLs without session cookies → map-thumb rejects with UNAUTHORIZED. */}
           <img

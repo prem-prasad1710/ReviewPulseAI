@@ -12,6 +12,7 @@ import LocationsToolbar from '@/components/locations/LocationsToolbar'
 import DevSeedPanel from '@/components/dev/DevSeedPanel'
 import { Card, CardDescription } from '@/components/ui/card'
 import { diagnoseLocationTokens, encryptionKeyConfigured } from '@/lib/token-health'
+import { explainTokenDecryptFailure, isSeedGoogleLocationId, looksLikeEncryptedPayload } from '@/lib/location-tokens'
 
 export default async function LocationsPage() {
   await connectDB()
@@ -88,18 +89,26 @@ export default async function LocationsPage() {
     critical: 'bg-rose-50 text-rose-800 dark:bg-rose-950/50 dark:text-rose-300',
   }
 
-  let tokenIssue: 'missing_key' | 'decrypt_failed' | null = null
+  let tokenIssue: 'missing_key' | 'decrypt_failed' | 'seed_data' | null = null
   if (!useMocks && locations.length > 0) {
-    if (!encryptionKeyConfigured()) {
+    const hasSeed = locations.some((l) =>
+      isSeedGoogleLocationId((l as { googleLocationId?: string }).googleLocationId)
+    )
+    if (hasSeed) {
+      tokenIssue = 'seed_data'
+    } else if (!encryptionKeyConfigured()) {
       tokenIssue = 'missing_key'
     } else {
       for (const loc of locations) {
-        const issue = diagnoseLocationTokens(
-          (loc as { accessToken?: string }).accessToken,
-          (loc as { refreshToken?: string }).refreshToken
-        )
-        if (issue) {
-          tokenIssue = issue
+        const access = (loc as { accessToken?: string }).accessToken
+        const refresh = (loc as { refreshToken?: string }).refreshToken
+        const googleLocationId = (loc as { googleLocationId?: string }).googleLocationId
+        if (
+          !looksLikeEncryptedPayload(access) ||
+          !looksLikeEncryptedPayload(refresh) ||
+          diagnoseLocationTokens(access, refresh)
+        ) {
+          tokenIssue = 'decrypt_failed'
           break
         }
       }

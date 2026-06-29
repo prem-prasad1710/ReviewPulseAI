@@ -1,18 +1,24 @@
 export async function register() {
   if (process.env.NEXT_RUNTIME !== 'nodejs') return
-  if (process.env.NODE_ENV !== 'production') return
 
   const critical: string[] = []
   if (!process.env.MONGODB_URI?.trim()) critical.push('MONGODB_URI')
   if (!(process.env.NEXTAUTH_SECRET || process.env.AUTH_SECRET)?.trim()) {
     critical.push('NEXTAUTH_SECRET (or AUTH_SECRET)')
   }
+  if (!process.env.ENCRYPTION_KEY?.trim()) {
+    critical.push('ENCRYPTION_KEY (required for Google review sync)')
+  }
 
   if (critical.length > 0) {
-    console.error(
-      `[ReviewPulse] Missing required env in production: ${critical.join(', ')}. Set these before accepting traffic.`
+    const level = process.env.NODE_ENV === 'production' ? 'error' : 'warn'
+    const log = level === 'error' ? console.error : console.warn
+    log(
+      `[ReviewPulse] Missing required env${process.env.NODE_ENV === 'production' ? ' in production' : ''}: ${critical.join(', ')}. Google review sync will fail until fixed.`
     )
   }
+
+  if (process.env.NODE_ENV !== 'production') return
 
   const urls = ['NEXTAUTH_URL', 'NEXT_PUBLIC_APP_URL'].filter((k) => !process.env[k]?.trim())
   if (urls.length > 0) {
