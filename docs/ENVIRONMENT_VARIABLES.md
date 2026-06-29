@@ -11,6 +11,7 @@ Copy **`.env.example`** to `.env.local` for local development. Never commit secr
 | `NEXTAUTH_SECRET` or `AUTH_SECRET` | JWT encryption for Auth.js session |
 | `NEXTAUTH_URL` | Canonical OAuth callback base URL |
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` / `GOOGLE_REDIRECT_URI` | Google OAuth (`lib/auth.ts`, `lib/gbp.ts`) |
+| `ENCRYPTION_KEY` | AES-256-GCM key for encrypting Google OAuth tokens stored per location (`lib/crypto.ts`). Generate: `openssl rand -hex 32`. **Must be identical across all deploys** — if you change it, users must reconnect Google at `/locations/connect`. |
 
 Also set **`NEXT_PUBLIC_APP_URL`** for links, redirects, OG, iframe snippets, alerts.
 

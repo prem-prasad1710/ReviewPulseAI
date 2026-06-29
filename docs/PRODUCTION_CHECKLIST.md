@@ -5,6 +5,7 @@ Use this before declaring a release **production-grade**. Adjust for your infra 
 ## 1. Secrets & configuration
 
 - [ ] `MONGODB_URI`, `NEXTAUTH_SECRET` (or `AUTH_SECRET`), `NEXTAUTH_URL`, `NEXT_PUBLIC_APP_URL`
+- [ ] `ENCRYPTION_KEY` set on **every** environment (local + Vercel) — same value everywhere; never rotate without users reconnecting Google
 - [ ] Google OAuth triple (`GOOGLE_CLIENT_ID`, …) validated on staging OAuth consent
 - [ ] AI keys routed **server-only** (`OPENAI_API_KEY` / `GROQ_*`); never `NEXT_PUBLIC_*` AI keys
 - [ ] Razorpay live keys + webhook URL registered | Twilio webhook base `TWILIO_WEBHOOK_PUBLIC_URL`
@@ -29,6 +30,7 @@ Boot-time logs from **`instrumentation.ts`** summarize missing optional integrat
 
 - [ ] Atlas IP allowlists / VPC for serverless egress
 - [ ] Google Places/Maps API quotas monitored
+- [ ] `GOOGLE_MAPS_API_KEY` set for location map previews (`/api/locations/[id]/map-thumb`); Maps Static API enabled in GCP
 - [ ] Twilio/message rate limits validated for alert fan-out (`lib/review-post-sync.ts` via `TWILIO_WHATSAPP_FROM`)
 
 ## 5. Operational runbooks

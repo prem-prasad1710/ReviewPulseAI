@@ -7,9 +7,11 @@ import { connectDB } from '@/lib/mongodb'
 import Location from '@/models/Location'
 import Review from '@/models/Review'
 import LocationSyncButton from '@/components/locations/LocationSyncButton'
+import GoogleTokenAlert from '@/components/locations/GoogleTokenAlert'
 import LocationsToolbar from '@/components/locations/LocationsToolbar'
 import DevSeedPanel from '@/components/dev/DevSeedPanel'
 import { Card, CardDescription } from '@/components/ui/card'
+import { diagnoseLocationTokens, encryptionKeyConfigured } from '@/lib/token-health'
 
 export default async function LocationsPage() {
   await connectDB()
@@ -86,6 +88,24 @@ export default async function LocationsPage() {
     critical: 'bg-rose-50 text-rose-800 dark:bg-rose-950/50 dark:text-rose-300',
   }
 
+  let tokenIssue: 'missing_key' | 'decrypt_failed' | null = null
+  if (!useMocks && locations.length > 0) {
+    if (!encryptionKeyConfigured()) {
+      tokenIssue = 'missing_key'
+    } else {
+      for (const loc of locations) {
+        const issue = diagnoseLocationTokens(
+          (loc as { accessToken?: string }).accessToken,
+          (loc as { refreshToken?: string }).refreshToken
+        )
+        if (issue) {
+          tokenIssue = issue
+          break
+        }
+      }
+    }
+  }
+
   return (
     <div className="space-y-8">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
@@ -101,6 +121,8 @@ export default async function LocationsPage() {
       </div>
 
       {showDevSeed ? <DevSeedPanel /> : null}
+
+      {tokenIssue ? <GoogleTokenAlert issue={tokenIssue} /> : null}
 
       {locations.length === 0 ? (
         <Card className="dark:bg-slate-900/70">

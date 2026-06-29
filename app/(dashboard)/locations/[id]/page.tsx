@@ -43,6 +43,7 @@ export default async function LocationHubPage({ params }: Props) {
 
   const showMapsPreview =
     Boolean(getGoogleMapsApiKey()) && Boolean(location.address?.trim()) && !fromMock
+  const mapsKeyMissing = !fromMock && Boolean(location.address?.trim()) && !getGoogleMapsApiKey()
 
   return (
     <div className="mx-auto max-w-5xl space-y-8 pb-10">
@@ -106,6 +107,15 @@ export default async function LocationHubPage({ params }: Props) {
             className="h-52 w-full object-cover md:h-64"
             loading="lazy"
           />
+        </div>
+      ) : mapsKeyMissing ? (
+        <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-5 py-4 text-sm text-slate-600 dark:border-slate-600 dark:bg-slate-900/50 dark:text-slate-400">
+          <p className="font-medium text-slate-800 dark:text-slate-200">Map preview not configured</p>
+          <p className="mt-1">
+            Add <code className="rounded bg-white px-1 text-xs dark:bg-slate-950">GOOGLE_MAPS_API_KEY</code> in Vercel →
+            Environment Variables, enable <strong>Maps Static API</strong> in Google Cloud Console (with billing), then
+            redeploy. Reviews sync separately via Google OAuth — maps only need this key.
+          </p>
         </div>
       ) : null}
 
