@@ -26,6 +26,7 @@ async function main() {
   const result = await seedTestDataForUserEmail(email, {
     upgradePlan: process.env.SEED_SKIP_PLAN_UPGRADE !== 'true',
     plan: process.env.SEED_PLAN === 'growth' ? 'growth' : 'scale',
+    purgeAll: process.env.SEED_PURGE_ALL === 'true',
   })
 
   console.log(JSON.stringify(result, null, 2))

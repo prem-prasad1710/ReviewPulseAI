@@ -1,9 +1,14 @@
 import mongoose from 'mongoose'
 import { connectDB } from '@/lib/mongodb'
 import Competitor from '@/models/Competitor'
+import EscalationTask from '@/models/EscalationTask'
+import ImportedReview from '@/models/ImportedReview'
 import Location from '@/models/Location'
 import Review from '@/models/Review'
+import ReviewAlert from '@/models/ReviewAlert'
+import SocialPost from '@/models/SocialPost'
 import StaffMention from '@/models/StaffMention'
+import Survey from '@/models/Survey'
 import User from '@/models/User'
 
 /** Prefix for synthetic GBP rows — safe to delete without touching real OAuth locations. */
@@ -45,6 +50,72 @@ export async function removeSeedDataForUser(userId: string | mongoose.Types.Obje
   return { deletedLocations: locIds.length, deletedReviews: revs.length + orphan.deletedCount }
 }
 
+export type PurgeLocationDataResult = {
+  deletedLocations: number
+  deletedReviews: number
+  deletedCompetitors: number
+  deletedAlerts: number
+  deletedStaffMentions: number
+  deletedEscalations: number
+  deletedImportedReviews: number
+  deletedSocialPosts: number
+  deletedSurveys: number
+}
+
+/** Removes every location and review (and related rows) for a user — use before a clean re-seed or real GBP reconnect. */
+export async function purgeAllLocationDataForUser(
+  userId: string | mongoose.Types.ObjectId
+): Promise<PurgeLocationDataResult> {
+  await connectDB()
+  const uid = typeof userId === 'string' ? new mongoose.Types.ObjectId(userId) : userId
+
+  const locs = await Location.find({ userId: uid }).select('_id').lean()
+  const locIds = locs.map((l) => l._id)
+
+  const revs = await Review.find({ userId: uid }).select('_id').lean()
+  const revIds = revs.map((r) => r._id)
+
+  const empty: PurgeLocationDataResult = {
+    deletedLocations: 0,
+    deletedReviews: 0,
+    deletedCompetitors: 0,
+    deletedAlerts: 0,
+    deletedStaffMentions: 0,
+    deletedEscalations: 0,
+    deletedImportedReviews: 0,
+    deletedSocialPosts: 0,
+    deletedSurveys: 0,
+  }
+
+  if (locIds.length === 0 && revIds.length === 0) return empty
+
+  const staff = await StaffMention.deleteMany(
+    revIds.length ? { reviewId: { $in: revIds } } : { locationId: { $in: locIds } }
+  )
+  const alerts = await ReviewAlert.deleteMany({ userId: uid })
+  const esc = await EscalationTask.deleteMany({ userId: uid })
+  const social = await SocialPost.deleteMany({ locationId: { $in: locIds } })
+  const imported = await ImportedReview.deleteMany({ locationId: { $in: locIds } })
+  const competitors = await Competitor.deleteMany({ locationId: { $in: locIds } })
+  const surveys = await Survey.deleteMany({ locationId: { $in: locIds } })
+  const reviews = await Review.deleteMany({ userId: uid })
+  const locations = await Location.deleteMany({ userId: uid })
+
+  await User.updateOne({ _id: uid }, { $unset: { whatsappVoicePin: '', whatsappVoiceDraft: '' } })
+
+  return {
+    deletedLocations: locations.deletedCount ?? 0,
+    deletedReviews: reviews.deletedCount ?? 0,
+    deletedCompetitors: competitors.deletedCount ?? 0,
+    deletedAlerts: alerts.deletedCount ?? 0,
+    deletedStaffMentions: staff.deletedCount ?? 0,
+    deletedEscalations: esc.deletedCount ?? 0,
+    deletedImportedReviews: imported.deletedCount ?? 0,
+    deletedSocialPosts: social.deletedCount ?? 0,
+    deletedSurveys: surveys.deletedCount ?? 0,
+  }
+}
+
 async function refreshLocationStats(locationId: mongoose.Types.ObjectId) {
   const agg = await Review.aggregate<{ avg: number; count: number }>([
     { $match: { locationId } },
@@ -73,14 +144,16 @@ export type SeedTestDataResult = {
 
 export async function seedTestDataForUserId(
   userId: string,
-  options?: { upgradePlan?: boolean; plan?: 'growth' | 'scale' }
+  options?: { upgradePlan?: boolean; plan?: 'growth' | 'scale'; purgeAll?: boolean }
 ): Promise<SeedTestDataResult> {
   await connectDB()
   const uid = new mongoose.Types.ObjectId(userId)
   const user = await User.findById(uid).lean()
   if (!user?.email) throw new Error('User not found')
 
-  const removed = await removeSeedDataForUser(uid)
+  const removed = options?.purgeAll
+    ? await purgeAllLocationDataForUser(uid)
+    : await removeSeedDataForUser(uid)
 
   const upgradePlan = options?.upgradePlan !== false
   const targetPlan = options?.plan ?? 'scale'
@@ -432,13 +505,32 @@ export async function seedTestDataForUserId(
     reviewsCreated: inserted.length,
     competitorsCreated: 2,
     staffMentionsCreated: staffCount,
-    previousSeedRemoved: removed,
+    previousSeedRemoved: {
+      deletedLocations: removed.deletedLocations,
+      deletedReviews: removed.deletedReviews,
+    },
   }
+}
+
+export async function resetAndSeedUserEmail(
+  email: string,
+  options?: { upgradePlan?: boolean; plan?: 'growth' | 'scale' }
+): Promise<SeedTestDataResult & { purged: PurgeLocationDataResult }> {
+  await connectDB()
+  const trimmed = email.trim()
+  const escaped = trimmed.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  const user = await User.findOne({ email: new RegExp(`^${escaped}$`, 'i') }).lean()
+  if (!user?._id) {
+    throw new Error(`No user with email "${trimmed}". Sign in once with Google so the account exists, then run again.`)
+  }
+  const purged = await purgeAllLocationDataForUser(user._id)
+  const seeded = await seedTestDataForUserId(String(user._id), { ...options, purgeAll: false })
+  return { ...seeded, purged }
 }
 
 export async function seedTestDataForUserEmail(
   email: string,
-  options?: { upgradePlan?: boolean; plan?: 'growth' | 'scale' }
+  options?: { upgradePlan?: boolean; plan?: 'growth' | 'scale'; purgeAll?: boolean }
 ): Promise<SeedTestDataResult> {
   await connectDB()
   const trimmed = email.trim()
