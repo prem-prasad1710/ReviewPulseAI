@@ -6,6 +6,7 @@ import { analyzeSentiment } from '@/lib/openai'
 import { listLocationReviews, refreshIfNeeded } from '@/lib/gbp'
 import type { GbpReview } from '@/lib/gbp'
 import { explainTokenDecryptFailure, isSeedGoogleLocationId } from '@/lib/location-tokens'
+import { detectVelocitySpike, notifySpikeViaWhatsApp } from '@/lib/review-velocity-spike'
 import Location from '@/models/Location'
 import Review from '@/models/Review'
 
@@ -154,6 +155,15 @@ export async function syncLocationReviewsForUser(
           ) / reviews.length
         : 0
     await location.save()
+
+    // Velocity spike detection — fire-and-forget, never block sync result
+    detectVelocitySpike(locationMongoId, userId)
+      .then(async (spike) => {
+        if (spike) {
+          await notifySpikeViaWhatsApp(spike, userId)
+        }
+      })
+      .catch((err) => console.error('Spike detection failed:', err))
 
     return { ok: true, syncedReviews: reviews.length }
   } catch (e) {

@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { toast } from 'sonner'
-import { ArrowLeft, Radar } from 'lucide-react'
+import { ArrowLeft, Radar, Target } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardDescription, CardTitle } from '@/components/ui/card'
 import { UpgradeBanner } from '@/components/billing/UpgradeGate'
@@ -20,6 +20,15 @@ interface CompetitorRow {
   placeUserRatingsTotal?: number
   lastAnalyzedAt?: string
   themes?: { positive: string[]; negative: string[] }
+  previousRating?: number
+}
+
+interface OpportunityAlert {
+  name: string
+  currentRating: number
+  previousRating: number
+  drop: number
+  address?: string
 }
 
 export default function CompetitorsPage() {
@@ -31,13 +40,32 @@ export default function CompetitorsPage() {
   const [rows, setRows] = useState<CompetitorRow[]>([])
   const [mapsUrl, setMapsUrl] = useState('')
   const [openId, setOpenId] = useState<string | null>(null)
+  const [opportunities, setOpportunities] = useState<OpportunityAlert[]>([])
 
   const load = async () => {
     const res = await fetch(`/api/locations/${id}/competitors`)
     const json = await res.json()
-    setRows(json?.data?.competitors || [])
+    const comps: CompetitorRow[] = json?.data?.competitors || []
+    setRows(comps)
     setPlanOk(Boolean(json?.data?.planOk))
     setLimit(json?.data?.limit ?? 0)
+
+    // Detect competitors with falling ratings (≥0.2★ drop)
+    const opps: OpportunityAlert[] = comps
+      .filter(
+        (c) =>
+          typeof c.placeRating === 'number' &&
+          typeof c.previousRating === 'number' &&
+          c.previousRating - c.placeRating >= 0.2
+      )
+      .map((c) => ({
+        name: c.name,
+        currentRating: c.placeRating!,
+        previousRating: c.previousRating!,
+        drop: Math.round((c.previousRating! - c.placeRating!) * 10) / 10,
+        address: c.address,
+      }))
+    setOpportunities(opps)
     setLoading(false)
   }
 
@@ -113,6 +141,45 @@ export default function CompetitorsPage() {
           per 24 hours per competitor.
         </p>
       </div>
+
+      {/* COMPETITIVE OPPORTUNITY ALERTS */}
+      {planOk && opportunities.length > 0 ? (
+        <Card className="overflow-hidden border-amber-200/90 bg-amber-50/60 dark:border-amber-800/60 dark:bg-amber-950/25">
+          <div className="border-b border-amber-200/80 px-6 py-4 dark:border-amber-800/50">
+            <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-amber-700 dark:text-amber-400">
+              <Target className="h-4 w-4" />
+              Competitive Opportunity
+            </p>
+            <CardTitle className="font-heading mt-0.5 text-base text-amber-900 dark:text-amber-100">
+              A rival is slipping — their customers are up for grabs
+            </CardTitle>
+          </div>
+          <div className="divide-y divide-amber-100 dark:divide-amber-900/50">
+            {opportunities.map((opp) => (
+              <div key={opp.name} className="px-6 py-4">
+                <div className="flex flex-wrap items-start justify-between gap-2">
+                  <div>
+                    <p className="font-semibold text-amber-900 dark:text-amber-100">{opp.name}</p>
+                    {opp.address ? (
+                      <p className="text-xs text-amber-700/80 dark:text-amber-300/80">{opp.address}</p>
+                    ) : null}
+                    <p className="mt-1 text-sm text-amber-800 dark:text-amber-200">
+                      Rating dropped <strong className="text-rose-600 dark:text-rose-400">▼{opp.drop}★</strong> → now {opp.currentRating.toFixed(1)}★
+                      <span className="ml-1 text-amber-700/70 dark:text-amber-400/70">(was {opp.previousRating.toFixed(1)}★)</span>
+                    </p>
+                  </div>
+                  <span className="rounded-xl border border-amber-300 bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800 dark:border-amber-700 dark:bg-amber-900/50 dark:text-amber-200">
+                    Opportunity window
+                  </span>
+                </div>
+                <div className="mt-3 rounded-xl border border-amber-200 bg-white/70 px-3 py-2 text-xs text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200">
+                  💡 <strong>Action:</strong> Run a quick promotion or post a special offer now — dissatisfied customers from <em>{opp.name}</em> may be searching for alternatives. Share a review request link with satisfied customers to build your rating while theirs drops.
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+      ) : null}
 
       {!planOk ? (
         <UpgradeBanner

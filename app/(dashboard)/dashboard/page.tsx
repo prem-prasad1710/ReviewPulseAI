@@ -20,6 +20,8 @@ import { connectDB } from '@/lib/mongodb'
 import { buildOwnerBrief } from '@/lib/owner-brief'
 import CrisisRadarCard from '@/components/dashboard/CrisisRadarCard'
 import OwnerBusinessBrief from '@/components/dashboard/OwnerBusinessBrief'
+import VelocitySpikeCard from '@/components/dashboard/VelocitySpikeCard'
+import type { SpikeData } from '@/components/dashboard/VelocitySpikeCard'
 import FirstRunChecklist from '@/components/onboarding/FirstRunChecklist'
 import TrialBanner from '@/components/billing/TrialBanner'
 import User from '@/models/User'
@@ -82,6 +84,40 @@ export default async function DashboardPage() {
           }))
         )
       : null
+
+  const velocitySpikes: SpikeData[] =
+    !useMocks && userId
+      ? await (async () => {
+          const locs = await Location.find({ userId, isActive: true })
+            .select('_id name')
+            .lean()
+          const h24 = new Date(Date.now() - 24 * 3600_000)
+          const h6 = new Date(Date.now() - 6 * 3600_000)
+          const spikes: SpikeData[] = []
+          for (const loc of locs) {
+            const recent24 = await Review.find({
+              locationId: loc._id,
+              reviewCreatedAt: { $gte: h24 },
+            })
+              .select('rating reviewCreatedAt')
+              .lean()
+            if (recent24.length === 0) continue
+            const recent6neg = recent24.filter(
+              (r) => r.rating <= 2 && new Date(r.reviewCreatedAt).getTime() >= h6.getTime()
+            )
+            const avg24 = recent24.reduce((s, r) => s + r.rating, 0) / recent24.length
+            const pos4 = recent24.filter((r) => r.rating >= 4)
+            if (recent6neg.length >= 2) {
+              spikes.push({ locationId: String(loc._id), locationName: loc.name, kind: 'negative_attack', reviewCount: recent6neg.length, windowHours: 6, avgRating: Math.round(avg24 * 10) / 10 })
+            } else if (recent24.length >= 3 && avg24 < 3.0) {
+              spikes.push({ locationId: String(loc._id), locationName: loc.name, kind: 'volume_spike', reviewCount: recent24.length, windowHours: 24, avgRating: Math.round(avg24 * 10) / 10 })
+            } else if (pos4.length >= 4) {
+              spikes.push({ locationId: String(loc._id), locationName: loc.name, kind: 'positive_surge', reviewCount: pos4.length, windowHours: 24, avgRating: Math.round(avg24 * 10) / 10 })
+            }
+          }
+          return spikes
+        })()
+      : []
 
   const crisisAlerts =
     !useMocks && userId
@@ -192,6 +228,12 @@ export default async function DashboardPage() {
       {!useMocks && crisisAlerts.length > 0 ? (
         <Reveal delay={25}>
           <CrisisRadarCard alerts={crisisAlerts} />
+        </Reveal>
+      ) : null}
+
+      {!useMocks && velocitySpikes.length > 0 ? (
+        <Reveal delay={28}>
+          <VelocitySpikeCard spikes={velocitySpikes} />
         </Reveal>
       ) : null}
 

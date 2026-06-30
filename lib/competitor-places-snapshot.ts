@@ -11,18 +11,23 @@ export type CachedPlaceReviewSnippet = Pick<
 export type CompetitorPlacesSnapshotFields = {
   placesSnapshotFetchedAt: Date
   placeRating?: number
+  previousRating?: number
   placeUserRatingsTotal?: number
   cachedReviewSnippets: CachedPlaceReviewSnippet[]
 }
 
 export function buildSnapshotFromPlaceDetails(
-  details: PlaceDetailsResult | null
+  details: PlaceDetailsResult | null,
+  existingRating?: number
 ): CompetitorPlacesSnapshotFields | null {
   if (!details) return null
   const reviews = (details.reviews || []).slice(0, MAX_CACHED_PLACE_REVIEWS)
+  const newRating = typeof details.rating === 'number' ? details.rating : undefined
   return {
     placesSnapshotFetchedAt: new Date(),
-    placeRating: typeof details.rating === 'number' ? details.rating : undefined,
+    placeRating: newRating,
+    // Preserve old rating so we can compute the delta for Opportunity Alerts
+    previousRating: typeof existingRating === 'number' ? existingRating : undefined,
     placeUserRatingsTotal: typeof details.user_ratings_total === 'number' ? details.user_ratings_total : undefined,
     cachedReviewSnippets: reviews.map((r) => ({
       author_name: r.author_name,

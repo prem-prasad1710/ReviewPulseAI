@@ -9,6 +9,8 @@ export interface ICompetitor extends Document {
   /** Cached Google Places Details snapshot — dashboard reads this; cron refreshes. */
   placesSnapshotFetchedAt?: Date
   placeRating?: number
+  /** Rating from the previous snapshot — used to detect drops for Opportunity Alerts. */
+  previousRating?: number
   placeUserRatingsTotal?: number
   cachedReviewSnippets?: Array<{
     author_name?: string
@@ -31,6 +33,7 @@ const CompetitorSchema = new Schema<ICompetitor>(
     address: String,
     placesSnapshotFetchedAt: { type: Date, index: true },
     placeRating: { type: Number, min: 1, max: 5 },
+    previousRating: { type: Number, min: 1, max: 5 },
     placeUserRatingsTotal: { type: Number, min: 0 },
     cachedReviewSnippets: {
       type: [

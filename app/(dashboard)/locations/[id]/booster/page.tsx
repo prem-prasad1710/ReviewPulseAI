@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { toast } from 'sonner'
-import { ArrowLeft, QrCode } from 'lucide-react'
+import { ArrowLeft, Copy, ExternalLink, MessageCircle, QrCode, Share2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardDescription, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -87,6 +87,19 @@ export default function BoosterPage() {
 
   const base = typeof window !== 'undefined' ? window.location.origin : ''
   const tracker = slug ? `${base}/r/${slug}` : ''
+  const googleReviewUrl = placeId ? `https://search.google.com/local/writereview?placeid=${placeId}` : ''
+
+  // One-tap WhatsApp deep-link — opens wa.me with pre-filled message
+  const reviewRequestMsg = name
+    ? `Hi! We loved having you at *${name}*. Could you spare 1 min to leave us a Google review? It really helps small businesses like ours 🙏\n\n👉 ${tracker || googleReviewUrl}`
+    : ''
+  const waShareLink = reviewRequestMsg
+    ? `https://wa.me/?text=${encodeURIComponent(reviewRequestMsg)}`
+    : ''
+  const smsShareLink = reviewRequestMsg
+    ? `sms:?body=${encodeURIComponent(reviewRequestMsg)}`
+    : ''
+
   const waTemplate = name
     ? `Namaste! Aapka ${name} mein aana bahut accha laga. Kya aap 1 minute mein hume Google review de sakte hain? Link: ${tracker}. Aapka feedback humare liye bahut important hai! 🙏`
     : ''
@@ -139,6 +152,80 @@ export default function BoosterPage() {
         <CardTitle className="text-base">Redirect tracker</CardTitle>
         <CardDescription>Each scan increments qrScans then 301s to Google.</CardDescription>
         <code className="block rounded-lg bg-slate-100 px-3 py-2 text-xs dark:bg-slate-800">{tracker || 'Save slug by saving location once'}</code>
+      </Card>
+
+      {/* ONE-TAP REVIEW REQUEST LINK */}
+      <Card className="space-y-4 p-6 dark:border-slate-700 dark:bg-slate-900/60">
+        <div>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Share2 className="h-5 w-5 text-indigo-500" />
+            One-tap Review Request Link
+          </CardTitle>
+          <CardDescription className="mt-1">
+            Share a pre-filled WhatsApp or SMS message with your tracker link directly to happy customers — no QR scanner needed.
+          </CardDescription>
+        </div>
+
+        {!planOk ? (
+          <p className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900 dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-200">
+            Upgrade to a paid plan to unlock this feature.
+          </p>
+        ) : !tracker && !googleReviewUrl ? (
+          <p className="text-xs text-slate-500">Set up a Google Place ID above to generate links.</p>
+        ) : (
+          <>
+            <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-xs leading-relaxed text-slate-700 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-300">
+              {reviewRequestMsg || '—'}
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                variant="outline"
+                className="rounded-xl gap-1.5"
+                onClick={() => {
+                  void navigator.clipboard.writeText(tracker || googleReviewUrl)
+                  toast.success('Review link copied!')
+                }}
+              >
+                <Copy className="h-4 w-4" />
+                Copy link
+              </Button>
+              <Button
+                variant="outline"
+                className="rounded-xl gap-1.5"
+                onClick={() => {
+                  void navigator.clipboard.writeText(reviewRequestMsg)
+                  toast.success('Message copied!')
+                }}
+              >
+                <Copy className="h-4 w-4" />
+                Copy message
+              </Button>
+              {waShareLink ? (
+                <a
+                  href={waShareLink}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex h-10 items-center gap-1.5 rounded-xl border border-emerald-200 bg-emerald-50 px-4 text-sm font-medium text-emerald-800 transition hover:bg-emerald-100 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300"
+                >
+                  <MessageCircle className="h-4 w-4" />
+                  Share via WhatsApp
+                </a>
+              ) : null}
+              {smsShareLink ? (
+                <a
+                  href={smsShareLink}
+                  className="inline-flex h-10 items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
+                >
+                  <ExternalLink className="h-4 w-4" />
+                  Send via SMS
+                </a>
+              ) : null}
+            </div>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400">
+              Tip: Send this after a great customer interaction — the personalised message gets 3× more clicks than a plain link.
+            </p>
+          </>
+        )}
       </Card>
 
       <Card className="space-y-3 p-6 dark:border-slate-700 dark:bg-slate-900/60">

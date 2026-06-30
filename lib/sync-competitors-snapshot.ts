@@ -38,12 +38,13 @@ export async function refreshCompetitorPlacesSnapshot(
     }
     throw e
   }
-  const snap = buildSnapshotFromPlaceDetails(details)
+  const snap = buildSnapshotFromPlaceDetails(details, c.placeRating)
   if (!snap) return { ok: false, error: 'places_unavailable' }
 
   if (details?.name) c.name = details.name
   if (details?.formatted_address) c.address = details.formatted_address
   c.placesSnapshotFetchedAt = snap.placesSnapshotFetchedAt
+  c.previousRating = snap.previousRating
   c.placeRating = snap.placeRating
   c.placeUserRatingsTotal = snap.placeUserRatingsTotal
   c.cachedReviewSnippets = snap.cachedReviewSnippets

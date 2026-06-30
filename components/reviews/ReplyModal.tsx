@@ -1,12 +1,14 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { AlertTriangle, ChevronDown, ChevronUp, Sparkles } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { UpgradeBanner } from '@/components/billing/UpgradeGate'
 import { cn } from '@/lib/utils'
 import SocialPostModal from '@/components/reviews/SocialPostModal'
+import ReplyQualityBadge from '@/components/reviews/ReplyQualityBadge'
+import { scoreReply } from '@/lib/reply-quality-score'
 
 const languages = [
   { id: 'english' as const, label: 'English' },
@@ -151,6 +153,16 @@ export default function ReplyModal({
       setLoading(false)
     }
   }
+
+  const qualityResult = useMemo(() => {
+    if (!reply.trim() || reply.length < 20 || !detail) return null
+    return scoreReply({
+      replyText: reply,
+      reviewerName: detail.reviewerName,
+      reviewText: detail.comment,
+      rating: detail.rating,
+    })
+  }, [reply, detail])
 
   const fakeScore = detail?.fakeScore
   const fakeSignals = detail?.fakeSignals || []
@@ -338,6 +350,7 @@ export default function ReplyModal({
                 plan="growth"
               />
             ) : null}
+            {qualityResult ? <ReplyQualityBadge result={qualityResult} /> : null}
             <textarea
               value={reply}
               onChange={(e) => setReply(e.target.value)}
