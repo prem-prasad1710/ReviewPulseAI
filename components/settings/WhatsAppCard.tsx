@@ -12,6 +12,7 @@ import { normalizeWhatsAppInput } from '@/lib/phone-e164'
 export default function WhatsAppCard() {
   const [number, setNumber] = useState('')
   const [alertsOn, setAlertsOn] = useState(true)
+  const [morningBriefing, setMorningBriefing] = useState(true)
   const [planOk, setPlanOk] = useState(false)
   const [twilioOk, setTwilioOk] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -25,6 +26,7 @@ export default function WhatsAppCard() {
     const json = await res.json()
     setNumber(json?.data?.whatsappNumber || '')
     setAlertsOn(json?.data?.whatsappAlertsEnabled !== false)
+    setMorningBriefing(json?.data?.morningBriefingEnabled !== false)
     setPlanOk(Boolean(json?.data?.planOk))
     setTwilioOk(Boolean(json?.data?.twilioConfigured))
     setAlertsSentToday(Number(json?.data?.whatsappAlertsSentToday ?? 0))
@@ -51,6 +53,7 @@ export default function WhatsAppCard() {
         body: JSON.stringify({
           whatsappNumber: number.trim(),
           whatsappAlertsEnabled: alertsOn,
+          morningBriefingEnabled: morningBriefing,
         }),
       })
       const json = await res.json()
@@ -61,6 +64,7 @@ export default function WhatsAppCard() {
       toast.success('WhatsApp settings saved')
       setNumber(json?.data?.whatsappNumber || '')
       setAlertsOn(json?.data?.whatsappAlertsEnabled !== false)
+      setMorningBriefing(json?.data?.morningBriefingEnabled !== false)
       setTwilioOk(Boolean(json?.data?.twilioConfigured))
     } finally {
       setSaving(false)
@@ -194,6 +198,19 @@ export default function WhatsAppCard() {
             checked={alertsOn}
             onChange={(e) => setAlertsOn(e.target.checked)}
             disabled={!planOk}
+          />
+        </label>
+
+        <label className="flex cursor-pointer items-center justify-between gap-3 rounded-xl border border-indigo-100 bg-indigo-50/50 px-3 py-2.5 dark:border-indigo-800/50 dark:bg-indigo-950/30">
+          <div>
+            <span className="text-sm font-medium text-slate-800 dark:text-slate-200">Morning briefing (9 AM IST)</span>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400">Daily WhatsApp summary of overnight reviews, pending count, and crisis flags.</p>
+          </div>
+          <input
+            type="checkbox"
+            className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+            checked={morningBriefing}
+            onChange={(e) => setMorningBriefing(e.target.checked)}
           />
         </label>
 

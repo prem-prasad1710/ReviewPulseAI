@@ -22,6 +22,10 @@ import CrisisRadarCard from '@/components/dashboard/CrisisRadarCard'
 import OwnerBusinessBrief from '@/components/dashboard/OwnerBusinessBrief'
 import VelocitySpikeCard from '@/components/dashboard/VelocitySpikeCard'
 import type { SpikeData } from '@/components/dashboard/VelocitySpikeCard'
+import ReplyStreakCard from '@/components/dashboard/ReplyStreakCard'
+import MoodCalendar from '@/components/dashboard/MoodCalendar'
+import type { DayMood } from '@/components/dashboard/MoodCalendar'
+import BusinessHealthScoreCard from '@/components/dashboard/BusinessHealthScoreCard'
 import FirstRunChecklist from '@/components/onboarding/FirstRunChecklist'
 import TrialBanner from '@/components/billing/TrialBanner'
 import User from '@/models/User'
@@ -29,6 +33,10 @@ import Review from '@/models/Review'
 import Location from '@/models/Location'
 import ReviewAlert from '@/models/ReviewAlert'
 import type { IUserLean } from '@/types'
+import { computeReplyStreak } from '@/lib/reply-streak'
+import { computeBusinessHealthScore } from '@/lib/business-health-score'
+import { toISTDateKey } from '@/lib/reply-streak'
+import CustomerThemesCard from '@/components/dashboard/CustomerThemesCard'
 
 export default async function DashboardPage() {
   await connectDB()
@@ -146,6 +154,73 @@ export default async function DashboardPage() {
         })()
       : []
 
+  // ── Reply Streak ──────────────────────────────────────────────────────────
+  const replyStreak =
+    !useMocks && userId
+      ? await computeReplyStreak(userId)
+      : { currentStreak: 0, bestStreak: 0, todayReplied: false }
+
+  // ── Mood Calendar (35 days, IST-keyed) — separate query avoids the 50-review cap ──
+  const moodCalendarDays: DayMood[] = await (async () => {
+    const days: DayMood[] = []
+    if (useMocks || !userId) {
+      // Mock: last 35 days with random data
+      const todayIST = toISTDateKey(new Date())
+      for (let i = 34; i >= 0; i--) {
+        const d = new Date(new Date(todayIST + 'T12:00:00+05:30').getTime() - i * 86400_000)
+        const key = toISTDateKey(d)
+        days.push({ date: key, avgRating: i % 5 === 0 ? 2.5 : i % 3 === 0 ? 4.8 : 4.0, reviewCount: i % 4 === 0 ? 0 : 2 })
+      }
+      return days
+    }
+    const since35 = new Date(Date.now() - 35 * 86400_000)
+    const calReviews = await Review.find({
+      userId,
+      reviewCreatedAt: { $gte: since35 },
+    })
+      .select('rating reviewCreatedAt')
+      .lean()
+
+    const dayRating = new Map<string, { total: number; count: number }>()
+    for (const r of calReviews) {
+      const key = toISTDateKey(new Date(r.reviewCreatedAt))
+      const prev = dayRating.get(key) || { total: 0, count: 0 }
+      dayRating.set(key, { total: prev.total + r.rating, count: prev.count + 1 })
+    }
+    const todayIST = toISTDateKey(new Date())
+    for (let i = 34; i >= 0; i--) {
+      const d = new Date(new Date(todayIST + 'T12:00:00+05:30').getTime() - i * 86400_000)
+      const key = toISTDateKey(d)
+      const data = dayRating.get(key)
+      days.push({
+        date: key,
+        avgRating: data ? Math.round((data.total / data.count) * 10) / 10 : null,
+        reviewCount: data?.count ?? 0,
+      })
+    }
+    return days
+  })()
+
+  // ── Business Health Score ─────────────────────────────────────────────────
+  const healthScore = !useMocks && userId
+    ? computeBusinessHealthScore({
+        totalReviews: reviews.length,
+        avgRating: reviews.length > 0
+          ? reviews.reduce((s, r) => s + r.rating, 0) / reviews.length
+          : 0,
+        repliedCount: reviews.filter((r) => r.status === 'replied').length,
+        pendingCount: reviews.filter((r) => r.status === 'pending').length,
+        crisisLast30Days: crisisAlerts.length,
+        reviewsLast7Days: reviews.filter(
+          (r) => new Date(r.reviewCreatedAt).getTime() >= weekCutoffMs
+        ).length,
+        highFakeScoreCount: reviews.filter(
+          (r) => typeof (r as { fakeScore?: number }).fakeScore === 'number' &&
+            ((r as { fakeScore?: number }).fakeScore ?? 0) >= 70
+        ).length,
+      })
+    : null
+
   const locMetrics = useMocks
     ? MOCK_LOCATIONS.map((l) => ({
         qrScans: (l as { qrScans?: number }).qrScans ?? 0,
@@ -234,6 +309,30 @@ export default async function DashboardPage() {
       {!useMocks && velocitySpikes.length > 0 ? (
         <Reveal delay={28}>
           <VelocitySpikeCard spikes={velocitySpikes} />
+        </Reveal>
+      ) : null}
+
+      {!useMocks && healthScore ? (
+        <Reveal delay={30}>
+          <div className="grid gap-6 lg:grid-cols-2">
+            <BusinessHealthScoreCard result={healthScore} />
+            <ReplyStreakCard
+              streak={replyStreak}
+              pendingToday={pendingReplies}
+            />
+          </div>
+        </Reveal>
+      ) : null}
+
+      {!useMocks && moodCalendarDays.some((d) => d.reviewCount > 0) ? (
+        <Reveal delay={32}>
+          <MoodCalendar days={moodCalendarDays} />
+        </Reveal>
+      ) : null}
+
+      {!useMocks && userId ? (
+        <Reveal delay={34}>
+          <CustomerThemesCard />
         </Reveal>
       ) : null}
 

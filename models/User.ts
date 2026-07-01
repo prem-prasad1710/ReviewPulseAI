@@ -34,6 +34,8 @@ export interface IUser extends Document {
   referredByUserId?: mongoose.Types.ObjectId
   /** B3 — last bulk festival greeting to superfans (rate limit). */
   superFanFestivalSentAt?: Date
+  /** Morning WhatsApp briefing at 9 AM IST (default: on when WhatsApp is configured). */
+  morningBriefingEnabled?: boolean
   /** 9.1 — Voice reply via WhatsApp: pin which review the next voice note applies to. */
   whatsappVoicePin?: {
     reviewId: mongoose.Types.ObjectId
@@ -93,6 +95,7 @@ const UserSchema = new Schema<IUser>(
       replyText: { type: String, maxlength: 1200 },
       createdAt: Date,
     },
+    morningBriefingEnabled: { type: Boolean, default: true },
     whatsappVoiceDayKey: String,
     whatsappVoiceNotesSent: { type: Number, default: 0 },
   },

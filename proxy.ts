@@ -59,7 +59,7 @@ function applyAgencyHostHeader(request: NextRequest): NextResponse {
   return NextResponse.next()
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl
 
   const devBypass =
@@ -82,7 +82,7 @@ export async function middleware(request: NextRequest) {
           return NextResponse.redirect(login)
         }
       } catch (e) {
-        console.error('middleware getToken:', e)
+        console.error('proxy getToken:', e)
       }
     }
   }

@@ -2,13 +2,14 @@
 
 import { useState } from 'react'
 import type { CSSProperties } from 'react'
-import { AlertTriangle } from 'lucide-react'
+import { AlertTriangle, Share2 } from 'lucide-react'
 import { Table, TD, TH } from '@/components/ui/table'
 import SentimentBadge from '@/components/reviews/SentimentBadge'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { LANGUAGE_FLAG_LABEL } from '@/lib/language-detect'
 import { cn } from '@/lib/utils'
+import ShareCardModal from '@/components/reviews/ShareCardModal'
 
 interface ReviewRow {
   _id: string
@@ -107,6 +108,8 @@ export default function ReviewTable({
   highlightReviewId?: string | null
   onGenerate: (reviewId: string) => void
 }) {
+  const [shareReview, setShareReview] = useState<ReviewRow | null>(null)
+
   if (reviews.length === 0) {
     return (
       <div className="rounded-2xl border border-dashed border-slate-300/90 bg-gradient-to-b from-slate-50/90 to-white px-6 py-14 text-center dark:border-slate-600 dark:from-slate-900/50 dark:to-slate-900/30">
@@ -119,6 +122,7 @@ export default function ReviewTable({
   }
 
   return (
+    <>
     <div className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-[0_8px_30px_-18px_rgba(15,23,42,0.08)] ring-1 ring-slate-900/[0.03] dark:border-slate-700/80 dark:bg-slate-900/50 dark:shadow-black/25 dark:ring-white/[0.04]">
       <div className="overflow-x-auto">
         <Table>
@@ -167,14 +171,26 @@ export default function ReviewTable({
                   <StatusBadge status={review.status} />
                 </TD>
                 <TD className="text-right">
-                  <Button
-                    size="sm"
-                    variant={review.status === 'replied' ? 'outline' : 'default'}
-                    className="rounded-xl shadow-sm dark:shadow-none"
-                    onClick={() => onGenerate(review._id)}
-                  >
-                    {review.status === 'replied' ? 'New draft' : 'Generate reply'}
-                  </Button>
+                  <div className="flex items-center justify-end gap-1.5">
+                    {review.rating >= 4 && (
+                      <button
+                        type="button"
+                        title="Generate social share card"
+                        className="h-8 w-8 rounded-xl text-violet-600 hover:bg-violet-50 dark:text-violet-400 dark:hover:bg-violet-950/40 flex items-center justify-center transition-colors"
+                        onClick={() => setShareReview(review)}
+                      >
+                        <Share2 className="h-3.5 w-3.5" />
+                      </button>
+                    )}
+                    <Button
+                      size="sm"
+                      variant={review.status === 'replied' ? 'outline' : 'default'}
+                      className="rounded-xl shadow-sm dark:shadow-none"
+                      onClick={() => onGenerate(review._id)}
+                    >
+                      {review.status === 'replied' ? 'New draft' : 'Generate reply'}
+                    </Button>
+                  </div>
                 </TD>
               </tr>
               )
@@ -183,5 +199,16 @@ export default function ReviewTable({
         </Table>
       </div>
     </div>
+
+    {shareReview ? (
+      <ShareCardModal
+        reviewId={shareReview._id}
+        reviewerName={shareReview.reviewerName}
+        rating={shareReview.rating}
+        comment={shareReview.comment}
+        onClose={() => setShareReview(null)}
+      />
+    ) : null}
+    </>
   )
 }

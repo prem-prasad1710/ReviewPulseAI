@@ -19,6 +19,7 @@ const putSchema = z.object({
     .transform((s) => (s === undefined ? undefined : normalizeWhatsAppInput(s)))
     .pipe(e164OrEmpty.optional()),
   whatsappAlertsEnabled: z.boolean().optional(),
+  morningBriefingEnabled: z.boolean().optional(),
 })
 
 export async function PUT(request: Request) {
@@ -40,17 +41,21 @@ export async function PUT(request: Request) {
       const wantOn = parsed.data.whatsappAlertsEnabled
       $set.whatsappAlertsEnabled = wantOn && !planAllowsWhatsApp(plan) ? false : wantOn
     }
+    if (parsed.data.morningBriefingEnabled !== undefined) {
+      $set.morningBriefingEnabled = parsed.data.morningBriefingEnabled
+    }
     if (Object.keys($set).length === 0) {
       return err('Nothing to update', 400)
     }
 
     const updated = await User.findByIdAndUpdate(user._id, { $set }, { new: true })
-      .select('whatsappNumber whatsappAlertsEnabled plan')
+      .select('whatsappNumber whatsappAlertsEnabled morningBriefingEnabled plan')
       .lean()
 
     return ok({
       whatsappNumber: updated?.whatsappNumber ?? '',
       whatsappAlertsEnabled: updated?.whatsappAlertsEnabled !== false,
+      morningBriefingEnabled: (updated as { morningBriefingEnabled?: boolean } | null)?.morningBriefingEnabled !== false,
       planOk: planAllowsWhatsApp((updated?.plan as string) || 'free'),
       twilioConfigured: isTwilioWhatsAppConfigured(),
       whatsappAlertsSentToday: 0,
@@ -67,13 +72,14 @@ export async function GET() {
   try {
     const user = await requireAuth()
     await connectDB()
-    const u = await User.findById(user._id).select('whatsappNumber whatsappAlertsEnabled plan whatsappAlertsDayKey whatsappAlertsSent').lean()
+    const u = await User.findById(user._id).select('whatsappNumber whatsappAlertsEnabled morningBriefingEnabled plan whatsappAlertsDayKey whatsappAlertsSent').lean()
     const dayKey = new Date().toISOString().slice(0, 10)
     const alertsSentToday =
       u?.whatsappAlertsDayKey === dayKey ? (u?.whatsappAlertsSent ?? 0) : 0
     return ok({
       whatsappNumber: u?.whatsappNumber ?? '',
       whatsappAlertsEnabled: u?.whatsappAlertsEnabled !== false,
+      morningBriefingEnabled: (u as { morningBriefingEnabled?: boolean } | null)?.morningBriefingEnabled !== false,
       planOk: planAllowsWhatsApp((u?.plan as string) || 'free'),
       twilioConfigured: isTwilioWhatsAppConfigured(),
       whatsappAlertsSentToday: alertsSentToday,

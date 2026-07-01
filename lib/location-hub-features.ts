@@ -6,6 +6,7 @@ import {
   Clock,
   FileText,
   Grid3x3,
+  HeartHandshake,
   KeyRound,
   MessageSquare,
   Mic,
@@ -56,6 +57,12 @@ export const LOCATION_HUB_LINKS: LocationHubLink[] = [
     description: 'Smart QR and WhatsApp templates for 5-star asks.',
     icon: QrCode,
     segment: 'booster',
+  },
+  {
+    label: '1-Star Recovery',
+    description: 'Track and recover from negative reviews — crisis playbook.',
+    icon: HeartHandshake,
+    segment: 'recovery',
   },
   {
     label: 'Keyword alerts',

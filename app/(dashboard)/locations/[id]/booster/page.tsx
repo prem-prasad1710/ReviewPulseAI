@@ -8,6 +8,7 @@ import { ArrowLeft, Copy, ExternalLink, MessageCircle, QrCode, Share2 } from 'lu
 import { Button } from '@/components/ui/button'
 import { Card, CardDescription, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
+import SendTimeHeatmap from '@/components/booster/SendTimeHeatmap'
 
 export default function BoosterPage() {
   const params = useParams()
@@ -279,6 +280,9 @@ export default function BoosterPage() {
       >
         Download QR (PNG)
       </a>
+
+      {/* Best-time-to-ask heatmap */}
+      <SendTimeHeatmap locationId={id} />
     </div>
   )
 }
