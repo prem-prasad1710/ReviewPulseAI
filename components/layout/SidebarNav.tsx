@@ -25,7 +25,7 @@ import { cn } from '@/lib/utils'
 
 const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/docs', label: 'Docs', icon: BookOpen },
+  // { href: '/docs', label: 'Docs', icon: BookOpen },
   { href: '/reviews', label: 'Reviews', icon: MessageSquare },
   { href: '/escalations', label: 'Escalations', icon: AlertTriangle },
   { href: '/locations', label: 'Locations', icon: MapPin },
