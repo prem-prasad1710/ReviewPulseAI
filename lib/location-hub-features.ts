@@ -13,6 +13,7 @@ import {
   Palette,
   QrCode,
   Radio,
+  Send,
   Share2,
   Target,
   Trophy,
@@ -63,6 +64,12 @@ export const LOCATION_HUB_LINKS: LocationHubLink[] = [
     description: 'Track and recover from negative reviews — crisis playbook.',
     icon: HeartHandshake,
     segment: 'recovery',
+  },
+  {
+    label: 'WA Campaign',
+    description: 'Bulk WhatsApp review requests — paste contacts, send personalised messages.',
+    icon: Send,
+    segment: 'campaign',
   },
   {
     label: 'Keyword alerts',

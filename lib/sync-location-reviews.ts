@@ -7,6 +7,7 @@ import { listLocationReviews, refreshIfNeeded } from '@/lib/gbp'
 import type { GbpReview } from '@/lib/gbp'
 import { explainTokenDecryptFailure, isSeedGoogleLocationId } from '@/lib/location-tokens'
 import { detectVelocitySpike, notifySpikeViaWhatsApp } from '@/lib/review-velocity-spike'
+import { notifyNewReviews } from '@/lib/notifications'
 import Location from '@/models/Location'
 import Review from '@/models/Review'
 
@@ -164,6 +165,22 @@ export async function syncLocationReviewsForUser(
         }
       })
       .catch((err) => console.error('Spike detection failed:', err))
+
+    // In-app notification for new reviews found during this sync
+    const syncedCount = reviews.length
+    if (syncedCount > 0) {
+      const negReviews = (reviews as GbpReview[]).filter((r) => {
+        const rat = normalizeRating(r.starRating || undefined)
+        return rat > 0 && rat <= 2
+      })
+      notifyNewReviews({
+        userId,
+        locationId: location._id as Types.ObjectId,
+        locationName: location.name,
+        total: syncedCount,
+        negativeCount: negReviews.length,
+      }).catch(() => {})
+    }
 
     return { ok: true, syncedReviews: reviews.length }
   } catch (e) {

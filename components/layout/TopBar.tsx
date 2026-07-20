@@ -5,6 +5,7 @@ import { signOut } from '@/lib/auth'
 import { AUTH_DISABLED_FOR_DEV } from '@/lib/auth-dev'
 import type { AgencyBrand } from '@/lib/agency-branding'
 import { MobileSidebarTrigger } from '@/components/layout/MobileSidebarTrigger'
+import NotificationBell from '@/components/layout/NotificationBell'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { ThemeToggle } from '@/components/theme/ThemeToggle'
@@ -62,6 +63,7 @@ export default function TopBar({
         </div>
 
         <div className="flex shrink-0 items-center gap-1 sm:gap-2 md:gap-3">
+          <NotificationBell />
           <ThemeToggle />
           {AUTH_DISABLED_FOR_DEV ? (
             <Badge className="hidden border border-amber-300/80 bg-amber-50 text-[10px] font-medium text-amber-900 dark:border-amber-700/60 dark:bg-amber-950/50 dark:text-amber-200 sm:inline-flex sm:text-xs">
