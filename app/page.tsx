@@ -19,6 +19,8 @@ import LandingTestimonialsSlider from '@/components/marketing/LandingTestimonial
 import { Reveal } from '@/components/motion/Reveal'
 import { Button } from '@/components/ui/button'
 import { getAppUrl } from '@/lib/app-url'
+import { SpeedInsights } from "@vercel/speed-insights/next"
+
 
 const appUrl = getAppUrl()
 
