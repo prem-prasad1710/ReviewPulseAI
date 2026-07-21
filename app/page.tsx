@@ -351,6 +351,7 @@ export default function Home() {
           <p className="mt-8 text-center text-xs text-slate-500 dark:text-slate-500">© {new Date().getFullYear()} ReviewPulse · Built for Indian SMBs</p>
         </footer>
       </main>
+      <SpeedInsights />
     </div>
   )
 }
