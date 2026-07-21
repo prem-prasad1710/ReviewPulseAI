@@ -52,3 +52,51 @@ export function verifyRazorpayWebhookSignature(body: string, signature: string) 
   const expected = crypto.createHmac('sha256', secret).update(body).digest('hex')
   return expected === signature
 }
+
+function normalizeKeyId(value: string | undefined): string {
+  return (value ?? '').trim().replace(/^["']|["']$/g, '')
+}
+
+/** Safe billing readiness snapshot — never exposes secrets or full key ids. */
+export function getRazorpayConfigStatus() {
+  const serverKeyId = normalizeKeyId(process.env.RAZORPAY_KEY_ID)
+  const publicKeyId = normalizeKeyId(process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID)
+  const hasSecret = Boolean(process.env.RAZORPAY_KEY_SECRET?.trim())
+  const webhookSecretSet = Boolean(process.env.RAZORPAY_WEBHOOK_SECRET?.trim())
+
+  const mode: 'live' | 'test' | 'unknown' = serverKeyId.startsWith('rzp_live_')
+    ? 'live'
+    : serverKeyId.startsWith('rzp_test_')
+      ? 'test'
+      : 'unknown'
+
+  const configuredPlans = (Object.keys(PLAN_ENV_VARS) as RazorpayPlanKey[]).filter((plan) => {
+    const raw = process.env[PLAN_ENV_VARS[plan]]
+    return typeof raw === 'string' && raw.trim().replace(/^["']|["']$/g, '').length > 0
+  })
+
+  const keysMatch = Boolean(serverKeyId && publicKeyId && serverKeyId === publicKeyId)
+  const credentialsConfigured = Boolean(serverKeyId && hasSecret)
+  const primaryPlansReady = ['starter', 'growth', 'scale', 'agency'].every((p) =>
+    configuredPlans.includes(p as RazorpayPlanKey)
+  )
+
+  return {
+    configured: credentialsConfigured,
+    mode,
+    acceptsRealPayments: mode === 'live' && credentialsConfigured && keysMatch && primaryPlansReady,
+    acceptsTestPayments: mode === 'test' && credentialsConfigured && keysMatch && primaryPlansReady,
+    keysMatch,
+    webhookSecretSet,
+    configuredPlans,
+    readyForCheckout:
+      credentialsConfigured && keysMatch && primaryPlansReady && (mode === 'live' || mode === 'test'),
+    notes: [
+      ...(mode === 'test' ? ['Test mode — real cards are not charged; use Razorpay test cards only.'] : []),
+      ...(mode === 'live' ? ['Live mode — real payments will be captured.'] : []),
+      ...(!keysMatch ? ['RAZORPAY_KEY_ID and NEXT_PUBLIC_RAZORPAY_KEY_ID must match.'] : []),
+      ...(!webhookSecretSet ? ['RAZORPAY_WEBHOOK_SECRET missing — plan sync may rely on client confirm only.'] : []),
+      ...(!primaryPlansReady ? ['One or more primary plan ids (starter/growth/scale/agency) are missing.'] : []),
+    ],
+  }
+}

@@ -4,6 +4,7 @@ import { ArrowLeft } from 'lucide-react'
 import { AppMark } from '@/components/brand/AppMark'
 import FreeReplyTool from '@/components/tools/FreeReplyTool'
 import { ThemeToggle } from '@/components/theme/ThemeToggle'
+import { getAppUrl } from '@/lib/app-url'
 
 export const metadata: Metadata = {
   title: 'Free AI reply to bad Google reviews | ReviewPulse',
@@ -15,7 +16,7 @@ export const metadata: Metadata = {
     images: [{ url: '/og.png', width: 1200, height: 630, alt: 'ReviewPulse free AI reply tool' }],
   },
   alternates: {
-    canonical: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/tools/free-reply`,
+    canonical: `${getAppUrl()}/tools/free-reply`,
   },
 }
 

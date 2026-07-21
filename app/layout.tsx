@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Manrope, Space_Grotesk } from 'next/font/google'
 import { Toaster } from 'sonner'
 import Providers from '@/components/providers/Providers'
+import { getAppUrl } from '@/lib/app-url'
 import './globals.css'
 import { Analytics } from "@vercel/analytics/next";
 const manrope = Manrope({
@@ -20,7 +21,8 @@ const spaceGrotesk = Space_Grotesk({
   adjustFontFallback: true,
 })
 
-const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+const appUrl = getAppUrl()
+const googleSiteVerification = process.env.GOOGLE_SITE_VERIFICATION?.trim()
 
 export const metadata: Metadata = {
   metadataBase: new URL(appUrl),
@@ -30,6 +32,9 @@ export const metadata: Metadata = {
   applicationName: 'ReviewPulse AI',
   keywords: ['Google reviews', 'Business Profile', 'AI replies', 'SMB', 'India', 'review management'],
   authors: [{ name: 'ReviewPulse' }],
+  ...(googleSiteVerification
+    ? { verification: { google: googleSiteVerification } }
+    : {}),
   openGraph: {
     type: 'website',
     locale: 'en_IN',

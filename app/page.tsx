@@ -10,6 +10,7 @@ import LandingFeaturesExplorer, { type LandingFeatureItem } from '@/components/m
 import LandingFinalCta from '@/components/marketing/LandingFinalCta'
 import LandingHero3D from '@/components/marketing/LandingHero3D'
 import LandingHowItWorks from '@/components/marketing/LandingHowItWorks'
+import LandingJsonLd from '@/components/marketing/LandingJsonLd'
 import LandingLogoMarquee from '@/components/marketing/LandingLogoMarquee'
 import LandingNav from '@/components/marketing/LandingNav'
 import LandingPricingShowcase from '@/components/marketing/LandingPricingShowcase'
@@ -17,8 +18,9 @@ import LandingStatChips from '@/components/marketing/LandingStatChips'
 import LandingTestimonialsSlider from '@/components/marketing/LandingTestimonialsSlider'
 import { Reveal } from '@/components/motion/Reveal'
 import { Button } from '@/components/ui/button'
+import { getAppUrl } from '@/lib/app-url'
 
-const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+const appUrl = getAppUrl()
 
 export const metadata: Metadata = {
   title: 'Reply to every Google review in minutes',
@@ -134,6 +136,7 @@ export default function Home() {
 
   return (
     <div className="bg-mesh relative min-h-screen overflow-x-hidden">
+      <LandingJsonLd appUrl={appUrl} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,rgba(15,23,42,0.035)_1px,transparent_1px),linear-gradient(to_bottom,rgba(15,23,42,0.035)_1px,transparent_1px)] bg-[size:48px_48px] opacity-60 dark:bg-[linear-gradient(to_right,rgba(148,163,184,0.08)_1px,transparent_1px),linear-gradient(to_bottom,rgba(148,163,184,0.08)_1px,transparent_1px)] dark:opacity-100" />
 
