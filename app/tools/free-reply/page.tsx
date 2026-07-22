@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
-import { AppMark } from '@/components/brand/AppMark'
+import { AppLogo } from '@/components/brand/AppLogo'
 import FreeReplyTool from '@/components/tools/FreeReplyTool'
 import { ThemeToggle } from '@/components/theme/ThemeToggle'
 import { getAppUrl } from '@/lib/app-url'
@@ -26,8 +26,7 @@ export default function FreeReplyPage() {
       <header className="mx-auto flex max-w-3xl items-center justify-between px-5 py-6">
         <Link href="/" className="inline-flex items-center gap-2.5 text-sm font-semibold text-slate-700 dark:text-slate-200">
           <ArrowLeft className="h-4 w-4 shrink-0" />
-          <AppMark size={32} priority className="rounded-lg ring-1 ring-slate-200/70 dark:ring-slate-600" />
-          <span className="sr-only">ReviewPulse</span>
+          <AppLogo variant="wordmark" wordmarkHeight={26} iconSize={30} priority />
         </Link>
         <ThemeToggle />
       </header>

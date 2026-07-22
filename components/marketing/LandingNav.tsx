@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { Menu, X } from 'lucide-react'
-import { AppMark } from '@/components/brand/AppMark'
+import { AppLogo } from '@/components/brand/AppLogo'
 import { Button } from '@/components/ui/button'
 import { ThemeToggle } from '@/components/theme/ThemeToggle'
 import { cn } from '@/lib/utils'
@@ -42,8 +42,7 @@ export default function LandingNav() {
           href="/"
           className="flex items-center gap-2.5 text-sm font-bold text-slate-900 transition hover:opacity-90 active:scale-[0.98] dark:text-white"
         >
-          <AppMark size={36} priority className="rounded-xl ring-1 ring-slate-200/80 shadow-sm dark:ring-white/10" />
-          <span className="sr-only">ReviewPulse</span>
+          <AppLogo variant="wordmark" wordmarkHeight={28} iconSize={32} priority />
         </Link>
 
         <nav className="hidden items-center gap-1 text-sm font-medium text-slate-600 dark:text-slate-300 md:flex md:gap-0.5">

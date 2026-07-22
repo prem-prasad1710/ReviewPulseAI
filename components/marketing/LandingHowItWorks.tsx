@@ -172,6 +172,7 @@ export default function LandingHowItWorks() {
             type="button"
             role="tab"
             aria-selected={active === i}
+            aria-label={`Step ${i + 1}: ${s.title}`}
             onClick={() => setActive(i)}
             className={cn(
               'h-2 rounded-full transition-all duration-300',

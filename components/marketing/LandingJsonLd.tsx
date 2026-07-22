@@ -12,7 +12,7 @@ export default function LandingJsonLd({ appUrl = getAppUrl() }: LandingJsonLdPro
         '@type': 'Organization',
         name: 'ReviewPulse AI',
         url: appUrl,
-        logo: `${appUrl}/og.png`,
+        logo: `${appUrl}/brand/logo-icon.png`,
         description:
           'Google Business review inbox, bilingual AI replies, and reputation tools for Indian SMBs.',
         contactPoint: {

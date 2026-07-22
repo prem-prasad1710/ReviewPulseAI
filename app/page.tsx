@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { ArrowRight, Clock3, ShieldCheck, Sparkles } from 'lucide-react'
-import { AppMark } from '@/components/brand/AppMark'
+import { AppLogo } from '@/components/brand/AppLogo'
 import LandingBusinessOwners from '@/components/marketing/LandingBusinessOwners'
 import LandingEdgeCards from '@/components/marketing/LandingEdgeCards'
 import LandingElectricFlow from '@/components/marketing/LandingElectricFlow'
@@ -315,10 +315,10 @@ export default function Home() {
         <footer className="mt-20 border-t border-slate-200/80 pt-12 text-sm text-slate-600 dark:border-slate-700/80 dark:text-slate-400">
           <div className="flex flex-col items-center justify-between gap-8 md:flex-row">
             <Link href="/" className="flex items-center gap-3 font-bold text-slate-900 transition hover:opacity-90 dark:text-slate-100">
-              <AppMark size={60} className="rounded-xl ring-1 ring-slate-200/80 dark:ring-slate-600" />
-              <span>
-                <span className="font-heading block text-base tracking-tight">ReviewPulse AI</span>
-                <span className="text-xs font-medium text-slate-500 dark:text-slate-400">Reputation for Indian SMBs</span>
+              <AppLogo variant="wordmark" wordmarkHeight={36} iconSize={40} className="rounded-xl" />
+              <span className="sr-only">ReviewsPulse</span>
+              <span className="hidden text-xs font-medium text-slate-500 dark:text-slate-400 sm:block">
+                Reputation for Indian SMBs
               </span>
             </Link>
             <div className="flex flex-wrap justify-center gap-6 text-xs font-medium md:justify-end">

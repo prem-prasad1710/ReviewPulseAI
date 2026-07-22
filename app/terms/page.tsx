@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { AppMark } from '@/components/brand/AppMark'
+import { AppLogo } from '@/components/brand/AppLogo'
 
 export const metadata: Metadata = {
   title: 'Terms of Service',
@@ -11,7 +11,7 @@ export default function TermsPage() {
   return (
     <div className="mx-auto min-h-screen max-w-3xl px-5 py-16 md:px-8">
       <Link href="/" className="mb-8 inline-flex items-center gap-2 text-sm font-semibold text-indigo-600 hover:underline dark:text-indigo-400">
-        <AppMark size={32} className="rounded-lg" />
+        <AppLogo variant="wordmark" wordmarkHeight={28} iconSize={32} priority />
         ReviewPulse AI
       </Link>
       <h1 className="font-heading text-3xl font-bold text-slate-900 dark:text-slate-50">Terms of Service</h1>

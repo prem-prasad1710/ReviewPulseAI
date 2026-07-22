@@ -45,13 +45,19 @@ export default function Sidebar({ agencyBrand }: { agencyBrand?: AgencyBrand | n
             <span className="text-sm font-bold text-white">{agencyBrand!.name.slice(0, 1).toUpperCase()}</span>
           </div>
         ) : (
-          <AppMark size={44} priority className="rounded-xl ring-1 ring-slate-200/80 dark:ring-slate-600" />
+          <AppMark size={44} priority className="rounded-xl" />
         )}
         <div className="min-w-0">
           {branded ? (
             <p className="font-heading truncate text-base font-bold tracking-tight text-slate-900 dark:text-slate-50">{title}</p>
           ) : (
-            <p className="sr-only">{title}</p>
+            <p className="font-heading truncate text-base font-bold tracking-tight text-slate-900 dark:text-slate-50">
+              <span className="dark:hidden">ReviewsPulse</span>
+              <span className="hidden dark:inline">
+                <span className="text-slate-100">Reviews</span>
+                <span className="text-[#2563EB]">Pulse</span>
+              </span>
+            </p>
           )}
           <p className="text-xs font-medium text-slate-500 dark:text-slate-400">{subtitle}</p>
         </div>
