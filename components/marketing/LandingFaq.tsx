@@ -2,16 +2,17 @@
 
 import { ChevronDown } from 'lucide-react'
 import { useState } from 'react'
+import { APP_NAME } from '@/lib/brand'
 import { cn } from '@/lib/utils'
 
 const faqs = [
   {
-    q: 'Does ReviewPulse post replies without my approval?',
+    q: `Does ${APP_NAME} post replies without my approval?`,
     a: 'No. You review and edit every AI draft before anything is published to Google. You stay in control of tone and wording.',
   },
   {
     q: 'Which languages are supported for AI replies?',
-    a: 'ReviewPulse is tuned for Hindi, English, and natural Hinglish so you can match how your customers actually write.',
+    a: `${APP_NAME} is tuned for Hindi, English, and natural Hinglish so you can match how your customers actually write.`,
   },
   {
     q: 'How does billing work?',

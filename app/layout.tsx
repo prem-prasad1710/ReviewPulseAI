@@ -3,6 +3,7 @@ import { Manrope, Space_Grotesk } from 'next/font/google'
 import { Toaster } from 'sonner'
 import Providers from '@/components/providers/Providers'
 import { getAppUrl } from '@/lib/app-url'
+import { APP_NAME, APP_TAGLINE } from '@/lib/brand'
 import './globals.css'
 import { Analytics } from "@vercel/analytics/next";
 const manrope = Manrope({
@@ -26,20 +27,19 @@ const googleSiteVerification = process.env.GOOGLE_SITE_VERIFICATION?.trim()
 
 export const metadata: Metadata = {
   metadataBase: new URL(appUrl),
-  title: { default: 'ReviewPulse AI', template: '%s · ReviewPulse AI' },
-  description:
-    'Google Business review inbox, AI replies in Hindi & English, and one-click publish—built for Indian SMBs.',
-  applicationName: 'ReviewPulse AI',
-  keywords: ['Google reviews', 'Business Profile', 'AI replies', 'SMB', 'India', 'review management'],
-  authors: [{ name: 'ReviewPulse' }],
+  title: { default: APP_NAME, template: `%s · ${APP_NAME}` },
+  description: `${APP_TAGLINE}. Sync Google reviews, draft bilingual AI replies, and publish with full control.`,
+  applicationName: APP_NAME,
+  keywords: ['Google reviews', 'Business Profile', 'AI replies', 'SMB', 'India', 'review management', 'ReviewsPulse'],
+  authors: [{ name: APP_NAME }],
   ...(googleSiteVerification
     ? { verification: { google: googleSiteVerification } }
     : {}),
   openGraph: {
     type: 'website',
     locale: 'en_IN',
-    siteName: 'ReviewPulse AI',
-    title: 'ReviewPulse AI — Reply to every Google review in minutes',
+    siteName: APP_NAME,
+    title: `${APP_NAME} — Reply to every Google review in minutes`,
     description:
       'Connect locations, sync reviews, draft bilingual AI replies, and publish with full control.',
     url: appUrl,
@@ -48,14 +48,14 @@ export const metadata: Metadata = {
         url: '/og.png',
         width: 1200,
         height: 630,
-        alt: 'ReviewPulse AI — Google review inbox with Hindi and English AI replies',
+        alt: `${APP_NAME} — Google review inbox with Hindi and English AI replies`,
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'ReviewPulse AI',
-    description: 'Review operations for Indian SMBs—secure, fast, bilingual.',
+    title: APP_NAME,
+    description: 'Google Business review management for Indian SMBs—secure, fast, bilingual.',
     images: ['/og.png'],
   },
   robots: { index: true, follow: true },

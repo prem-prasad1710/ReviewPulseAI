@@ -9,6 +9,8 @@ import { ThemeToggle } from '@/components/theme/ThemeToggle'
 import { cn } from '@/lib/utils'
 
 const NAV_LINKS = [
+  { href: '/#about', label: 'About' },
+  { href: '/privacy', label: 'Privacy' },
   { href: '/tools/free-reply', label: 'Free reply tool' },
   { href: '#electric-flow', label: 'Product map' },
   { href: '#features', label: 'Features' },

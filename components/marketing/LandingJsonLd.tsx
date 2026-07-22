@@ -1,4 +1,5 @@
 import { getAppUrl } from '@/lib/app-url'
+import { APP_NAME, APP_TAGLINE, SUPPORT_EMAIL } from '@/lib/brand'
 
 type LandingJsonLdProps = {
   appUrl?: string
@@ -10,34 +11,35 @@ export default function LandingJsonLd({ appUrl = getAppUrl() }: LandingJsonLdPro
     '@graph': [
       {
         '@type': 'Organization',
-        name: 'ReviewPulse AI',
+        name: APP_NAME,
         url: appUrl,
         logo: `${appUrl}/brand/logo-icon.png`,
-        description:
-          'Google Business review inbox, bilingual AI replies, and reputation tools for Indian SMBs.',
+        description: APP_TAGLINE,
         contactPoint: {
           '@type': 'ContactPoint',
           contactType: 'customer support',
-          email: 'support@reviewpulse.in',
+          email: SUPPORT_EMAIL,
           availableLanguage: ['English', 'Hindi'],
         },
       },
       {
         '@type': 'SoftwareApplication',
-        name: 'ReviewPulse AI',
+        name: APP_NAME,
         applicationCategory: 'BusinessApplication',
         operatingSystem: 'Web',
         url: appUrl,
+        description:
+          'Google Business Profile review inbox with AI-assisted replies in English and Hindi for Indian SMBs.',
         offers: {
           '@type': 'Offer',
           priceCurrency: 'INR',
-          price: '299',
-          description: 'Starter plan from ₹299/month',
+          price: '999',
+          description: 'Starter plan from ₹999/month',
         },
       },
       {
         '@type': 'WebSite',
-        name: 'ReviewPulse AI',
+        name: APP_NAME,
         url: appUrl,
         potentialAction: {
           '@type': 'SearchAction',

@@ -11,6 +11,7 @@ import LandingFinalCta from '@/components/marketing/LandingFinalCta'
 import LandingHero3D from '@/components/marketing/LandingHero3D'
 import LandingHowItWorks from '@/components/marketing/LandingHowItWorks'
 import LandingJsonLd from '@/components/marketing/LandingJsonLd'
+import LandingOAuthDisclosure from '@/components/marketing/LandingOAuthDisclosure'
 import LandingLogoMarquee from '@/components/marketing/LandingLogoMarquee'
 import LandingNav from '@/components/marketing/LandingNav'
 import LandingPricingShowcase from '@/components/marketing/LandingPricingShowcase'
@@ -19,21 +20,22 @@ import LandingTestimonialsSlider from '@/components/marketing/LandingTestimonial
 import { Reveal } from '@/components/motion/Reveal'
 import { Button } from '@/components/ui/button'
 import { getAppUrl } from '@/lib/app-url'
+import { APP_NAME } from '@/lib/brand'
 import { SpeedInsights } from "@vercel/speed-insights/next"
 
 
 const appUrl = getAppUrl()
 
 export const metadata: Metadata = {
-  title: 'Reply to every Google review in minutes',
+  title: `${APP_NAME} — Google Business review management for Indian SMBs`,
   description:
-    'ReviewPulse AI: Google Business review inbox, bilingual AI replies, WhatsApp alerts, and Razorpay billing — built for Indian SMBs. 14-day Growth trial.',
+    `${APP_NAME} syncs Google Business Profile reviews, drafts bilingual AI replies, and publishes with your approval. Built for Indian restaurants, clinics, and salons.`,
   alternates: { canonical: appUrl },
   openGraph: {
-    title: 'ReviewPulse AI — Google review operations for Indian SMBs',
+    title: `${APP_NAME} — Google review operations for Indian SMBs`,
     description: 'Connect Google, sync reviews, draft Hindi/English replies, publish with full control.',
     url: appUrl,
-    images: [{ url: '/og.png', width: 1200, height: 630, alt: 'ReviewPulse AI' }],
+    images: [{ url: '/og.png', width: 1200, height: 630, alt: `${APP_NAME} logo and product` }],
   },
 }
 
@@ -111,7 +113,7 @@ export default function Home() {
     mainEntity: [
       {
         '@type': 'Question',
-        name: 'Does ReviewPulse post replies without my approval?',
+        name: `Does ${APP_NAME} post replies without my approval?`,
         acceptedAnswer: {
           '@type': 'Answer',
           text: 'No. You review and edit every AI draft before anything is published to Google.',
@@ -122,7 +124,7 @@ export default function Home() {
         name: 'Which languages are supported for AI replies?',
         acceptedAnswer: {
           '@type': 'Answer',
-          text: 'ReviewPulse supports Hindi, English, and natural Hinglish replies.',
+          text: `${APP_NAME} supports Hindi, English, and natural Hinglish replies.`,
         },
       },
       {
@@ -161,8 +163,13 @@ export default function Home() {
                 “You have 217 unanswered reviews.” Restaurants lose bookings when bad feedback sits silent.
               </p>
               <p className="mb-8 max-w-xl text-base leading-relaxed text-slate-600 dark:text-slate-400 md:text-lg">
-                ReviewPulse is the India-first reputation layer: connect Google Business in about a minute, see sentiment
-                and themes instantly, and ship professional replies — including a free public generator for tough reviews.
+                <strong>{APP_NAME}</strong> is the India-first reputation layer: connect Google Business in about a
+                minute, see sentiment and themes instantly, and ship professional replies — including a free public
+                generator for tough reviews.{' '}
+                <Link href="/#about" className="font-medium text-indigo-700 underline-offset-2 hover:underline dark:text-indigo-300">
+                  Learn how we use Google data
+                </Link>
+                .
               </p>
 
               <div className="mb-8 flex flex-wrap gap-3">
@@ -197,6 +204,10 @@ export default function Home() {
           </section>
         </Reveal>
 
+        <Reveal delay={20}>
+          <LandingOAuthDisclosure />
+        </Reveal>
+
         {/* Electric flow — product story */}
         <Reveal delay={30}>
           <LandingElectricFlow />
@@ -207,7 +218,7 @@ export default function Home() {
             <div className="mb-6 text-center">
               <p className="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-indigo-600 dark:text-indigo-400">Product tour</p>
               <h2 className="font-heading text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-50 md:text-3xl">
-                See ReviewPulse in 90 seconds
+                See {APP_NAME} in 90 seconds
               </h2>
               <p className="mx-auto mt-2 max-w-xl text-sm text-slate-600 dark:text-slate-400">
                 Connect Google → sync reviews → AI reply → publish. No mock data — your real inbox after signup.
@@ -216,7 +227,7 @@ export default function Home() {
             <div className="overflow-hidden rounded-2xl border border-slate-200/90 bg-slate-900 shadow-xl dark:border-slate-700">
               {process.env.NEXT_PUBLIC_DEMO_VIDEO_URL ? (
                 <iframe
-                  title="ReviewPulse product demo"
+                  title={`${APP_NAME} product demo`}
                   src={process.env.NEXT_PUBLIC_DEMO_VIDEO_URL}
                   className="aspect-video w-full"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -289,7 +300,7 @@ export default function Home() {
           <section className="mb-20">
             <div className="relative mb-8 text-center md:text-left">
               <p className="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-indigo-600 dark:text-indigo-400">Example outcomes</p>
-              <h2 className="font-heading text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-50 md:text-3xl">How teams use ReviewPulse</h2>
+              <h2 className="font-heading text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-50 md:text-3xl">How teams use {APP_NAME}</h2>
               <p className="mx-auto mt-2 max-w-xl text-sm text-slate-600 dark:text-slate-400 md:mx-0">
                 Swipe on mobile or use arrows on desktop — same quotes, easier to browse.
               </p>
@@ -328,11 +339,14 @@ export default function Home() {
               <Link href="/tools/free-reply" className="transition hover:text-indigo-700 dark:hover:text-indigo-400">
                 Free AI reply
               </Link>
-              <Link href="/privacy" className="transition hover:text-indigo-700 dark:hover:text-indigo-400">
-                Privacy
+              <Link href="/privacy" className="font-semibold transition hover:text-indigo-700 dark:hover:text-indigo-400">
+                Privacy Policy
               </Link>
               <Link href="/terms" className="transition hover:text-indigo-700 dark:hover:text-indigo-400">
                 Terms
+              </Link>
+              <Link href="/#about" className="transition hover:text-indigo-700 dark:hover:text-indigo-400">
+                About &amp; Google data
               </Link>
               <a href="#demo" className="transition hover:text-indigo-700 dark:hover:text-indigo-400">
                 Demo
@@ -343,12 +357,14 @@ export default function Home() {
               <a href="#faq" className="transition hover:text-indigo-700 dark:hover:text-indigo-400">
                 FAQ
               </a>
-              <Link href="/dashboard" className="transition hover:text-indigo-700 dark:hover:text-indigo-400">
-                Dashboard
-              </Link>
             </div>
           </div>
-          <p className="mt-8 text-center text-xs text-slate-500 dark:text-slate-500">© {new Date().getFullYear()} ReviewPulse · Built for Indian SMBs</p>
+          <p className="mt-8 text-center text-xs text-slate-500 dark:text-slate-500">
+            © {new Date().getFullYear()} {APP_NAME} · Built for Indian SMBs ·{' '}
+            <Link href="/privacy" className="underline-offset-2 hover:underline">
+              Privacy Policy
+            </Link>
+          </p>
         </footer>
       </main>
       <SpeedInsights />
