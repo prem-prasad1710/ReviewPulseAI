@@ -1,6 +1,8 @@
 import { z } from 'zod'
 import { err, ok } from '@/lib/api'
+import { clientIp, redisRateLimitUnavailableResponse, requireRedisRateLimitInProduction } from '@/lib/client-ip'
 import { connectDB } from '@/lib/mongodb'
+import { publicSurveyLimiter } from '@/lib/rate-limit'
 import Survey from '@/models/Survey'
 import SurveyResponse from '@/models/SurveyResponse'
 
@@ -22,6 +24,15 @@ export async function GET(_request: Request, { params }: { params: Promise<{ slu
 
 export async function POST(request: Request, { params }: { params: Promise<{ slug: string }> }) {
   try {
+    if (requireRedisRateLimitInProduction() && !publicSurveyLimiter) {
+      return redisRateLimitUnavailableResponse()
+    }
+    if (publicSurveyLimiter) {
+      const ip = clientIp(request)
+      const { success } = await publicSurveyLimiter.limit(`survey:${ip}`)
+      if (!success) return err('Too many submissions. Try again later.', 429)
+    }
+
     const body = await request.json()
     const parsed = postSchema.safeParse(body)
     if (!parsed.success) return err('Invalid input', 400)

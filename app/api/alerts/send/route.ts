@@ -3,6 +3,7 @@ import { ObjectId } from 'mongodb'
 import { auth } from '@/lib/auth'
 import { processReviewAfterSync } from '@/lib/review-post-sync'
 import { getDb } from '@/lib/mongodb'
+import { alertsSendLimiter } from '@/lib/rate-limit'
 
 /**
  * POST /api/alerts/send
@@ -13,6 +14,13 @@ export async function POST(request: NextRequest) {
     const session = await auth()
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    if (alertsSendLimiter) {
+      const { success } = await alertsSendLimiter.limit(`alerts:${session.user.id}`)
+      if (!success) {
+        return NextResponse.json({ error: 'Too many alert requests. Try again later.' }, { status: 429 })
+      }
     }
 
     const body = await request.json()

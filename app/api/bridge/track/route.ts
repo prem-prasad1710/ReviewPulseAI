@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { err, ok } from '@/lib/api'
-import { getClientIp } from '@/lib/client-ip'
+import { getClientIp, redisRateLimitUnavailableResponse, requireRedisRateLimitInProduction } from '@/lib/client-ip'
 import { connectDB } from '@/lib/mongodb'
 import { bridgeTrackLimiter } from '@/lib/rate-limit'
 import { serverErr } from '@/lib/production-error'
@@ -17,6 +17,10 @@ export async function POST(request: Request) {
     const body = await request.json()
     const parsed = bodySchema.safeParse(body)
     if (!parsed.success) return err('Invalid input', 400)
+
+    if (requireRedisRateLimitInProduction() && !bridgeTrackLimiter) {
+      return redisRateLimitUnavailableResponse()
+    }
 
     if (bridgeTrackLimiter) {
       const ip = getClientIp(request)

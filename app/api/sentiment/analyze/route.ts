@@ -1,6 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { sentimentAnalyzer } from '@/lib/multilingual-sentiment'
+import { sentimentAnalyzeLimiter } from '@/lib/rate-limit'
+
+async function rateLimitSentiment(userId: string) {
+  if (!sentimentAnalyzeLimiter) return true
+  const { success } = await sentimentAnalyzeLimiter.limit(`sentiment:${userId}`)
+  return success
+}
 
 /**
  * POST /api/sentiment/analyze
@@ -11,6 +18,9 @@ export async function POST(request: NextRequest) {
     const session = await auth()
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+    if (!(await rateLimitSentiment(session.user.id))) {
+      return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429 })
     }
 
     const body = await request.json()
@@ -42,6 +52,9 @@ export async function PUT(request: NextRequest) {
     const session = await auth()
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+    if (!(await rateLimitSentiment(session.user.id))) {
+      return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429 })
     }
 
     const body = await request.json()

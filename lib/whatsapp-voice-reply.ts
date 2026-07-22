@@ -44,6 +44,22 @@ function extensionForMime(mime: string): string {
 }
 
 async function fetchTwilioMedia(mediaUrl: string): Promise<{ buffer: Buffer; contentType: string }> {
+  let parsed: URL
+  try {
+    parsed = new URL(mediaUrl)
+  } catch {
+    throw new Error('Invalid media URL')
+  }
+  const host = parsed.hostname.toLowerCase()
+  const allowed =
+    host.endsWith('.twilio.com') ||
+    host === 'twilio.com' ||
+    host.endsWith('.twiliocdn.com') ||
+    host.endsWith('.media.twilio.com')
+  if (!allowed) {
+    throw new Error('Media URL must be hosted by Twilio')
+  }
+
   const sid = process.env.TWILIO_ACCOUNT_SID?.trim()
   const token = process.env.TWILIO_AUTH_TOKEN?.trim()
   if (!sid || !token) throw new Error('Twilio credentials missing')

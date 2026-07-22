@@ -70,7 +70,13 @@ function cubicBridge(sx: number, sy: number, ex: number, ey: number, tension = 0
   const cy1 = sy
   const cx2 = ex - dx * tension
   const cy2 = ey
-  return { d: `M ${sx} ${sy} C ${cx1} ${cy1}, ${cx2} ${cy2}, ${ex} ${ey}`, cx1, cy1, cx2, cy2, x3: ex, y3: ey }
+  const d = `M ${sx} ${sy} C ${cx1} ${cy1}, ${cx2} ${cy2}, ${ex} ${ey}`
+  if (d.includes('NaN') || !Number.isFinite(dx)) return null
+  return { d, cx1, cy1, cx2, cy2, x3: ex, y3: ey }
+}
+
+function isValidPathD(d: string) {
+  return d.length > 8 && !d.includes('NaN') && !d.includes('Infinity')
 }
 
 function cubicMidpoint(
@@ -104,8 +110,8 @@ function measureElectricMesh(mesh: HTMLElement): ElectricGeom | null {
   if (!hubEl || !leftEl || !rightEl) return null
 
   const hub = localRect(hubEl.getBoundingClientRect(), meshRect)
-  const leftBtns = [...leftEl.querySelectorAll<HTMLButtonElement>('button')]
-  const rightBtns = [...rightEl.querySelectorAll<HTMLButtonElement>('button')]
+  const leftBtns = [...leftEl.querySelectorAll<HTMLButtonElement>('[data-electric-node]')]
+  const rightBtns = [...rightEl.querySelectorAll<HTMLButtonElement>('[data-electric-node]')]
   if (leftBtns.length !== NODES_IN.length || rightBtns.length !== NODES_OUT.length) return null
 
   const inset = 6
@@ -126,9 +132,15 @@ function measureElectricMesh(mesh: HTMLElement): ElectricGeom | null {
     const sy = (L.top + L.bottom) / 2
     const ex = hubLeftX
     const ey = hubPortY(i)
-    const { d, cx1, cy1, cx2, cy2, x3, y3 } = cubicBridge(sx, sy, ex, ey)
+    const bridge = cubicBridge(sx, sy, ex, ey)
+    const d =
+      bridge && isValidPathD(bridge.d) ? bridge.d : `M ${sx} ${sy} L ${ex} ${ey}`
     dIn.push(d)
-    pillIn.push(cubicMidpoint(sx, sy, cx1, cy1, cx2, cy2, x3, y3, 0.5))
+    pillIn.push(
+      bridge
+        ? cubicMidpoint(sx, sy, bridge.cx1, bridge.cy1, bridge.cx2, bridge.cy2, bridge.x3, bridge.y3, 0.5)
+        : { x: (sx + ex) / 2, y: (sy + ey) / 2 }
+    )
   }
 
   const dOut: string[] = []
@@ -139,9 +151,15 @@ function measureElectricMesh(mesh: HTMLElement): ElectricGeom | null {
     const sy = hubPortY(i)
     const ex = R.left + 1
     const ey = (R.top + R.bottom) / 2
-    const { d, cx1, cy1, cx2, cy2, x3, y3 } = cubicBridge(sx, sy, ex, ey)
+    const bridge = cubicBridge(sx, sy, ex, ey)
+    const d =
+      bridge && isValidPathD(bridge.d) ? bridge.d : `M ${sx} ${sy} L ${ex} ${ey}`
     dOut.push(d)
-    pillOut.push(cubicMidpoint(sx, sy, cx1, cy1, cx2, cy2, x3, y3, 0.5))
+    pillOut.push(
+      bridge
+        ? cubicMidpoint(sx, sy, bridge.cx1, bridge.cy1, bridge.cx2, bridge.cy2, bridge.x3, bridge.y3, 0.5)
+        : { x: (sx + ex) / 2, y: (sy + ey) / 2 }
+    )
   }
 
   return { w, h, dIn, dOut, pillIn, pillOut }
@@ -164,6 +182,7 @@ function NodeButton({
   return (
     <button
       type="button"
+      data-electric-node={node.id}
       onMouseEnter={onHover}
       onFocus={onHover}
       onMouseLeave={onLeave}
@@ -226,6 +245,8 @@ export default function LandingElectricFlow() {
     const mql = window.matchMedia('(min-width: 1024px)')
     const onBp = () => requestAnimationFrame(remesh)
     mql.addEventListener('change', onBp)
+
+    void document.fonts?.ready?.then(() => requestAnimationFrame(remesh))
 
     return () => {
       ro.disconnect()
@@ -331,7 +352,7 @@ export default function LandingElectricFlow() {
           className="relative mx-auto hidden min-h-[480px] max-w-6xl lg:block lg:min-h-[520px]"
         >
           <svg
-            className="absolute inset-0 z-0 h-full w-full"
+            className="pointer-events-none absolute inset-0 z-[2] h-full w-full overflow-visible"
             viewBox={geom ? `0 0 ${geom.w} ${geom.h}` : '0 0 1000 520'}
             preserveAspectRatio="none"
             fill="none"
@@ -346,20 +367,16 @@ export default function LandingElectricFlow() {
               </linearGradient>
             </defs>
             {(geom?.dIn ?? []).map((d, i) => (
-              <path
-                key={`in-${i}`}
-                d={d}
-                stroke={`url(#${gradId})`}
-                className={pathClass('in', i)}
-              />
+              <g key={`in-g-${i}`}>
+                <path d={d} stroke="currentColor" className={cn(pathClass('in', i), 'text-indigo-300/25 dark:text-indigo-400/20')} strokeWidth={4} />
+                <path d={d} stroke={`url(#${gradId})`} className={pathClass('in', i)} />
+              </g>
             ))}
             {(geom?.dOut ?? []).map((d, i) => (
-              <path
-                key={`out-${i}`}
-                d={d}
-                stroke={`url(#${gradId})`}
-                className={pathClass('out', i)}
-              />
+              <g key={`out-g-${i}`}>
+                <path d={d} stroke="currentColor" className={cn(pathClass('out', i), 'text-indigo-300/25 dark:text-indigo-400/20')} strokeWidth={4} />
+                <path d={d} stroke={`url(#${gradId})`} className={pathClass('out', i)} />
+              </g>
             ))}
           </svg>
 
@@ -402,7 +419,7 @@ export default function LandingElectricFlow() {
 
           <div
             data-electric-col="in"
-            className="absolute inset-y-8 left-0 z-[2] flex w-[11.5rem] flex-col justify-between py-2"
+            className="absolute inset-y-8 left-0 z-[4] flex w-[11.5rem] flex-col justify-between py-2"
           >
             {NODES_IN.map((n, i) => (
               <NodeButton
@@ -419,13 +436,13 @@ export default function LandingElectricFlow() {
             ))}
           </div>
 
-          <div data-electric-hub className="absolute left-1/2 top-1/2 z-[3] w-[min(100%,17.5rem)] -translate-x-1/2 -translate-y-1/2">
+          <div data-electric-hub className="absolute left-1/2 top-1/2 z-[5] w-[min(100%,17.5rem)] -translate-x-1/2 -translate-y-1/2">
             <HubCard />
           </div>
 
           <div
             data-electric-col="out"
-            className="absolute inset-y-8 right-0 z-[2] flex w-[11.5rem] flex-col justify-between py-2"
+            className="absolute inset-y-8 right-0 z-[4] flex w-[11.5rem] flex-col justify-between py-2"
           >
             {NODES_OUT.map((n, i) => (
               <NodeButton

@@ -5,6 +5,7 @@ import { connectDB } from '@/lib/mongodb'
 import { encrypt } from '@/lib/crypto'
 import { defaultAlertKeywordsForCategory } from '@/lib/default-keywords'
 import { effectiveLocationLimit } from '@/lib/plans'
+import { sanitizeLocationsForClient } from '@/lib/location-serialize'
 import type { IUserLean } from '@/types'
 import Location from '@/models/Location'
 
@@ -27,7 +28,7 @@ export async function GET() {
     await connectDB()
 
     const locations = await Location.find({ userId: user._id, isActive: true }).sort({ createdAt: -1 }).lean()
-    return ok(locations)
+    return ok(sanitizeLocationsForClient(locations as Record<string, unknown>[]))
   } catch (error) {
     console.error('GET /api/locations failed:', error)
     if (error instanceof Error && error.message === 'UNAUTHORIZED') return err('Unauthorized', 401)

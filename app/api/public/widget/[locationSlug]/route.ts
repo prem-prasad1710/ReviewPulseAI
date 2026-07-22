@@ -1,20 +1,17 @@
 import { NextResponse } from 'next/server'
 import { connectDB } from '@/lib/mongodb'
+import { clientIp, redisRateLimitUnavailableResponse, requireRedisRateLimitInProduction } from '@/lib/client-ip'
 import { publicWidgetLimiter } from '@/lib/rate-limit'
 import Location from '@/models/Location'
 import Review from '@/models/Review'
 
-function clientIp(request: Request): string {
-  const xf = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-  if (xf) return xf.slice(0, 64)
-  const real = request.headers.get('x-real-ip')?.trim()
-  if (real) return real.slice(0, 64)
-  return 'unknown'
-}
-
 /** E5 — public JSON for embeddable “social proof” wall (rate-limited). */
 export async function GET(request: Request, { params }: { params: Promise<{ locationSlug: string }> }) {
   try {
+    if (requireRedisRateLimitInProduction() && !publicWidgetLimiter) {
+      return redisRateLimitUnavailableResponse()
+    }
+
     const { locationSlug: rawSlug } = await params
     const slug = decodeURIComponent(rawSlug || '').trim()
 

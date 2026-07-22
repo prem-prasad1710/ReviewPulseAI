@@ -52,7 +52,11 @@ export async function POST(request: Request) {
   const signature = request.headers.get('x-twilio-signature') || ''
   const url = webhookUrlForSignatureValidation(request)
 
-  if (shouldVerifyTwilioWebhookSignature() && authToken) {
+  if (shouldVerifyTwilioWebhookSignature()) {
+    if (!authToken) {
+      console.error('Twilio webhook: TWILIO_AUTH_TOKEN missing in production')
+      return new NextResponse('Server misconfigured', { status: 503 })
+    }
     const valid = twilio.validateRequest(authToken, signature, url, params)
     if (!valid) {
       console.warn('Twilio webhook: signature validation failed for', url)

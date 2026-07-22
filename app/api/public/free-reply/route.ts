@@ -1,8 +1,9 @@
 import { z } from 'zod'
 import { NextResponse } from 'next/server'
 import { err, ok } from '@/lib/api'
-import { publicFreeReplyLimiter } from '@/lib/rate-limit'
+import { clientIp } from '@/lib/client-ip'
 import { generatePublicFreeReply } from '@/lib/public-free-reply'
+import { checkPublicFreeReplyLimit, markPublicFreeReplyUsed } from '@/lib/public-free-reply-limit'
 
 const bodySchema = z.object({
   reviewText: z.string().min(10).max(4000),
@@ -11,32 +12,35 @@ const bodySchema = z.object({
   language: z.enum(['english', 'hindi', 'hinglish']).default('english'),
 })
 
-function clientIp(request: Request): string {
-  const xf = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-  if (xf) return xf.slice(0, 64)
-  const real = request.headers.get('x-real-ip')?.trim()
-  if (real) return real.slice(0, 64)
-  return 'unknown'
-}
-
-/** Acquisition — paste a review, get a professional reply (no login). Rate-limited via Upstash in production. */
+/** Acquisition — paste a review, get one professional reply (no login). */
 export async function POST(request: Request) {
   try {
-    if (process.env.NODE_ENV === 'production' && !publicFreeReplyLimiter) {
-      if (process.env.ALLOW_PUBLIC_FREE_REPLY_WITHOUT_REDIS !== 'true') {
+    const ip = clientIp(request)
+    let limit: Awaited<ReturnType<typeof checkPublicFreeReplyLimit>>
+    try {
+      limit = await checkPublicFreeReplyLimit(ip)
+    } catch (e) {
+      if (e instanceof Error && e.message === 'FREE_REPLY_REDIS_REQUIRED') {
         return err(
-          'Preview is unavailable: configure UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN for rate limits, or set ALLOW_PUBLIC_FREE_REPLY_WITHOUT_REDIS=true (not recommended — OpenAI abuse risk).',
+          'Preview is unavailable: configure UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN for rate limits.',
           503
         )
       }
+      throw e
     }
 
-    if (publicFreeReplyLimiter) {
-      const ip = clientIp(request)
-      const { success } = await publicFreeReplyLimiter.limit(`free-reply:${ip}`)
-      if (!success) {
-        return err('Too many tries this hour. Create a free account for full inbox.', 429)
-      }
+    if (!limit.allowed) {
+      return NextResponse.json(
+        {
+          error:
+            limit.reason === 'used'
+              ? 'You have used your free preview. Sign in to unlock the full inbox and AI replies.'
+              : 'Free preview limit reached. Sign in to continue.',
+          code: 'FREE_REPLY_LIMIT',
+          redirectTo: limit.redirectTo,
+        },
+        { status: 429, headers: { 'Cache-Control': 'no-store' } }
+      )
     }
 
     const body = await request.json()
@@ -47,6 +51,8 @@ export async function POST(request: Request) {
     if (!reply || reply.length < 40) {
       return err('Could not generate a reply. Try shorter text or different wording.', 500)
     }
+
+    await markPublicFreeReplyUsed()
 
     return ok({ reply })
   } catch (e) {
@@ -67,6 +73,6 @@ export async function POST(request: Request) {
 export function GET() {
   return NextResponse.json({
     name: 'ReviewPulse free reply preview',
-    usage: 'POST JSON { reviewText, rating, businessName?, language? }',
+    usage: 'POST JSON { reviewText, rating, businessName?, language? } — one free try per visitor',
   })
 }

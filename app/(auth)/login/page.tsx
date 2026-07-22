@@ -38,17 +38,18 @@ export default async function LoginPage({
   const errorParam = params?.error
   const errorCode = Array.isArray(errorParam) ? errorParam[0] : errorParam
   const errorMessage = errorCode ? errorMessages[errorCode] || `Authentication error: ${errorCode}` : null
+  const limitReason = params?.reason === 'free-reply-limit' || params?.reason?.[0] === 'free-reply-limit'
 
   return (
     <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center px-4 py-12">
       <div className="relative w-full max-w-md">
         <div className="pointer-events-none absolute -inset-1 rounded-[1.35rem] bg-gradient-to-br from-indigo-500/20 via-violet-500/15 to-blue-500/20 blur-xl" aria-hidden />
         <div className="relative overflow-hidden rounded-3xl border border-slate-200/90 bg-white/95 p-8 shadow-2xl shadow-slate-900/10 backdrop-blur-md dark:border-slate-700/90 dark:bg-slate-900/90 dark:shadow-black/40 sm:p-10">
-          <div className="mb-6 flex flex-col items-center gap-4 text-center sm:flex-row sm:text-left">
+          <div className="mb-6 flex flex-col items-center gap-3 text-center">
             <AppLogo variant="wordmark" wordmarkHeight={36} iconSize={44} priority />
             <div>
               <h1 className="font-heading text-xl font-bold tracking-tight text-slate-900 dark:text-slate-50">Sign in</h1>
-              <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Secure OAuth · Google Business</p>
+              <p className="mt-1 text-xs font-medium text-slate-500 dark:text-slate-400">Secure OAuth · Google Business</p>
             </div>
           </div>
 
@@ -66,6 +67,12 @@ export default async function LoginPage({
               OAuth only — we never store passwords
             </span>
           </div>
+
+          {limitReason ? (
+            <div className="mb-5 rounded-xl border border-indigo-200/90 bg-indigo-50/90 px-4 py-3 text-sm leading-relaxed text-indigo-900 dark:border-indigo-500/35 dark:bg-indigo-950/50 dark:text-indigo-100">
+              Your free AI reply preview is used. Sign in with Google, then pick a plan to unlock the full inbox, unlimited AI replies, and one-click publish.
+            </div>
+          ) : null}
 
           {errorMessage ? (
             <div className="mb-5 rounded-xl border border-red-200/90 bg-red-50/90 px-4 py-3 text-sm leading-relaxed text-red-800">

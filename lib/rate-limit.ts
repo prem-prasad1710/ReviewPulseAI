@@ -58,13 +58,43 @@ export const syncAllLimiter = redis
     })
   : null
 
-/** SEO / acquisition — free reply preview (no auth). Requires Redis in production (see route guard). */
+/** SEO / acquisition — free reply preview (no auth). One try per IP per year. */
 export const publicFreeReplyLimiter = redis
   ? new Ratelimit({
       redis,
-      limiter: Ratelimit.slidingWindow(12, '1 h'),
+      limiter: Ratelimit.fixedWindow(1, '365 d'),
       analytics: true,
       prefix: 'reviewpulse:public-free-reply',
+    })
+  : null
+
+/** Public survey submissions — per IP. */
+export const publicSurveyLimiter = redis
+  ? new Ratelimit({
+      redis,
+      limiter: Ratelimit.slidingWindow(8, '1 h'),
+      analytics: true,
+      prefix: 'reviewpulse:public-survey',
+    })
+  : null
+
+/** Manual alert re-send — per authenticated user. */
+export const alertsSendLimiter = redis
+  ? new Ratelimit({
+      redis,
+      limiter: Ratelimit.slidingWindow(20, '1 h'),
+      analytics: true,
+      prefix: 'reviewpulse:alerts-send',
+    })
+  : null
+
+/** Authenticated AI sentiment — per user. */
+export const sentimentAnalyzeLimiter = redis
+  ? new Ratelimit({
+      redis,
+      limiter: Ratelimit.slidingWindow(30, '1 h'),
+      analytics: true,
+      prefix: 'reviewpulse:sentiment-analyze',
     })
   : null
 

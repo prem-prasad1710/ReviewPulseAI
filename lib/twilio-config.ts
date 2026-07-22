@@ -30,9 +30,10 @@ export function webhookUrlForSignatureValidation(request: Request): string {
   return request.url
 }
 
-/** Validates X-Twilio-Signature when TWILIO_WEBHOOK_PUBLIC_URL is set (must match the URL Twilio calls). */
+/** Validates X-Twilio-Signature in production whenever auth token is configured. */
 export function shouldVerifyTwilioWebhookSignature(): boolean {
   if (process.env.TWILIO_SKIP_SIGNATURE_VERIFY === 'true') return false
   if (!process.env.TWILIO_AUTH_TOKEN?.trim()) return false
-  return Boolean(process.env.TWILIO_WEBHOOK_PUBLIC_URL?.trim() && process.env.NODE_ENV === 'production')
+  if (process.env.NODE_ENV === 'production') return true
+  return Boolean(process.env.TWILIO_WEBHOOK_PUBLIC_URL?.trim())
 }

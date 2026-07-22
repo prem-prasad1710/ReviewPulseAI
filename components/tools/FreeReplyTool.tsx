@@ -32,6 +32,11 @@ export default function FreeReplyTool() {
       })
       const j = await res.json().catch(() => ({}))
       if (!res.ok) {
+        if (res.status === 429 && (j?.code === 'FREE_REPLY_LIMIT' || j?.redirectTo)) {
+          toast.message('Free preview used — sign in to unlock full access.')
+          window.location.href = String(j.redirectTo || '/login?callbackUrl=%2Fsubscribe%3Fplan%3Dgrowth')
+          return
+        }
         setError(j?.error || 'Could not generate')
         return
       }
@@ -49,6 +54,9 @@ export default function FreeReplyTool() {
   return (
     <div className="mx-auto max-w-2xl space-y-6">
       <div className="rounded-2xl border border-slate-200/90 bg-white/95 p-6 shadow-lg dark:border-slate-700 dark:bg-slate-900/80">
+        <p className="mb-4 text-center text-xs text-slate-500 dark:text-slate-400">
+          One free AI reply preview per visitor — then sign in to unlock the full product.
+        </p>
         <label className="block text-sm font-semibold text-slate-800 dark:text-slate-100">Paste the review</label>
         <textarea
           value={reviewText}
