@@ -11,10 +11,13 @@ Copy **`.env.example`** to `.env.local` for local development. Never commit secr
 | `NEXTAUTH_SECRET` or `AUTH_SECRET` | JWT encryption for Auth.js session |
 | `NEXTAUTH_URL` | Canonical OAuth callback base URL — **production:** `https://reviewspulse.in` (not `*.vercel.app`) |
 | `NEXT_PUBLIC_APP_URL` | Public site URL for SEO, sitemap, OG — **production:** `https://reviewspulse.in` |
-| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` / `GOOGLE_REDIRECT_URI` | Google OAuth (`lib/auth.ts`, `lib/gbp.ts`) |
+| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Google OAuth (`lib/auth.ts`, `lib/gbp.ts`) |
+| `GOOGLE_REDIRECT_URI` | Optional override; defaults to `{NEXT_PUBLIC_APP_URL}/api/auth/callback/google` |
 | `ENCRYPTION_KEY` | AES-256-GCM key for encrypting Google OAuth tokens stored per location (`lib/crypto.ts`). Generate: `openssl rand -hex 32`. **Must be identical across all deploys** — if you change it, users must reconnect Google at `/locations/connect`. |
 
-Also set **`NEXT_PUBLIC_APP_URL`** and **`NEXTAUTH_URL`** to your custom domain (e.g. `https://reviewspulse.in`) so OAuth callbacks and SEO stay on that domain, not the Vercel preview URL.
+Also set **`NEXT_PUBLIC_APP_URL`** and **`NEXTAUTH_URL`** to your custom domain (e.g. `https://reviewspulse.in`) so SEO and crons use the right host. **Do not** leave `NEXTAUTH_URL` pointing at `*.vercel.app` in Production — the app clears it automatically, but delete the stale value in Vercel to avoid confusion.
+
+**OAuth troubleshooting (`CallbackRouteError`):** ensure Production env has `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, and `NEXTAUTH_SECRET` matching Google Cloud / your local `.env`. Redirect URI in Google must be exactly `https://reviewspulse.in/api/auth/callback/google`. Sign in from `https://reviewspulse.in/login` (www redirects to apex).
 
 ## Google OAuth redirect URIs (Cloud Console)
 

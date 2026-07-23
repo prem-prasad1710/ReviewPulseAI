@@ -1,6 +1,7 @@
 import { google } from 'googleapis'
 import type { mybusinessbusinessinformation_v1 } from 'googleapis'
 import { decrypt, encrypt } from '@/lib/crypto'
+import { getGoogleOAuthRedirectUri } from '@/lib/google-oauth-redirect'
 import { explainTokenDecryptFailure } from '@/lib/location-tokens'
 
 export interface GbpReview {
@@ -22,7 +23,7 @@ export function getOAuthClient(accessToken: string, refreshToken: string) {
   const oauth2Client = new google.auth.OAuth2(
     process.env.GOOGLE_CLIENT_ID,
     process.env.GOOGLE_CLIENT_SECRET,
-    process.env.GOOGLE_REDIRECT_URI
+    getGoogleOAuthRedirectUri()
   )
   oauth2Client.setCredentials({ access_token: accessToken, refresh_token: refreshToken })
   return oauth2Client

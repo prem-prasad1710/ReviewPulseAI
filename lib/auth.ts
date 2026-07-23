@@ -1,5 +1,6 @@
 import NextAuth, { type NextAuthConfig } from 'next-auth'
 import Google from 'next-auth/providers/google'
+import { bootstrapCanonicalAuthUrl } from '@/lib/bootstrap-auth-url'
 import { connectDB } from '@/lib/mongodb'
 import { provisionLocationsFromGoogleOAuth } from '@/lib/provision-google-locations'
 import { expireTrialIfNeeded, getEffectivePlan, trialEndsAtFromNow, TRIAL_PLAN } from '@/lib/trial'
@@ -17,9 +18,12 @@ const googleScope = [
   'https://www.googleapis.com/auth/business.manage',
 ].join(' ')
 
+bootstrapCanonicalAuthUrl()
+
 export const authConfig: NextAuthConfig = {
-  secret: process.env.NEXTAUTH_SECRET,
+  secret: process.env.NEXTAUTH_SECRET || process.env.AUTH_SECRET,
   trustHost: true,
+  debug: process.env.AUTH_DEBUG === 'true',
   session: { strategy: 'jwt' },
   providers: [
     Google({
@@ -98,11 +102,15 @@ export const authConfig: NextAuthConfig = {
     },
     async jwt({ token, user }) {
       if (user?.email) {
-        await connectDB()
-        const dbUser = await User.findOne({ email: user.email }).select('_id plan trialEndsAt subscriptionStatus').lean()
-        if (dbUser) {
-          token.id = String(dbUser._id)
-          token.plan = getEffectivePlan(dbUser as IUserLean)
+        try {
+          await connectDB()
+          const dbUser = await User.findOne({ email: user.email }).select('_id plan trialEndsAt subscriptionStatus').lean()
+          if (dbUser) {
+            token.id = String(dbUser._id)
+            token.plan = getEffectivePlan(dbUser as IUserLean)
+          }
+        } catch (error) {
+          console.error('Auth jwt callback failed:', error)
         }
       }
       return token

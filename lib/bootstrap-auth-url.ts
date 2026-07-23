@@ -1,27 +1,35 @@
 /**
- * Align Auth.js base URL with your public domain (e.g. reviewspulse.in).
- * Prevents OAuth callbacks from using *.vercel.app when NEXTAUTH_URL is stale.
+ * OAuth callbacks must use the same host the user signed in from (reviewspulse.in).
+ * A stale NEXTAUTH_URL / AUTH_URL pointing at *.vercel.app breaks Google's token exchange.
  */
 export function bootstrapCanonicalAuthUrl() {
   const canonical = (
     process.env.CANONICAL_APP_URL?.trim() ||
     process.env.NEXT_PUBLIC_APP_URL?.trim() ||
-    process.env.NEXTAUTH_URL?.trim() ||
     ''
   ).replace(/\/$/, '')
 
-  if (!canonical) return
+  const authUrl = (process.env.AUTH_URL || process.env.NEXTAUTH_URL || '').replace(/\/$/, '')
 
-  process.env.AUTH_URL = canonical
-  process.env.NEXTAUTH_URL = canonical
+  // Drop preview URLs so Auth.js trustHost uses x-forwarded-host from the live request.
+  if (authUrl.includes('vercel.app')) {
+    delete process.env.AUTH_URL
+    delete process.env.NEXTAUTH_URL
+    if (canonical) {
+      console.info(
+        `[ReviewsPulse] Removed vercel.app auth base URL; OAuth uses request host. NEXT_PUBLIC_APP_URL=${canonical}`
+      )
+    } else {
+      console.warn(
+        '[ReviewsPulse] NEXTAUTH_URL was *.vercel.app — cleared for OAuth. Set NEXT_PUBLIC_APP_URL=https://reviewspulse.in in Vercel.'
+      )
+    }
+    return
+  }
 
-  if (
-    process.env.NODE_ENV === 'production' &&
-    process.env.VERCEL_URL &&
-    canonical.includes('vercel.app')
-  ) {
-    console.warn(
-      '[ReviewsPulse] NEXT_PUBLIC_APP_URL / NEXTAUTH_URL still points to vercel.app — set both to https://reviewspulse.in for OAuth verification and sign-in on your custom domain.'
-    )
+  // When only a canonical public URL exists, mirror it for server-side links (not required for OAuth).
+  if (canonical && !authUrl) {
+    process.env.AUTH_URL = canonical
+    process.env.NEXTAUTH_URL = canonical
   }
 }

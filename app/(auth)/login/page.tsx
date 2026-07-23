@@ -5,9 +5,17 @@ import GoogleSignInButton from '@/components/auth/GoogleSignInButton'
 import { getAppSession } from '@/lib/auth-helpers'
 
 const errorMessages: Record<string, string> = {
-  AccessDenied: 'Sign in was denied. Please check Google OAuth test users and MongoDB connection.',
+  AccessDenied:
+    'Sign in was denied. If the app is in Google OAuth testing mode, add your email as a test user in Google Cloud Console.',
   DatabaseConnection: 'Database connection failed. Add your current IP in MongoDB Atlas Network Access.',
-  Configuration: 'OAuth configuration issue detected. Verify Google OAuth client settings.',
+  Configuration:
+    'Google OAuth misconfiguration: redirect URI or client secret mismatch. In Vercel set NEXT_PUBLIC_APP_URL=https://reviewspulse.in, remove any NEXTAUTH_URL pointing at vercel.app, and confirm Google redirect URI https://reviewspulse.in/api/auth/callback/google.',
+  OAuthCallbackError:
+    'Google rejected the OAuth callback. Check redirect URIs in Google Cloud Console match https://reviewspulse.in/api/auth/callback/google exactly.',
+  OAuthSignin:
+    'Could not start Google sign-in. Verify GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in Vercel match Google Cloud Console.',
+  CallbackRouteError:
+    'OAuth callback failed — usually redirect URI mismatch or invalid client secret. See Vercel logs for [auth][cause].',
 }
 
 /** Same-origin path only — prevents open redirects. */

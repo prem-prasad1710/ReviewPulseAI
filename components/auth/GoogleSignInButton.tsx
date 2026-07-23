@@ -18,7 +18,7 @@ export default function GoogleSignInButton({
       type="button"
       className={className}
       onClick={() => {
-        void signIn('google', { callbackUrl })
+        void signIn('google', { callbackUrl, redirect: true })
       }}
     >
       {children}
