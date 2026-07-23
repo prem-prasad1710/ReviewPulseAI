@@ -13,7 +13,7 @@ import {
   type RazorpayPrefill,
 } from '@/components/billing/razorpay-subscription'
 import type { RazorpayPlanKey } from '@/lib/razorpay'
-import { RAZORPAY_PLAN_CHECKOUT_NAMES } from '@/lib/razorpay-subscription-create'
+import { RAZORPAY_PLAN_CHECKOUT_NAMES } from '@/lib/razorpay-plan-names'
 
 const LABELS: Record<RazorpayPlanKey, string> = {
   starter: 'Starter — ₹999/mo',

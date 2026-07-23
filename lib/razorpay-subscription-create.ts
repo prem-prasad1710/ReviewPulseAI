@@ -1,14 +1,9 @@
 import { addMonths } from 'date-fns'
 import { EXPECTED_PLAN_AMOUNT_PAISE } from '@/lib/razorpay-plan-validation'
+import { RAZORPAY_PLAN_CHECKOUT_NAMES } from '@/lib/razorpay-plan-names'
 import type { RazorpayPlanKey } from '@/lib/razorpay'
 
-export const RAZORPAY_PLAN_CHECKOUT_NAMES: Record<RazorpayPlanKey, string> = {
-  starter: 'ReviewsPulse Starter',
-  growth: 'ReviewsPulse Growth',
-  scale: 'ReviewsPulse Scale',
-  agency: 'ReviewsPulse Agency',
-  agency_addon: 'ReviewsPulse Agency — extra location',
-}
+export { RAZORPAY_PLAN_CHECKOUT_NAMES }
 
 /**
  * Razorpay subscription checkout defaults to a ₹1–₹5 mandate auth unless an upfront

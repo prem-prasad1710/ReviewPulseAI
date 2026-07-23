@@ -83,6 +83,44 @@ const nextConfig: NextConfig = {
         })
       )
     }
+
+    // Safety net: if any 'use client' import chain accidentally reaches a module
+    // that uses the "node:" URI scheme, stub it out in the browser bundle so the
+    // build does not hard-fail with "UnhandledSchemeError". The primary fix is
+    // breaking the import chain (lib/razorpay-plan-names.ts), but defence-in-depth
+    // prevents the same class of error from recurring elsewhere.
+    if (!isServer) {
+      config.resolve.alias = {
+        ...config.resolve.alias,
+        'node:fs': false,
+        'node:path': false,
+        'node:module': false,
+        'node:os': false,
+        'node:crypto': false,
+        'node:stream': false,
+        'node:buffer': false,
+        'node:util': false,
+        'node:url': false,
+        'node:events': false,
+        'node:net': false,
+        'node:tls': false,
+        'node:zlib': false,
+        'node:http': false,
+        'node:https': false,
+        'node:child_process': false,
+        'node:worker_threads': false,
+        'node:async_hooks': false,
+        'node:perf_hooks': false,
+        'node:readline': false,
+        'node:assert': false,
+        'node:string_decoder': false,
+        'node:querystring': false,
+        'node:vm': false,
+        'node:dns': false,
+        'node:dgram': false,
+      }
+    }
+
     return config
   },
   async headers() {
