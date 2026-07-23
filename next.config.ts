@@ -102,16 +102,6 @@ const nextConfig: NextConfig = {
       { source: '/:path*', headers },
     ]
   },
-  async redirects() {
-    return [
-      {
-        source: '/:path*',
-        has: [{ type: 'host', value: 'www.reviewspulse.in' }],
-        destination: 'https://reviewspulse.in/:path*',
-        permanent: true,
-      },
-    ]
-  },
 }
 
 export default nextConfig

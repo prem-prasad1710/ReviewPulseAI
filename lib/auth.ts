@@ -34,10 +34,15 @@ export const authConfig: NextAuthConfig = {
   ],
   callbacks: {
     async redirect({ url, baseUrl }) {
+      // Keep redirects on the same host the user signed in from (www vs apex).
       if (url.startsWith('/')) return `${baseUrl}${url}`
       try {
         const next = new URL(url)
-        if (next.origin === baseUrl) return url
+        const base = new URL(baseUrl)
+        if (next.hostname === base.hostname) return url
+        if (next.pathname.startsWith('/') && !next.pathname.startsWith('//')) {
+          return `${baseUrl}${next.pathname}${next.search}${next.hash}`
+        }
       } catch {
         /* ignore */
       }

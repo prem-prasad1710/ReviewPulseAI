@@ -15,7 +15,9 @@ Copy **`.env.example`** to `.env.local` for local development. Never commit secr
 | `GOOGLE_REDIRECT_URI` | Optional override; defaults to `{NEXT_PUBLIC_APP_URL}/api/auth/callback/google` |
 | `ENCRYPTION_KEY` | AES-256-GCM key for encrypting Google OAuth tokens stored per location (`lib/crypto.ts`). Generate: `openssl rand -hex 32`. **Must be identical across all deploys** — if you change it, users must reconnect Google at `/locations/connect`. |
 
-Also set **`NEXT_PUBLIC_APP_URL`** and **`NEXTAUTH_URL`** to your custom domain (e.g. `https://reviewspulse.in`) so SEO and crons use the right host. **Do not** leave `NEXTAUTH_URL` pointing at `*.vercel.app` in Production — the app clears it automatically, but delete the stale value in Vercel to avoid confusion.
+Also set **`NEXT_PUBLIC_APP_URL`** to your **Vercel primary domain** (either `https://reviewspulse.in` or `https://www.reviewspulse.in` — pick one and use it everywhere).
+
+**Avoid redirect loops:** In Vercel → Domains, set one domain as **Primary** and do not add conflicting www↔apex redirects in code *and* Vercel at the same time. Leave `NEXTAUTH_URL` unset in Production (or set it to the same primary host as `NEXT_PUBLIC_APP_URL`). Auth.js uses `trustHost` so both www and apex work for OAuth if both are on the project.
 
 **OAuth troubleshooting (`CallbackRouteError`):** ensure Production env has `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, and `NEXTAUTH_SECRET` matching Google Cloud / your local `.env`. Redirect URI in Google must be exactly `https://reviewspulse.in/api/auth/callback/google`. Sign in from `https://reviewspulse.in/login` (www redirects to apex).
 
