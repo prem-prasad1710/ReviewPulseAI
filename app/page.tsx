@@ -11,7 +11,7 @@ import LandingFinalCta from '@/components/marketing/LandingFinalCta'
 import LandingHero3D from '@/components/marketing/LandingHero3D'
 import LandingHowItWorks from '@/components/marketing/LandingHowItWorks'
 import LandingJsonLd from '@/components/marketing/LandingJsonLd'
-import LandingOAuthDisclosure from '@/components/marketing/LandingOAuthDisclosure'
+import LandingHomePurpose from '@/components/marketing/LandingHomePurpose'
 import LandingLogoMarquee from '@/components/marketing/LandingLogoMarquee'
 import LandingNav from '@/components/marketing/LandingNav'
 import LandingPricingShowcase from '@/components/marketing/LandingPricingShowcase'
@@ -166,7 +166,7 @@ export default function Home() {
                 <strong>{APP_NAME}</strong> is the India-first reputation layer: connect Google Business in about a
                 minute, see sentiment and themes instantly, and ship professional replies — including a free public
                 generator for tough reviews.{' '}
-                <Link href="/#about" className="font-medium text-indigo-700 underline-offset-2 hover:underline dark:text-indigo-300">
+                <Link href="/about" className="font-medium text-indigo-700 underline-offset-2 hover:underline dark:text-indigo-300">
                   Learn how we use Google data
                 </Link>
                 .
@@ -205,7 +205,7 @@ export default function Home() {
         </Reveal>
 
         <Reveal delay={20}>
-          <LandingOAuthDisclosure />
+          <LandingHomePurpose />
         </Reveal>
 
         {/* Electric flow — product story */}
@@ -327,7 +327,7 @@ export default function Home() {
           <div className="flex flex-col items-center justify-between gap-8 md:flex-row">
             <Link href="/" className="flex items-center gap-3 font-bold text-slate-900 transition hover:opacity-90 dark:text-slate-100">
               <AppLogo variant="wordmark" wordmarkHeight={36} iconSize={40} className="rounded-xl" />
-              <span className="sr-only">ReviewsPulse</span>
+              <span className="font-heading text-sm font-bold text-slate-900 dark:text-slate-100">{APP_NAME}</span>
               <span className="hidden text-xs font-medium text-slate-500 dark:text-slate-400 sm:block">
                 Reputation for Indian SMBs
               </span>
@@ -345,7 +345,7 @@ export default function Home() {
               <Link href="/terms" className="transition hover:text-indigo-700 dark:hover:text-indigo-400">
                 Terms
               </Link>
-              <Link href="/#about" className="transition hover:text-indigo-700 dark:hover:text-indigo-400">
+              <Link href="/about" className="transition hover:text-indigo-700 dark:hover:text-indigo-400">
                 About &amp; Google data
               </Link>
               <a href="#demo" className="transition hover:text-indigo-700 dark:hover:text-indigo-400">

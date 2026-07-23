@@ -1,5 +1,9 @@
+import { bootstrapCanonicalAuthUrl } from '@/lib/bootstrap-auth-url'
+
 export async function register() {
   if (process.env.NEXT_RUNTIME !== 'nodejs') return
+
+  bootstrapCanonicalAuthUrl()
 
   const critical: string[] = []
   if (!process.env.MONGODB_URI?.trim()) critical.push('MONGODB_URI')

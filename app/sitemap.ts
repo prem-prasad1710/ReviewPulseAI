@@ -7,6 +7,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { path: '', priority: 1, changeFrequency: 'weekly' },
     { path: '/login', priority: 0.9, changeFrequency: 'monthly' },
     { path: '/tools/free-reply', priority: 0.95, changeFrequency: 'weekly' },
+    { path: '/about', priority: 0.5, changeFrequency: 'monthly' },
     { path: '/privacy', priority: 0.3, changeFrequency: 'yearly' },
     { path: '/terms', priority: 0.3, changeFrequency: 'yearly' },
   ]

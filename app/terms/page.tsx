@@ -28,7 +28,7 @@ export default function TermsPage() {
         <p>
           By signing in with Google, you authorize {APP_NAME} to access the Google Business Profile data needed to
           provide the service, as described on our{' '}
-          <Link href="/#about">homepage</Link> and <Link href="/privacy">Privacy Policy</Link>.
+          <Link href="/about">About page</Link> and <Link href="/privacy">Privacy Policy</Link>.
         </p>
         <h2>Accounts &amp; billing</h2>
         <p>

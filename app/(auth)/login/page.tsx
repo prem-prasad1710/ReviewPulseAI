@@ -1,9 +1,8 @@
 import { redirect } from 'next/navigation'
 import { Lock, Sparkles } from 'lucide-react'
 import { AppLogo } from '@/components/brand/AppLogo'
-import { signIn } from '@/lib/auth'
+import GoogleSignInButton from '@/components/auth/GoogleSignInButton'
 import { getAppSession } from '@/lib/auth-helpers'
-import { Button } from '@/components/ui/button'
 
 const errorMessages: Record<string, string> = {
   AccessDenied: 'Sign in was denied. Please check Google OAuth test users and MongoDB connection.',
@@ -80,19 +79,10 @@ export default async function LoginPage({
             </div>
           ) : null}
 
-          <form
-            action={async (formData: FormData) => {
-              'use server'
-              const raw = formData.get('callbackUrl')
-              const to = safePostLoginPath(typeof raw === 'string' ? raw : undefined)
-              await signIn('google', { redirectTo: to })
-            }}
-          >
-            <input type="hidden" name="callbackUrl" value={redirectTo} />
-            <Button type="submit" className="h-11 w-full rounded-xl text-base font-semibold shadow-md shadow-indigo-600/20">
-              Continue with Google
-            </Button>
-          </form>
+          <GoogleSignInButton
+            callbackUrl={redirectTo}
+            className="h-11 w-full rounded-xl text-base font-semibold shadow-md shadow-indigo-600/20"
+          />
 
           <p className="mt-6 text-center text-[11px] leading-relaxed text-slate-500 dark:text-slate-500">
             By continuing you agree to our acceptable use of Google Business data for review management only.

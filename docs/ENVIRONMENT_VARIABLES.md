@@ -9,11 +9,25 @@ Copy **`.env.example`** to `.env.local` for local development. Never commit secr
 | `MONGODB_URI` | Atlas connection string (`lib/mongodb.ts`) |
 | `MONGODB_DB_NAME` | Optional database name override |
 | `NEXTAUTH_SECRET` or `AUTH_SECRET` | JWT encryption for Auth.js session |
-| `NEXTAUTH_URL` | Canonical OAuth callback base URL |
+| `NEXTAUTH_URL` | Canonical OAuth callback base URL — **production:** `https://reviewspulse.in` (not `*.vercel.app`) |
+| `NEXT_PUBLIC_APP_URL` | Public site URL for SEO, sitemap, OG — **production:** `https://reviewspulse.in` |
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` / `GOOGLE_REDIRECT_URI` | Google OAuth (`lib/auth.ts`, `lib/gbp.ts`) |
 | `ENCRYPTION_KEY` | AES-256-GCM key for encrypting Google OAuth tokens stored per location (`lib/crypto.ts`). Generate: `openssl rand -hex 32`. **Must be identical across all deploys** — if you change it, users must reconnect Google at `/locations/connect`. |
 
-Also set **`NEXT_PUBLIC_APP_URL`** for links, redirects, OG, iframe snippets, alerts.
+Also set **`NEXT_PUBLIC_APP_URL`** and **`NEXTAUTH_URL`** to your custom domain (e.g. `https://reviewspulse.in`) so OAuth callbacks and SEO stay on that domain, not the Vercel preview URL.
+
+## Google OAuth redirect URIs (Cloud Console)
+
+Register **all** environments you use:
+
+- `http://localhost:3000/api/auth/callback/google` (local)
+- `https://reviewspulse.in/api/auth/callback/google` (production)
+- `https://www.reviewspulse.in/api/auth/callback/google` (www alias)
+- Optional: `https://<your-vercel-project>.vercel.app/api/auth/callback/google` (preview only)
+
+**Authorized JavaScript origins:** same hosts without the `/api/auth/...` path.
+
+OAuth consent screen: app name **ReviewsPulse**, homepage `https://reviewspulse.in`, privacy `https://reviewspulse.in/privacy`.
 
 ## AI & LLMs
 

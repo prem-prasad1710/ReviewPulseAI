@@ -69,11 +69,10 @@ export async function proxy(request: NextRequest) {
     const secret = process.env.NEXTAUTH_SECRET || process.env.AUTH_SECRET
     if (secret) {
       try {
-        const base = process.env.NEXTAUTH_URL || request.nextUrl.origin
         const token = await getToken({
           req: request,
           secret,
-          secureCookie: base.startsWith('https://'),
+          secureCookie: request.nextUrl.protocol === 'https:',
         })
         const id = (token as { id?: string } | null)?.id
         if (!id) {
