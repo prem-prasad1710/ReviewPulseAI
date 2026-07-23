@@ -1,4 +1,4 @@
-import { PLAN_LIMITS } from '@/lib/plans'
+import { PLAN_LIMITS } from '@/lib/plan-limits'
 import type { RazorpayPlanKey } from '@/lib/razorpay'
 
 /** First-month order amount in paise — safe for client + server. */
