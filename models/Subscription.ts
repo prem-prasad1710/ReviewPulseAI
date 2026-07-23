@@ -9,6 +9,8 @@ export interface ISubscription extends Document {
   currentStart: Date
   currentEnd: Date
   paidCount: number
+  firstOrderId?: string
+  firstPaymentId?: string
   createdAt: Date
 }
 
@@ -26,6 +28,8 @@ const SubscriptionSchema = new Schema<ISubscription>(
     currentStart: { type: Date, required: true },
     currentEnd: { type: Date, required: true },
     paidCount: { type: Number, default: 0 },
+    firstOrderId: { type: String, index: true, sparse: true },
+    firstPaymentId: { type: String, sparse: true },
   },
   { timestamps: true, strict: true }
 )

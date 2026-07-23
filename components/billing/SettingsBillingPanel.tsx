@@ -5,6 +5,7 @@ import BillingResumeButton from '@/components/agency/BillingResumeButton'
 import { PLAN_LIMITS } from '@/lib/plans'
 import { formatCurrencyINR } from '@/lib/utils'
 import type { BillingSummary } from '@/lib/billing-summary'
+import type { RazorpayPlanKey } from '@/lib/razorpay'
 
 const RESUMABLE = new Set(['created', 'authenticated', 'pending', 'halted'])
 
@@ -21,7 +22,14 @@ export default function SettingsBillingPanel({
   if (!RESUMABLE.has(summary.primaryLive.status)) return null
   if (!razorpayKeyId) return null
 
-  const planLabel = summary.plan in PLAN_LIMITS ? summary.plan : 'starter'
+  const subPlan = summary.subscriptions.find((s) => s.razorpaySubscriptionId === summary.primarySubscriptionId)?.plan
+  const planLabel = (
+    summary.plan !== 'free' && summary.plan in PLAN_LIMITS
+      ? summary.plan
+      : subPlan && subPlan in PLAN_LIMITS
+        ? subPlan
+        : 'starter'
+  ) as RazorpayPlanKey
   const price =
     planLabel in PLAN_LIMITS ? formatCurrencyINR(PLAN_LIMITS[planLabel as keyof typeof PLAN_LIMITS].price) : ''
 
@@ -38,9 +46,9 @@ export default function SettingsBillingPanel({
           <div className="mt-4 flex flex-wrap gap-2">
             <BillingResumeButton
               razorpayKeyId={razorpayKeyId}
-              subscriptionId={summary.primarySubscriptionId}
+              plan={planLabel}
               label="Resume Razorpay checkout"
-              description={`ReviewPulse ${planLabel} plan`}
+              description={`ReviewPulse ${planLabel} plan — first month`}
               prefill={prefill}
             />
             <Link

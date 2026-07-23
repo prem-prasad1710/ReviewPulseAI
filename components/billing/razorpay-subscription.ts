@@ -78,14 +78,22 @@ export async function ensureRazorpayCheckoutReady(): Promise<void> {
   }
 }
 
+export type RazorpayOrderCheckoutSuccess = {
+  razorpay_payment_id: string
+  razorpay_order_id: string
+  razorpay_signature: string
+}
+
 export type RazorpaySubscriptionCheckoutSuccess = {
   razorpay_payment_id: string
   razorpay_subscription_id: string
   razorpay_signature: string
 }
 
+export type RazorpayCheckoutSuccess = RazorpayOrderCheckoutSuccess | RazorpaySubscriptionCheckoutSuccess
+
 /** Persists plan + subscription row immediately after Checkout (webhooks can lag). */
-export async function confirmSubscriptionWithServer(response: RazorpaySubscriptionCheckoutSuccess): Promise<void> {
+export async function confirmSubscriptionWithServer(response: RazorpayCheckoutSuccess): Promise<void> {
   const res = await fetch('/api/subscriptions/confirm', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -97,6 +105,55 @@ export async function confirmSubscriptionWithServer(response: RazorpaySubscripti
   }
 }
 
+export function openRazorpayOrderModal(opts: {
+  key: string
+  orderId: string
+  amountPaise: number
+  name: string
+  description: string
+  prefill?: RazorpayPrefill
+  onSuccess: (response: RazorpayOrderCheckoutSuccess) => void | Promise<void>
+  onDismiss?: () => void
+  onOpen?: () => void
+}) {
+  if (!window.Razorpay) {
+    throw new Error('Razorpay is not loaded')
+  }
+
+  const prefill = sanitizePrefill(opts.prefill)
+  const hasPrefill =
+    Boolean(prefill?.email?.trim()) || Boolean(prefill?.name?.trim()) || Boolean(prefill?.contact?.trim())
+
+  const options: Record<string, unknown> = {
+    key: opts.key,
+    order_id: opts.orderId,
+    name: opts.name,
+    description: opts.description,
+    handler: (response: Record<string, unknown>) => {
+      void opts.onSuccess(response as RazorpayOrderCheckoutSuccess)
+    },
+    theme: { color: '#4f46e5' },
+    ...(hasPrefill ? { prefill: { email: prefill?.email, name: prefill?.name, contact: prefill?.contact } } : {}),
+  }
+
+  if (opts.onDismiss) {
+    options.modal = { ondismiss: opts.onDismiss }
+  }
+
+  try {
+    const rzp = new window.Razorpay(options)
+    rzp.open()
+    opts.onOpen?.()
+  } catch (e) {
+    throw e instanceof Error
+      ? e
+      : new Error(
+          'Razorpay Checkout could not open — check NEXT_PUBLIC_RAZORPAY_KEY_ID matches your Razorpay mode (test vs live).'
+        )
+  }
+}
+
+/** @deprecated Prefer openRazorpayOrderModal — subscription checkout only auth-charges ₹5 on UPI. */
 export function openRazorpaySubscriptionModal(opts: {
   key: string
   subscriptionId: string
@@ -136,6 +193,10 @@ export function openRazorpaySubscriptionModal(opts: {
     rzp.open()
     opts.onOpen?.()
   } catch (e) {
-    throw e instanceof Error ? e : new Error('Razorpay Checkout could not open — check NEXT_PUBLIC_RAZORPAY_KEY_ID matches your Razorpay mode (test vs live).')
+    throw e instanceof Error
+      ? e
+      : new Error(
+          'Razorpay Checkout could not open — check NEXT_PUBLIC_RAZORPAY_KEY_ID matches your Razorpay mode (test vs live).'
+        )
   }
 }

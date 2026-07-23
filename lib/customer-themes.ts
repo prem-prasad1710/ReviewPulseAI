@@ -1,5 +1,13 @@
 import { getOpenAI, resolveLlmChatModel } from '@/lib/openai'
 
+export type CustomerThemesStatus =
+  | 'ready'
+  | 'no_reviews'
+  | 'no_recent_reviews'
+  | 'insufficient_reviews'
+  | 'no_review_text'
+  | 'analysis_unavailable'
+
 export type ThemeItem = {
   topic: string
   emoji: string

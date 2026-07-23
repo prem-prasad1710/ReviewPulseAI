@@ -4,29 +4,23 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
-import {
-  confirmSubscriptionWithServer,
-  ensureRazorpayCheckoutReady,
-  loadRazorpayScript,
-  openRazorpaySubscriptionModal,
-  type RazorpayPrefill,
-} from '@/components/billing/razorpay-subscription'
+import { startOrderCheckout } from '@/components/billing/start-order-checkout'
+import { loadRazorpayScript, type RazorpayPrefill } from '@/components/billing/razorpay-subscription'
+import type { RazorpayPlanKey } from '@/lib/razorpay'
 
 type Props = {
   razorpayKeyId: string
-  subscriptionId: string
+  plan: RazorpayPlanKey
   label?: string
   description: string
-  brandName?: string
   prefill?: RazorpayPrefill
 }
 
 export default function BillingResumeButton({
   razorpayKeyId,
-  subscriptionId,
+  plan,
   label = 'Open checkout',
   description,
-  brandName = 'ReviewPulse',
   prefill,
 }: Props) {
   const router = useRouter()
@@ -38,56 +32,25 @@ export default function BillingResumeButton({
 
   const run = async () => {
     setBusy(true)
-    let loadToast: string | number | undefined
-    const dismissLoading = () => {
-      if (loadToast !== undefined) {
-        toast.dismiss(loadToast)
-        loadToast = undefined
-      }
-    }
     try {
-      const res = await fetch('/api/subscriptions/resume', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ subscriptionId }),
-      })
-      const json = await res.json()
-      if (!res.ok) {
-        toast.error(json?.error || 'Could not resume checkout')
-        return
-      }
-      loadToast = toast.loading('Opening Razorpay payment…')
-      const sid = (json?.data?.subscriptionId as string | undefined) || subscriptionId
-      await ensureRazorpayCheckoutReady()
-      dismissLoading()
-      openRazorpaySubscriptionModal({
-        key: razorpayKeyId,
-        subscriptionId: sid,
-        name: brandName,
+      await startOrderCheckout({
+        razorpayKeyId,
+        plan,
         description,
         prefill,
-        onOpen: () => dismissLoading(),
-        onSuccess: async (checkout) => {
-          dismissLoading()
-          try {
-            await confirmSubscriptionWithServer(checkout)
-            toast.success('Payment confirmed — billing updated.')
-            router.refresh()
-          } catch (e) {
-            toast.error(e instanceof Error ? e.message : 'Sync failed — try refresh shortly.')
-            router.refresh()
-          }
+        onConfirmed: async () => {
+          toast.success('Payment confirmed — billing updated.')
+          router.refresh()
         },
         onDismiss: () => {
-          dismissLoading()
           toast.message('Checkout closed — you can resume anytime from Billing.')
         },
       })
     } catch (e) {
-      dismissLoading()
+      if (e instanceof Error && e.message === 'CHECKOUT_DISMISSED') return
       toast.error(e instanceof Error ? e.message : 'Checkout error')
+      router.refresh()
     } finally {
-      dismissLoading()
       setBusy(false)
     }
   }

@@ -5,15 +5,9 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
-import {
-  confirmSubscriptionWithServer,
-  ensureRazorpayCheckoutReady,
-  loadRazorpayScript,
-  openRazorpaySubscriptionModal,
-  type RazorpayPrefill,
-} from '@/components/billing/razorpay-subscription'
+import { startOrderCheckout } from '@/components/billing/start-order-checkout'
+import { loadRazorpayScript, type RazorpayPrefill } from '@/components/billing/razorpay-subscription'
 import type { RazorpayPlanKey } from '@/lib/razorpay'
-import { RAZORPAY_PLAN_CHECKOUT_NAMES } from '@/lib/razorpay-plan-names'
 
 const LABELS: Record<RazorpayPlanKey, string> = {
   starter: 'Starter — ₹999/mo',
@@ -41,7 +35,7 @@ export default function PlanCheckoutButtons({
   variant?: 'full' | 'focused'
   focusedPlan?: FocusedSmbPlan
   showAgencyRow?: boolean
-  /** After successful mandate (e.g. `/dashboard`). Default: refresh current route. */
+  /** After successful payment (e.g. `/dashboard`). Default: refresh current route. */
   successRedirect?: string
 }) {
   const router = useRouter()
@@ -60,68 +54,26 @@ export default function PlanCheckoutButtons({
       return
     }
     setBusy(plan)
-    let loadToast: string | number | undefined
-    const dismissLoading = () => {
-      if (loadToast !== undefined) {
-        toast.dismiss(loadToast)
-        loadToast = undefined
-      }
-    }
     try {
-      const res = await fetch('/api/subscriptions/create', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ plan }),
-      })
-      const json = (await res.json()) as { success?: boolean; error?: string; data?: { subscriptionId?: string } }
-      if (!res.ok) {
-        toast.error(json?.error || 'Could not create subscription')
-        return
-      }
-      const subscriptionId = json?.data?.subscriptionId
-      if (!subscriptionId) {
-        toast.error('No subscription id returned')
-        return
-      }
-
-      loadToast = toast.loading('Opening Razorpay payment…')
-
-      await ensureRazorpayCheckoutReady()
-      dismissLoading()
-
-      openRazorpaySubscriptionModal({
-        key: razorpayKeyId,
-        subscriptionId,
-        name: RAZORPAY_PLAN_CHECKOUT_NAMES[plan],
-        description: `${LABELS[plan]} · first month charged at checkout`,
+      await startOrderCheckout({
+        razorpayKeyId,
+        plan,
+        description: `${LABELS[plan]} — pay first month now`,
         prefill,
-        onOpen: () => dismissLoading(),
-        onSuccess: async (checkout) => {
-          dismissLoading()
-          try {
-            await confirmSubscriptionWithServer(checkout)
-            toast.success('Payment confirmed — your plan is updated.')
-            if (successRedirect) router.push(successRedirect)
-            else router.refresh()
-          } catch (e) {
-            toast.error(
-              e instanceof Error
-                ? e.message
-                : 'Payment succeeded but server sync failed — refresh in a minute or contact support.'
-            )
-            router.refresh()
-          }
+        onConfirmed: async () => {
+          toast.success('Payment confirmed — your plan is updated.')
+          if (successRedirect) router.push(successRedirect)
+          else router.refresh()
         },
         onDismiss: () => {
-          dismissLoading()
           toast.message('Checkout closed — if you did not see it, check for overlays or try again.')
         },
       })
     } catch (e) {
-      dismissLoading()
+      if (e instanceof Error && e.message === 'CHECKOUT_DISMISSED') return
       toast.error(e instanceof Error ? e.message : 'Checkout error')
+      router.refresh()
     } finally {
-      dismissLoading()
       setBusy(null)
     }
   }
@@ -245,8 +197,7 @@ export default function PlanCheckoutButtons({
         </div>
       ) : null}
       <p className="text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">
-        Create matching plans in Razorpay Dashboard and set <code className="rounded bg-slate-100 px-1 dark:bg-slate-800">RAZORPAY_PLAN_*</code>{' '}
-        environment variables. Checkout confirms your plan in the database right away; webhooks also sync billing.
+        Checkout charges the full first month (₹999–₹9,999) via Razorpay Orders. Recurring billing starts next month.
       </p>
     </div>
   )

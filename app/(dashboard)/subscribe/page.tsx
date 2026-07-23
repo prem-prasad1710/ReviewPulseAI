@@ -111,7 +111,7 @@ export default async function SubscribePage({
           </span>
           <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-200/90 bg-slate-50 px-2.5 py-1 dark:border-slate-600 dark:bg-slate-800/80">
             <Lock className="h-3.5 w-3.5 text-indigo-600 dark:text-indigo-400" />
-            Razorpay subscriptions
+            Razorpay secure checkout
           </span>
         </div>
         <div className="mb-4 flex items-center gap-2 text-indigo-600 dark:text-indigo-400">

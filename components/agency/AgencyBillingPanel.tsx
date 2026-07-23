@@ -17,10 +17,7 @@ export default function AgencyBillingPanel({
     (s) => s.razorpaySubscriptionId === billing.primarySubscriptionId
   )
   const primaryStatus = billing.primaryLive?.status ?? dbPrimary?.status ?? '—'
-  const needsResume =
-    billing.primarySubscriptionId &&
-    razorpayKeyId &&
-    (INCOMPLETE.has(primaryStatus) || Boolean(billing.primaryLive?.short_url))
+  const needsResume = billing.primarySubscriptionId && razorpayKeyId && INCOMPLETE.has(primaryStatus)
 
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900/40">
@@ -85,23 +82,12 @@ export default function AgencyBillingPanel({
             This subscription in dashboard
           </a>
         ) : null}
-        {billing.primaryLive?.short_url ? (
-          <a
-            href={billing.primaryLive.short_url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex h-9 items-center rounded-xl bg-indigo-600 px-3 text-sm font-medium text-white hover:bg-indigo-700"
-          >
-            Complete mandate / payment
-          </a>
-        ) : null}
-        {needsResume && billing.primarySubscriptionId ? (
+        {needsResume ? (
           <BillingResumeButton
             razorpayKeyId={razorpayKeyId!}
-            subscriptionId={billing.primarySubscriptionId}
-            label="Resume checkout"
-            description="ReviewPulse Agency — complete subscription"
-            brandName="ReviewPulse Agency"
+            plan="agency"
+            label="Pay first month"
+            description={`ReviewsPulse Agency — first month payment`}
             prefill={checkoutPrefill}
           />
         ) : null}

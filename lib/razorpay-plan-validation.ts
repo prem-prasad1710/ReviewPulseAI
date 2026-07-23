@@ -1,14 +1,8 @@
-import { PLAN_LIMITS } from '@/lib/plans'
+import { PLAN_CHECKOUT_AMOUNT_PAISE } from '@/lib/razorpay-checkout-amounts'
 import { getRazorpayClient, type RazorpayPlanKey } from '@/lib/razorpay'
 
 /** Expected monthly charge in paise (INR × 100). Must match Razorpay Dashboard → Plans. */
-export const EXPECTED_PLAN_AMOUNT_PAISE: Record<RazorpayPlanKey, number> = {
-  starter: PLAN_LIMITS.starter.price * 100,
-  growth: PLAN_LIMITS.growth.price * 100,
-  scale: PLAN_LIMITS.scale.price * 100,
-  agency: PLAN_LIMITS.agency.price * 100,
-  agency_addon: 299 * 100,
-}
+export const EXPECTED_PLAN_AMOUNT_PAISE = PLAN_CHECKOUT_AMOUNT_PAISE
 
 function formatInrFromPaise(paise: number): string {
   return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(
