@@ -39,6 +39,12 @@ export default function BillingResumeButton({
   const run = async () => {
     setBusy(true)
     let loadToast: string | number | undefined
+    const dismissLoading = () => {
+      if (loadToast !== undefined) {
+        toast.dismiss(loadToast)
+        loadToast = undefined
+      }
+    }
     try {
       const res = await fetch('/api/subscriptions/resume', {
         method: 'POST',
@@ -52,17 +58,17 @@ export default function BillingResumeButton({
       }
       loadToast = toast.loading('Opening Razorpay payment…')
       const sid = (json?.data?.subscriptionId as string | undefined) || subscriptionId
-      /* Avoid redirect to hosted /t/subscriptions/… — use Checkout modal (see PlanCheckoutButtons). */
       await ensureRazorpayCheckoutReady()
-      toast.dismiss(loadToast)
-      toast.message('Complete payment in the Razorpay window (overlay).')
+      dismissLoading()
       openRazorpaySubscriptionModal({
         key: razorpayKeyId,
         subscriptionId: sid,
         name: brandName,
         description,
         prefill,
+        onOpen: () => dismissLoading(),
         onSuccess: async (checkout) => {
+          dismissLoading()
           try {
             await confirmSubscriptionWithServer(checkout)
             toast.success('Payment confirmed — billing updated.')
@@ -72,12 +78,16 @@ export default function BillingResumeButton({
             router.refresh()
           }
         },
-        onDismiss: () => toast.message('Checkout closed — you can resume anytime from Billing.'),
+        onDismiss: () => {
+          dismissLoading()
+          toast.message('Checkout closed — you can resume anytime from Billing.')
+        },
       })
     } catch (e) {
+      dismissLoading()
       toast.error(e instanceof Error ? e.message : 'Checkout error')
     } finally {
-      if (loadToast !== undefined) toast.dismiss(loadToast)
+      dismissLoading()
       setBusy(false)
     }
   }

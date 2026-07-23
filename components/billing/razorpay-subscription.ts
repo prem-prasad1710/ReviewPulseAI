@@ -25,37 +25,57 @@ function sanitizePrefill(p?: RazorpayPrefill): RazorpayPrefill | undefined {
   return { email, name, contact }
 }
 
+const SCRIPT_SRC = 'https://checkout.razorpay.com/v1/checkout.js'
+const LOAD_TIMEOUT_MS = 8000
+
+function waitForRazorpayGlobal(): Promise<void> {
+  if (window.Razorpay) return Promise.resolve()
+  return new Promise((resolve, reject) => {
+    const deadline = Date.now() + LOAD_TIMEOUT_MS
+    const tick = () => {
+      if (window.Razorpay) {
+        resolve()
+        return
+      }
+      if (Date.now() > deadline) {
+        reject(new Error('Razorpay checkout did not load in time'))
+        return
+      }
+      setTimeout(tick, 40)
+    }
+    tick()
+  })
+}
+
 export function loadRazorpayScript(): Promise<void> {
   if (typeof window === 'undefined') return Promise.resolve()
   if (window.Razorpay) return Promise.resolve()
+
   return new Promise((resolve, reject) => {
-    const existing = document.querySelector('script[src="https://checkout.razorpay.com/v1/checkout.js"]')
+    const existing = document.querySelector(`script[src="${SCRIPT_SRC}"]`)
     if (existing) {
-      existing.addEventListener('load', () => resolve(), { once: true })
-      existing.addEventListener('error', () => reject(new Error('Failed to load Razorpay')), { once: true })
-      if (window.Razorpay) resolve()
+      waitForRazorpayGlobal().then(resolve).catch(reject)
       return
     }
+
     const s = document.createElement('script')
-    s.src = 'https://checkout.razorpay.com/v1/checkout.js'
+    s.src = SCRIPT_SRC
     s.async = true
-    s.onload = () => resolve()
+    s.onload = () => {
+      waitForRazorpayGlobal().then(resolve).catch(reject)
+    }
     s.onerror = () => reject(new Error('Failed to load Razorpay'))
     document.body.appendChild(s)
   })
 }
 
-/** Script sometimes registers `window.Razorpay` a tick after `onload`. */
 export async function ensureRazorpayCheckoutReady(): Promise<void> {
   await loadRazorpayScript()
-  const deadline = Date.now() + 8000
-  while (Date.now() < deadline) {
-    if (window.Razorpay) return
-    await new Promise((r) => setTimeout(r, 40))
+  if (!window.Razorpay) {
+    throw new Error(
+      'Razorpay checkout did not load. Disable ad blockers for this site, allow checkout.razorpay.com, and try again.'
+    )
   }
-  throw new Error(
-    'Razorpay checkout did not load. Disable ad blockers for this site, allow checkout.razorpay.com, and try again.'
-  )
 }
 
 export type RazorpaySubscriptionCheckoutSuccess = {
@@ -85,6 +105,7 @@ export function openRazorpaySubscriptionModal(opts: {
   prefill?: RazorpayPrefill
   onSuccess: (response: RazorpaySubscriptionCheckoutSuccess) => void | Promise<void>
   onDismiss?: () => void
+  onOpen?: () => void
 }) {
   if (!window.Razorpay) {
     throw new Error('Razorpay is not loaded')
@@ -113,6 +134,7 @@ export function openRazorpaySubscriptionModal(opts: {
   try {
     const rzp = new window.Razorpay(options)
     rzp.open()
+    opts.onOpen?.()
   } catch (e) {
     throw e instanceof Error ? e : new Error('Razorpay Checkout could not open — check NEXT_PUBLIC_RAZORPAY_KEY_ID matches your Razorpay mode (test vs live).')
   }

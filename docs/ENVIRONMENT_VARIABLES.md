@@ -97,7 +97,19 @@ Alerts also reference **`NEXT_PUBLIC_BASE_URL`** fallback paths in SMS copy — 
 | `RAZORPAY_KEY_ID` / `RAZORPAY_KEY_SECRET` | API pair |
 | `RAZORPAY_WEBHOOK_SECRET` | Webhook verification |
 | `NEXT_PUBLIC_RAZORPAY_KEY_ID` | Client checkout |
-| `RAZORPAY_PLAN_STARTER`, `*_GROWTH`, `*_SCALE`, `*_AGENCY` | Plan id ↔ tier mapping |
+| `RAZORPAY_PLAN_STARTER`, `*_GROWTH`, `*_SCALE`, `*_AGENCY`, `*_AGENCY_ADDON` | Razorpay **Subscription Plan** ids (`plan_…`) — amounts must match app pricing |
+
+Create plans in Razorpay Dashboard → Subscriptions → Plans with these **monthly INR** amounts, then paste each plan id into Vercel:
+
+| Env var | Plan | Amount |
+|---------|------|--------|
+| `RAZORPAY_PLAN_STARTER` | Starter | ₹999 |
+| `RAZORPAY_PLAN_GROWTH` | Growth | ₹2,499 |
+| `RAZORPAY_PLAN_SCALE` | Scale | ₹5,999 |
+| `RAZORPAY_PLAN_AGENCY` | Agency | ₹9,999 |
+| `RAZORPAY_PLAN_AGENCY_ADDON` | Extra agency location | ₹299 |
+
+Checkout blocks mismatched plans (e.g. ₹5 test plans). Set `RAZORPAY_SKIP_PLAN_AMOUNT_CHECK=true` only for local experiments.
 
 ## Cron & bridges
 

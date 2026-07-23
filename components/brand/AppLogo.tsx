@@ -69,7 +69,7 @@ export function AppLogo({
         </span>
       </span>
       {/* Accessible name when wordmark image uses alt="" in dark companion layout */}
-      <span className="sr-only">ReviewsPulse</span>
+      {/* <span className="sr-only">ReviewsPulse</span> */}
     </span>
   )
 }

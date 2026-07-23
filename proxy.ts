@@ -29,6 +29,7 @@ function requiresDashboardSession(pathname: string): boolean {
     '/agency',
     '/reports',
     '/subscribe',
+    '/support',
   ]
   return prefixes.some((p) => pathname === p || pathname.startsWith(`${p}/`))
 }

@@ -5,6 +5,7 @@ import { requireAuth } from '@/lib/auth-helpers'
 import { connectDB } from '@/lib/mongodb'
 import { ensureRazorpayCustomerId } from '@/lib/razorpay-customer'
 import { getRazorpayClient, getRazorpayPlanId, type RazorpayPlanKey } from '@/lib/razorpay'
+import { assertRazorpayPlanAmount } from '@/lib/razorpay-plan-validation'
 import { subscriptionCreateLimiter } from '@/lib/rate-limit'
 import Agency from '@/models/Agency'
 import Subscription from '@/models/Subscription'
@@ -62,6 +63,8 @@ export async function POST(request: Request) {
     const razorpay = getRazorpayClient()
     const planKey = parsed.data.plan as RazorpayPlanKey
     const razorpayPlanId = getRazorpayPlanId(planKey)
+
+    await assertRazorpayPlanAmount(planKey, razorpayPlanId)
 
     const customerId = await ensureRazorpayCustomerId(user._id)
 
@@ -153,6 +156,12 @@ export async function POST(request: Request) {
     }
     if (error instanceof Error && error.message.startsWith('Missing Razorpay plan id')) {
       return err(error.message, 503)
+    }
+    if (error instanceof Error && error.message.startsWith('Razorpay plan mismatch')) {
+      return err(error.message, 502)
+    }
+    if (error instanceof Error && error.message.includes('Could not read amount for Razorpay plan')) {
+      return err(error.message, 502)
     }
     return err('Failed to create subscription', 500)
   }

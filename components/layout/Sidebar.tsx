@@ -69,13 +69,13 @@ export default function Sidebar({ agencyBrand }: { agencyBrand?: AgencyBrand | n
 
       <div className="mt-4 shrink-0 border-t border-slate-200/70 pt-4 dark:border-slate-700/80 lg:mt-auto lg:pt-8">
         {!branded ? (
-          <a
-            href="mailto:support@reviewpulse.in"
+          <Link
+            href="/support"
             className="flex items-center gap-2 rounded-xl border border-slate-100 bg-slate-50/80 px-3 py-2.5 text-xs font-medium text-slate-600 transition hover:border-indigo-100 hover:bg-white hover:text-indigo-700 dark:border-slate-700 dark:bg-slate-800/80 dark:text-slate-300 dark:hover:border-indigo-500/40 dark:hover:bg-slate-800 dark:hover:text-indigo-300"
           >
             <LifeBuoy className="h-4 w-4 shrink-0 text-indigo-500 dark:text-indigo-400" />
             Help &amp; support
-          </a>
+          </Link>
         ) : null}
         {!branded ? (
           <p className="mt-3 px-1 text-[10px] font-medium uppercase tracking-wider text-slate-400 dark:text-slate-500">v0.1 · Beta</p>

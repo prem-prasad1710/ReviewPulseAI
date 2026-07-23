@@ -60,6 +60,12 @@ export default function PlanCheckoutButtons({
     }
     setBusy(plan)
     let loadToast: string | number | undefined
+    const dismissLoading = () => {
+      if (loadToast !== undefined) {
+        toast.dismiss(loadToast)
+        loadToast = undefined
+      }
+    }
     try {
       const res = await fetch('/api/subscriptions/create', {
         method: 'POST',
@@ -79,18 +85,18 @@ export default function PlanCheckoutButtons({
 
       loadToast = toast.loading('Opening Razorpay payment…')
 
-      /* Do not redirect to api.razorpay.com/v1/t/subscriptions/… — Razorpay often returns
-       * "Hosted page is not available" for that URL. Subscription auth is done via Checkout modal. */
       await ensureRazorpayCheckoutReady()
-      toast.dismiss(loadToast)
-      toast.message('Complete payment in the Razorpay window (popup overlay).')
+      dismissLoading()
+
       openRazorpaySubscriptionModal({
         key: razorpayKeyId,
         subscriptionId,
         name: plan === 'agency' || plan === 'agency_addon' ? 'ReviewPulse Agency' : 'ReviewPulse',
         description: LABELS[plan],
         prefill,
+        onOpen: () => dismissLoading(),
         onSuccess: async (checkout) => {
+          dismissLoading()
           try {
             await confirmSubscriptionWithServer(checkout)
             toast.success('Payment confirmed — your plan is updated.')
@@ -105,13 +111,16 @@ export default function PlanCheckoutButtons({
             router.refresh()
           }
         },
-        onDismiss: () =>
-          toast.message('Checkout closed — if you did not see it, check for overlays or try again.'),
+        onDismiss: () => {
+          dismissLoading()
+          toast.message('Checkout closed — if you did not see it, check for overlays or try again.')
+        },
       })
     } catch (e) {
+      dismissLoading()
       toast.error(e instanceof Error ? e.message : 'Checkout error')
     } finally {
-      if (loadToast !== undefined) toast.dismiss(loadToast)
+      dismissLoading()
       setBusy(null)
     }
   }
