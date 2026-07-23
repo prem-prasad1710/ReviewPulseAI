@@ -256,7 +256,7 @@ html:not(.dark) #electric-flow .landing-electric-path-muted {
 }
 
 .dark .landing-electric-path-active {
-  filter: drop-shadow(0 0 10px rgb(99 102 241 / 0.65));
+  filter: drop-shadow(0 0 8px rgb(99 102 241 / 0.35));
 }
 
 @keyframes landing-how-shimmer {

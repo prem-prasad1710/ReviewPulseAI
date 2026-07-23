@@ -191,16 +191,16 @@ function NodeButton({
         'group relative flex w-full items-center gap-3 rounded-2xl border px-3 py-2.5 text-left transition-all duration-300',
         align === 'left' ? 'flex-row' : 'flex-row-reverse text-right',
         active
-          ? 'border-cyan-500/45 bg-gradient-to-br from-cyan-50/90 to-indigo-50/80 shadow-[0_0_20px_-4px_rgba(6,182,212,0.25)] dark:border-cyan-400/50 dark:from-transparent dark:to-transparent dark:bg-white/12 dark:shadow-[0_0_24px_-4px_rgba(34,211,238,0.35)]'
-          : 'border-slate-200/90 bg-white/90 hover:border-indigo-300/70 hover:bg-slate-50/95 dark:border-white/10 dark:bg-white/[0.04] dark:hover:border-indigo-400/35 dark:hover:bg-white/[0.08]'
+          ? 'border-indigo-400/50 bg-gradient-to-br from-indigo-50/90 to-cyan-50/80 shadow-[0_0_20px_-4px_rgba(99,102,241,0.2)] dark:border-indigo-500/45 dark:from-slate-800/95 dark:to-slate-900/95 dark:bg-slate-900/90 dark:shadow-[0_0_20px_-4px_rgba(99,102,241,0.2)]'
+          : 'border-slate-200/90 bg-white/90 hover:border-indigo-300/70 hover:bg-slate-50/95 dark:border-slate-700/90 dark:bg-slate-900/75 dark:hover:border-indigo-500/40 dark:hover:bg-slate-900/90'
       )}
     >
       <span
         className={cn(
           'flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border transition-all duration-300',
           active
-            ? 'border-cyan-500/40 bg-cyan-100 text-cyan-900 dark:border-cyan-300/60 dark:bg-cyan-500/20 dark:text-cyan-100'
-            : 'border-slate-200 bg-slate-50 text-slate-600 group-hover:border-indigo-300 group-hover:text-indigo-800 dark:border-white/15 dark:bg-slate-900/60 dark:text-slate-300 dark:group-hover:border-indigo-400/40 dark:group-hover:text-white'
+            ? 'border-indigo-400/40 bg-indigo-100 text-indigo-900 dark:border-indigo-500/40 dark:bg-indigo-950/60 dark:text-indigo-200'
+            : 'border-slate-200 bg-slate-50 text-slate-600 group-hover:border-indigo-300 group-hover:text-indigo-800 dark:border-slate-600/80 dark:bg-slate-950/70 dark:text-slate-300 dark:group-hover:border-indigo-500/40 dark:group-hover:text-indigo-200'
         )}
       >
         <Icon className="h-[18px] w-[18px]" aria-hidden />
@@ -273,7 +273,7 @@ export default function LandingElectricFlow() {
   return (
     <section
       id="electric-flow"
-      className="relative mb-20 overflow-hidden rounded-[2rem] border border-slate-200/90 bg-gradient-to-b from-white via-slate-50/90 to-indigo-50/25 shadow-[0_40px_80px_-36px_rgba(15,23,42,0.12)] ring-1 ring-slate-900/[0.04] dark:border-slate-800/80 dark:from-slate-950 dark:via-slate-950 dark:to-slate-950 dark:shadow-[0_40px_100px_-40px_rgba(0,0,0,0.85)] dark:ring-white/[0.06]"
+      className="relative mb-20 overflow-hidden rounded-[2rem] border border-slate-200/90 bg-gradient-to-b from-white via-slate-50/90 to-indigo-50/25 shadow-[0_40px_80px_-36px_rgba(15,23,42,0.12)] ring-1 ring-slate-900/[0.04] dark:border-slate-700/90 dark:bg-slate-900/85 dark:from-slate-900/95 dark:via-slate-900/90 dark:to-slate-950 dark:shadow-[0_40px_100px_-40px_rgba(0,0,0,0.85)] dark:ring-white/[0.04]"
     >
       <div
         className="pointer-events-none absolute inset-0 opacity-[0.5] dark:hidden"
@@ -292,7 +292,7 @@ export default function LandingElectricFlow() {
         aria-hidden
       />
       <div
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_85%_55%_at_50%_0%,rgb(99,102,241,0.14),transparent_58%),radial-gradient(ellipse_55%_45%_at_100%_45%,rgb(6,182,212,0.08),transparent_52%),radial-gradient(ellipse_45%_38%_at_0%_85%,rgb(139,92,246,0.08),transparent_48%)] dark:bg-[radial-gradient(ellipse_80%_60%_at_50%_0%,rgb(99,102,241,0.22),transparent_55%),radial-gradient(ellipse_60%_50%_at_100%_50%,rgb(6,182,212,0.12),transparent_50%),radial-gradient(ellipse_50%_40%_at_0%_80%,rgb(139,92,246,0.12),transparent_45%)]"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_85%_55%_at_50%_0%,rgb(99,102,241,0.14),transparent_58%),radial-gradient(ellipse_55%_45%_at_100%_45%,rgb(6,182,212,0.08),transparent_52%),radial-gradient(ellipse_45%_38%_at_0%_85%,rgb(139,92,246,0.08),transparent_48%)] dark:bg-[radial-gradient(ellipse_80%_60%_at_50%_0%,rgb(99,102,241,0.12),transparent_55%),radial-gradient(ellipse_60%_50%_at_100%_50%,rgb(6,182,212,0.06),transparent_50%),radial-gradient(ellipse_50%_40%_at_0%_80%,rgb(139,92,246,0.06),transparent_45%)]"
         aria-hidden
       />
 
@@ -387,7 +387,7 @@ export default function LandingElectricFlow() {
                 className={cn(
                   'pointer-events-none absolute z-[1] max-w-[7rem] truncate rounded-full border px-2 py-0.5 text-[10px] font-semibold backdrop-blur-md transition-opacity duration-300',
                   hoverIn === i || hoverIn === null ? 'opacity-100' : 'opacity-25',
-                  'border-cyan-600/25 bg-cyan-100/90 text-cyan-900 backdrop-blur-md dark:border-cyan-400/35 dark:bg-cyan-950/50 dark:text-cyan-100/95'
+                  'border-indigo-500/25 bg-indigo-100/90 text-indigo-900 backdrop-blur-md dark:border-indigo-500/35 dark:bg-slate-900/90 dark:text-indigo-200/95'
                 )}
                 style={{
                   left: `${(p.x / geom.w) * 100}%`,
@@ -405,7 +405,7 @@ export default function LandingElectricFlow() {
                 className={cn(
                   'pointer-events-none absolute z-[1] max-w-[7rem] truncate rounded-full border px-2 py-0.5 text-[10px] font-semibold backdrop-blur-md transition-opacity duration-300',
                   hoverOut === i || hoverOut === null ? 'opacity-100' : 'opacity-25',
-                  'border-violet-500/25 bg-violet-100/90 text-violet-900 backdrop-blur-md dark:border-violet-400/35 dark:bg-violet-950/50 dark:text-violet-100/95'
+                  'border-violet-500/25 bg-violet-100/90 text-violet-900 backdrop-blur-md dark:border-violet-500/35 dark:bg-slate-900/90 dark:text-violet-200/95'
                 )}
                 style={{
                   left: `${(p.x / geom.w) * 100}%`,
@@ -460,7 +460,7 @@ export default function LandingElectricFlow() {
           </div>
         </div>
 
-        <footer className="relative z-[4] mt-12 border-t border-slate-200/90 pt-8 dark:border-white/10 md:mt-14">
+        <footer className="relative z-[4] mt-12 border-t border-slate-200/90 pt-8 dark:border-slate-700/80 md:mt-14">
           <p className="mb-4 text-center text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-500">Built to sit beside tools you already use</p>
           <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3 opacity-90 grayscale transition hover:grayscale-0 hover:opacity-100 dark:opacity-80">
             {['Google Business', 'Gmail', 'Slack', 'WhatsApp', 'Razorpay', 'Resend'].map((name) => (
@@ -477,11 +477,11 @@ export default function LandingElectricFlow() {
 
 function HubCard() {
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-slate-200/90 bg-white/90 p-5 shadow-lg shadow-slate-900/[0.04] ring-1 ring-slate-900/[0.03] backdrop-blur-xl dark:border-white/15 dark:bg-white/[0.06] dark:shadow-[0_0_0_1px_rgba(255,255,255,0.04)_inset] dark:ring-transparent">
-      <div className="pointer-events-none absolute -right-12 -top-12 h-32 w-32 rounded-full bg-indigo-400/20 blur-3xl dark:bg-indigo-500/25" aria-hidden />
-      <div className="pointer-events-none absolute -bottom-10 -left-10 h-28 w-28 rounded-full bg-cyan-400/15 blur-3xl dark:bg-cyan-500/20" aria-hidden />
+    <div className="relative overflow-hidden rounded-2xl border border-slate-200/90 bg-white/90 p-5 shadow-lg shadow-slate-900/[0.04] ring-1 ring-slate-900/[0.03] backdrop-blur-xl dark:border-slate-700/90 dark:bg-slate-900/90 dark:shadow-[0_0_0_1px_rgba(255,255,255,0.03)_inset] dark:ring-transparent">
+      <div className="pointer-events-none absolute -right-12 -top-12 h-32 w-32 rounded-full bg-indigo-400/20 blur-3xl dark:bg-indigo-600/15" aria-hidden />
+      <div className="pointer-events-none absolute -bottom-10 -left-10 h-28 w-28 rounded-full bg-cyan-400/15 blur-3xl dark:bg-cyan-600/10" aria-hidden />
 
-      <div className="relative flex items-center justify-between gap-2 border-b border-slate-200/90 pb-3 dark:border-white/10">
+      <div className="relative flex items-center justify-between gap-2 border-b border-slate-200/90 pb-3 dark:border-slate-700/80">
         <div className="flex items-center gap-2">
           <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-600 text-white dark:bg-indigo-500/30 dark:text-indigo-100">
             <Bot className="h-4 w-4" aria-hidden />
@@ -495,7 +495,7 @@ function HubCard() {
       </div>
 
       <div className="relative mt-4 space-y-3 text-[11px]">
-        <div className="rounded-xl border border-slate-200/90 bg-slate-50/90 px-3 py-2 dark:border-white/10 dark:bg-slate-950/40">
+        <div className="rounded-xl border border-slate-200/90 bg-slate-50/90 px-3 py-2 dark:border-slate-700/80 dark:bg-slate-950/70">
           <p className="mb-1.5 font-semibold uppercase tracking-wide text-slate-500">Conditions</p>
           <div className="flex flex-wrap gap-1.5">
             <span className="rounded-md bg-rose-100 px-2 py-0.5 font-medium text-rose-800 dark:bg-rose-500/20 dark:text-rose-100">Rating ≤ 3★</span>
@@ -503,7 +503,7 @@ function HubCard() {
             <span className="rounded-md bg-slate-200/80 px-2 py-0.5 font-medium text-slate-800 dark:bg-white/10 dark:text-slate-200">Last 30 days</span>
           </div>
         </div>
-        <div className="rounded-xl border border-slate-200/90 bg-slate-50/90 px-3 py-2 dark:border-white/10 dark:bg-slate-950/40">
+        <div className="rounded-xl border border-slate-200/90 bg-slate-50/90 px-3 py-2 dark:border-slate-700/80 dark:bg-slate-950/70">
           <p className="mb-1.5 font-semibold uppercase tracking-wide text-slate-500">Output</p>
           <div className="flex flex-wrap gap-1.5">
             <span className="rounded-md bg-cyan-100 px-2 py-0.5 font-medium text-cyan-900 dark:bg-cyan-500/20 dark:text-cyan-50">Draft reply</span>

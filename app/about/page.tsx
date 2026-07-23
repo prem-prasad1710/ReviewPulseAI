@@ -18,7 +18,6 @@ export default function AboutPage() {
         className="mb-8 inline-flex items-center gap-2 text-sm font-semibold text-indigo-600 hover:underline dark:text-indigo-400"
       >
         <AppLogo variant="wordmark" wordmarkHeight={28} iconSize={32} priority />
-        <span>{APP_NAME}</span>
       </Link>
 
       <h1 className="font-heading text-3xl font-bold text-slate-900 dark:text-slate-50">

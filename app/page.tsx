@@ -327,7 +327,6 @@ export default function Home() {
           <div className="flex flex-col items-center justify-between gap-8 md:flex-row">
             <Link href="/" className="flex items-center gap-3 font-bold text-slate-900 transition hover:opacity-90 dark:text-slate-100">
               <AppLogo variant="wordmark" wordmarkHeight={36} iconSize={40} className="rounded-xl" />
-              <span className="font-heading text-sm font-bold text-slate-900 dark:text-slate-100">{APP_NAME}</span>
               <span className="hidden text-xs font-medium text-slate-500 dark:text-slate-400 sm:block">
                 Reputation for Indian SMBs
               </span>

@@ -15,7 +15,6 @@ export default function PrivacyPage() {
     <div className="mx-auto min-h-screen max-w-3xl px-5 py-16 md:px-8">
       <Link href="/" className="mb-8 inline-flex items-center gap-2 text-sm font-semibold text-indigo-600 hover:underline dark:text-indigo-400">
         <AppLogo variant="wordmark" wordmarkHeight={28} iconSize={32} priority />
-        <span>{APP_NAME}</span>
       </Link>
       <h1 className="font-heading text-3xl font-bold text-slate-900 dark:text-slate-50">Privacy Policy</h1>
       <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">Last updated: July 2026 · Applies to {APP_NAME}</p>
