@@ -6,6 +6,7 @@ import { connectDB } from '@/lib/mongodb'
 import { ensureRazorpayCustomerId } from '@/lib/razorpay-customer'
 import { getRazorpayClient, getRazorpayPlanId, type RazorpayPlanKey } from '@/lib/razorpay'
 import { assertRazorpayPlanAmount } from '@/lib/razorpay-plan-validation'
+import { buildRazorpaySubscriptionCreatePayload } from '@/lib/razorpay-subscription-create'
 import { subscriptionCreateLimiter } from '@/lib/rate-limit'
 import Agency from '@/models/Agency'
 import Subscription from '@/models/Subscription'
@@ -68,17 +69,15 @@ export async function POST(request: Request) {
 
     const customerId = await ensureRazorpayCustomerId(user._id)
 
-    /* Razorpay API accepts customer_id; SDK types omit it — cast for compile. */
-    const subscriptionRaw = await razorpay.subscriptions.create({
-      plan_id: razorpayPlanId,
-      customer_id: customerId,
-      customer_notify: 1,
-      total_count: 120,
-      notes: {
-        userId: String(user._id),
-        plan: parsed.data.plan,
-      },
-    } as never)
+    /* Razorpay API accepts customer_id + addons; SDK types omit them — cast for compile. */
+    const subscriptionRaw = await razorpay.subscriptions.create(
+      buildRazorpaySubscriptionCreatePayload(
+        planKey,
+        razorpayPlanId,
+        customerId,
+        String(user._id)
+      ) as never
+    )
     const subscription = subscriptionRaw as unknown as {
       id: string
       status: string

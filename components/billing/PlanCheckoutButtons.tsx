@@ -13,6 +13,7 @@ import {
   type RazorpayPrefill,
 } from '@/components/billing/razorpay-subscription'
 import type { RazorpayPlanKey } from '@/lib/razorpay'
+import { RAZORPAY_PLAN_CHECKOUT_NAMES } from '@/lib/razorpay-subscription-create'
 
 const LABELS: Record<RazorpayPlanKey, string> = {
   starter: 'Starter — ₹999/mo',
@@ -91,8 +92,8 @@ export default function PlanCheckoutButtons({
       openRazorpaySubscriptionModal({
         key: razorpayKeyId,
         subscriptionId,
-        name: plan === 'agency' || plan === 'agency_addon' ? 'ReviewPulse Agency' : 'ReviewPulse',
-        description: LABELS[plan],
+        name: RAZORPAY_PLAN_CHECKOUT_NAMES[plan],
+        description: `${LABELS[plan]} · first month charged at checkout`,
         prefill,
         onOpen: () => dismissLoading(),
         onSuccess: async (checkout) => {

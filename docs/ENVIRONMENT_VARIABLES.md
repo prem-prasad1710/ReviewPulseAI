@@ -113,6 +113,8 @@ Create plans in Razorpay Dashboard → Subscriptions → Plans with these **mont
 
 Checkout blocks mismatched plans (e.g. ₹5 test plans). Set `RAZORPAY_SKIP_PLAN_AMOUNT_CHECK=true` only for local experiments.
 
+Subscriptions collect the **first month upfront** at checkout (via Razorpay addon); recurring billing starts the following month. Ensure each plan’s `item.amount` in Razorpay matches the table above.
+
 ## Cron & bridges
 
 | Variable | Purpose |
