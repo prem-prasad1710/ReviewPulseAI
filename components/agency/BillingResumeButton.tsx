@@ -48,7 +48,7 @@ export default function BillingResumeButton({
       })
     } catch (e) {
       if (e instanceof Error && e.message === 'CHECKOUT_DISMISSED') return
-      toast.error(e instanceof Error ? e.message : 'Checkout error')
+      toast.error('Checkout could not be completed. Please try again or contact support.')
       router.refresh()
     } finally {
       setBusy(false)

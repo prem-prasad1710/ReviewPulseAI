@@ -56,6 +56,8 @@ export async function generateMonthlyReportForLocation(
   const replied = reviews.filter((r) => r.status === 'replied').length
   const replyRate = total > 0 ? replied / total : 0
   const positive = reviews.filter((r) => r.sentiment === 'positive').length
+  const neutral = reviews.filter((r) => r.sentiment === 'neutral').length
+  const negative = reviews.filter((r) => r.sentiment === 'negative').length
   const positiveRatio = total > 0 ? positive / total : 0
   const avgRating =
     total > 0 ? reviews.reduce((s, r) => s + r.rating, 0) / total : location.averageRating || 0
@@ -67,27 +69,62 @@ export async function generateMonthlyReportForLocation(
   const grade = letterGrade(score)
 
   const monthLabel = new Intl.DateTimeFormat('en-IN', { month: 'long', year: 'numeric' }).format(new Date())
-  const summary = [
-    `Reputation score ${score} (${grade}) based on rating, reply rate, and sentiment.`,
-    `Reply rate ${Math.round(replyRate * 100)}% across ${total} synced reviews.`,
-    planAllowsMonthlyPdfAuto(user.plan as string)
-      ? 'Automated monthly report (Scale).'
-      : 'Monthly reputation snapshot.',
+
+  // ── Build smart summary bullets ──
+  const summary: string[] = [
+    `Reputation score ${score}/100 (Grade ${grade}) — based on ${avgRating.toFixed(1)}★ average rating, ${Math.round(replyRate * 100)}% reply rate, and ${Math.round(positiveRatio * 100)}% positive sentiment.`,
+    `${replied} out of ${total} customer reviews have been replied to. ${
+      replyRate >= 0.8
+        ? 'Excellent engagement — keep it up!'
+        : replyRate >= 0.5
+          ? 'Good reply coverage. Aim for 80%+ for best results.'
+          : 'Reply rate needs improvement. Responding quickly boosts ranking and trust.'
+    }`,
   ]
-  const statsLines = [
-    `Total reviews: ${total}`,
-    `Replied: ${replied}`,
-    `Average rating: ${avgRating.toFixed(2)} / 5`,
-    `Positive sentiment: ${positive} (${Math.round(positiveRatio * 100)}%)`,
-  ]
+
+  if (negative > 0) {
+    summary.push(
+      `${negative} negative review${negative === 1 ? '' : 's'} ${
+        negative === 1 ? 'needs' : 'need'
+      } attention — timely professional responses can recover rating and show customers you care.`
+    )
+  }
+  if (positive >= 5) {
+    summary.push(
+      `${positive} positive reviews provide great word-of-mouth momentum. Share the best ones on social media to amplify reach.`
+    )
+  }
+  if (planAllowsMonthlyPdfAuto(user.plan as string)) {
+    summary.push('This report is automatically generated each month and emailed to you.')
+  }
+
+  // ── Recent review samples (up to 5) ──
+  const recentReviews = reviews
+    .sort((a, b) => new Date(b.reviewCreatedAt).getTime() - new Date(a.reviewCreatedAt).getTime())
+    .slice(0, 5)
+    .map((r) => ({
+      name: r.reviewerName || 'Customer',
+      rating: r.rating,
+      comment: r.comment || '',
+      sentiment: (r.sentiment || 'neutral') as 'positive' | 'neutral' | 'negative',
+      status: (r.status || 'pending') as 'replied' | 'pending' | 'ignored' | 'scheduled',
+    }))
 
   const pdfBuf = await buildMonthlyReportBuffer({
     businessName: location.name,
+    address: location.address,
     monthLabel,
     score,
     grade,
+    totalReviews: total,
+    repliedCount: replied,
+    avgRating,
+    positiveCount: positive,
+    neutralCount: neutral,
+    negativeCount: negative,
     executiveSummary: summary,
-    statsLines,
+    recentReviews,
+    generatedAt: new Date().toISOString(),
   })
 
   const token = process.env.BLOB_READ_WRITE_TOKEN

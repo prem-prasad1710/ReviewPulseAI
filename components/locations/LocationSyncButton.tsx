@@ -31,7 +31,13 @@ export default function LocationSyncButton({
       const res = await fetch(`/api/locations/${locationId}/sync`, { method: 'POST' })
       const json = await res.json()
       if (!res.ok) {
-        toast.error(json?.error || 'Sync failed')
+        const userMsg =
+          res.status === 401
+            ? 'Session expired — please sign in again.'
+            : res.status === 503
+              ? 'Google connection needs to be refreshed. Go to Locations → Reconnect Google.'
+              : 'Review sync failed. Please try again in a moment.'
+        toast.error(userMsg)
         return
       }
       const n = json?.data?.syncedReviews ?? 0

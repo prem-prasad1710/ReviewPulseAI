@@ -26,6 +26,7 @@ export default function ReviewsInbox() {
   const searchParams = useSearchParams()
   const [reviews, setReviews] = useState<ReviewItem[]>([])
   const [loading, setLoading] = useState(true)
+  const [fetchError, setFetchError] = useState<string | null>(null)
   const [selectedReviewId, setSelectedReviewId] = useState<string | null>(null)
   const [highlightReviewId, setHighlightReviewId] = useState<string | null>(null)
 
@@ -34,11 +35,25 @@ export default function ReviewsInbox() {
   useEffect(() => {
     const load = async () => {
       setLoading(true)
-      const q = locationId ? `?locationId=${encodeURIComponent(locationId)}` : ''
-      const response = await fetch(`/api/reviews${q}`, { cache: 'no-store' })
-      const json = await response.json()
-      setReviews(json?.data || [])
-      setLoading(false)
+      setFetchError(null)
+      try {
+        const q = locationId ? `?locationId=${encodeURIComponent(locationId)}` : ''
+        const response = await fetch(`/api/reviews${q}`, { cache: 'no-store' })
+        const json = await response.json()
+        if (!response.ok) {
+          if (response.status === 401) {
+            setFetchError('Your session has expired. Please sign in again.')
+          } else {
+            setFetchError('Could not load reviews. Please try refreshing the page.')
+          }
+          return
+        }
+        setReviews(json?.data || [])
+      } catch {
+        setFetchError('Network error — check your connection and try again.')
+      } finally {
+        setLoading(false)
+      }
     }
     void load()
   }, [locationId])
@@ -74,6 +89,27 @@ export default function ReviewsInbox() {
           <Skeleton className="h-4 w-full max-w-lg rounded-md" />
         </div>
         <Skeleton className="h-72 w-full rounded-2xl" />
+      </div>
+    )
+  }
+
+  if (fetchError) {
+    return (
+      <div className="flex flex-col items-center justify-center gap-4 rounded-2xl border border-red-200/80 bg-red-50/60 px-6 py-16 text-center dark:border-red-900/40 dark:bg-red-950/20">
+        <MessageSquare className="h-10 w-10 text-red-400 dark:text-red-600" />
+        <div>
+          <p className="text-base font-semibold text-red-800 dark:text-red-200">{fetchError}</p>
+          <p className="mt-1 text-sm text-red-700/80 dark:text-red-300/70">
+            If this keeps happening, try signing out and back in.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => window.location.reload()}
+          className="rounded-xl bg-red-600 px-5 py-2 text-sm font-semibold text-white hover:bg-red-700 transition-colors"
+        >
+          Retry
+        </button>
       </div>
     )
   }
