@@ -50,7 +50,7 @@ export default function PlanCheckoutButtons({
 
   const start = async (plan: RazorpayPlanKey) => {
     if (!razorpayKeyId) {
-      toast.error('Razorpay is not configured (missing NEXT_PUBLIC_RAZORPAY_KEY_ID).')
+      toast.error('Payment service is temporarily unavailable. Please try again later or contact support.')
       return
     }
     setBusy(plan)
@@ -66,12 +66,12 @@ export default function PlanCheckoutButtons({
           else router.refresh()
         },
         onDismiss: () => {
-          toast.message('Checkout closed — if you did not see it, check for overlays or try again.')
+          toast.message('Checkout closed. If the window did not appear, try again.')
         },
       })
     } catch (e) {
       if (e instanceof Error && e.message === 'CHECKOUT_DISMISSED') return
-      toast.error(e instanceof Error ? e.message : 'Checkout error')
+      toast.error('Checkout could not be completed. Please try again or contact support.')
       router.refresh()
     } finally {
       setBusy(null)

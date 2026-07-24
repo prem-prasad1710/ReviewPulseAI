@@ -103,7 +103,14 @@ export default function ReplyModal({
       })
       const j = await res.json().catch(() => ({}))
       if (!res.ok) {
-        setAuthErr((j?.error as string) || 'Authenticity analysis failed')
+        setAuthErr(
+          res.status === 403
+            ? 'Upgrade your plan to run authenticity analysis.'
+            : res.status === 429
+              ? 'Too many requests — please wait a moment.'
+              : 'Authenticity analysis is unavailable right now. Please try again.'
+        )
+        void j
         return
       }
       const refreshed = await fetch(`/api/reviews/${reviewId}`)
@@ -127,12 +134,20 @@ export default function ReplyModal({
       })
       const json = await res.json()
       if (!res.ok) {
-        const msg = (json?.error as string) || 'Could not generate reply'
+        const apiMsg = (json?.error as string) || ''
+        const userMsg =
+          res.status === 403
+            ? apiMsg || 'You have reached your monthly reply limit. Upgrade your plan to continue.'
+            : res.status === 429
+              ? 'Too many requests — please wait a moment and try again.'
+              : res.status === 401
+                ? 'Session expired. Please sign in again.'
+                : 'Could not generate reply. Please try again.'
         if (res.status === 403) {
-          setQuotaError(msg)
-          toast.error(msg)
+          setQuotaError(userMsg)
+          toast.error(userMsg)
         } else {
-          toast.error(msg)
+          toast.error(userMsg)
         }
         return
       }
