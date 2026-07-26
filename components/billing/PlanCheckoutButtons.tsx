@@ -7,6 +7,7 @@ import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { startOrderCheckout } from '@/components/billing/start-order-checkout'
 import { loadRazorpayScript, type RazorpayPrefill } from '@/components/billing/razorpay-subscription'
+import { isRazorpayTestKey } from '@/lib/razorpay-checkout-errors'
 import type { RazorpayPlanKey } from '@/lib/razorpay'
 
 const LABELS: Record<RazorpayPlanKey, string> = {
@@ -89,10 +90,24 @@ export default function PlanCheckoutButtons({
 
   const showAgencyAddon = userPlan === 'agency'
   const focus = variant === 'focused' && focusedPlan ? focusedPlan : null
+  const testMode = isRazorpayTestKey(razorpayKeyId)
+
+  const testModeHint = testMode ? (
+    <div className="rounded-xl border border-amber-200/90 bg-amber-50/90 px-3 py-2.5 text-[11px] leading-relaxed text-amber-950 dark:border-amber-500/30 dark:bg-amber-950/40 dark:text-amber-100">
+      <p className="font-semibold">Test mode — use Indian payment methods</p>
+      <p className="mt-1">
+        International cards are blocked on most test accounts. Prefer{' '}
+        <strong>UPI</strong> with <code className="rounded bg-amber-100/80 px-1 dark:bg-amber-900/60">success@razorpay</code>{' '}
+        or Indian test card <code className="rounded bg-amber-100/80 px-1 dark:bg-amber-900/60">5267 3181 8797 5449</code>{' '}
+        (any future expiry, any CVV). Avoid 4111… cards — Razorpay treats them as international.
+      </p>
+    </div>
+  ) : null
 
   if (focus) {
     return (
       <div className="space-y-4">
+        {testModeHint}
         <Button
           type="button"
           size="lg"
@@ -149,6 +164,7 @@ export default function PlanCheckoutButtons({
 
   return (
     <div className="space-y-3">
+      {testModeHint}
       <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
         Start or change subscription (Razorpay Checkout)
       </p>

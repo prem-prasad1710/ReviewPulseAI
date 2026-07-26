@@ -82,7 +82,7 @@ export async function startOrderCheckout(opts: StartOrderCheckoutOpts): Promise<
         },
         onPaymentFailed: (message) => {
           dismissLoading()
-          toast.error(message)
+          toast.error(message, { duration: 12000 })
           reject(new Error('PAYMENT_FAILED'))
         },
         onDismiss: () => {
