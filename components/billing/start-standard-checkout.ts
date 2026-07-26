@@ -1,12 +1,17 @@
 'use client'
 
-import { toast } from 'sonner'
 import {
   ensureRazorpayCheckoutReady,
   openRazorpayOrderModal,
   type RazorpayOrderCheckoutSuccess,
   type RazorpayPrefill,
 } from '@/components/billing/razorpay-subscription'
+import {
+  clearCheckoutToast,
+  showCheckoutError,
+  showCheckoutLoading,
+  showCheckoutSuccess,
+} from '@/lib/checkout-toast'
 
 export type StartStandardCheckoutOpts = {
   razorpayKeyId: string
@@ -34,6 +39,8 @@ async function verifyPaymentWithServer(response: RazorpayOrderCheckoutSuccess): 
 
 /** Generic Standard Checkout: create-order → modal → verify-payment. */
 export async function startStandardCheckout(opts: StartStandardCheckoutOpts): Promise<void> {
+  clearCheckoutToast()
+
   const res = await fetch('/api/create-order', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -59,18 +66,10 @@ export async function startStandardCheckout(opts: StartStandardCheckoutOpts): Pr
     throw new Error('Order could not be created. Try again.')
   }
 
-  let loadToast: string | number | undefined
-  const dismissLoading = () => {
-    if (loadToast !== undefined) {
-      toast.dismiss(loadToast)
-      loadToast = undefined
-    }
-  }
-
   try {
-    loadToast = toast.loading('Opening Razorpay payment…')
+    showCheckoutLoading('Opening secure payment…')
     await ensureRazorpayCheckoutReady()
-    dismissLoading()
+    clearCheckoutToast()
 
     await new Promise<void>((resolve, reject) => {
       openRazorpayOrderModal({
@@ -80,30 +79,34 @@ export async function startStandardCheckout(opts: StartStandardCheckoutOpts): Pr
         name: opts.name,
         description: opts.description,
         prefill: opts.prefill,
-        onOpen: () => dismissLoading(),
+        onOpen: () => clearCheckoutToast(),
         onPaymentFailed: (message) => {
-          dismissLoading()
-          toast.error(message || 'Payment failed. Please try again.')
+          clearCheckoutToast()
+          showCheckoutError(message || 'Payment failed. Please try again.', 12000)
           reject(new Error('PAYMENT_FAILED'))
         },
         onSuccess: async (checkout) => {
-          dismissLoading()
+          clearCheckoutToast()
+          showCheckoutLoading('Confirming your payment…')
           try {
             await verifyPaymentWithServer(checkout)
+            clearCheckoutToast()
+            showCheckoutSuccess('Payment verified successfully.')
             await opts.onVerified?.(checkout)
             resolve()
           } catch (e) {
+            clearCheckoutToast()
             reject(e instanceof Error ? e : new Error('Payment verification failed'))
           }
         },
         onDismiss: () => {
-          dismissLoading()
+          clearCheckoutToast()
           opts.onDismiss?.()
           reject(new Error('CHECKOUT_DISMISSED'))
         },
       })
     })
   } finally {
-    dismissLoading()
+    clearCheckoutToast()
   }
 }

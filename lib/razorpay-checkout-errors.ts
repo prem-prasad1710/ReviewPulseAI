@@ -4,18 +4,14 @@ export function formatRazorpayPaymentError(raw: string | undefined): string {
   const lower = message.toLowerCase()
 
   if (lower.includes('international card')) {
-    return [
-      'This Razorpay account does not accept international cards.',
-      'In Test mode, pay with UPI (success@razorpay) or an Indian test card (5267 3181 8797 5449).',
-      'For foreign cards in production, enable International Payments in Razorpay Dashboard → Payment Methods.',
-    ].join(' ')
+    return 'This payment method is not supported. Please use an Indian-issued card, UPI, or net banking.'
   }
 
   if (lower.includes('card issuer is invalid') || lower.includes('invalid card')) {
-    return 'That card cannot be used in Test mode. Try UPI success@razorpay or Razorpay’s Indian test card 5267 3181 8797 5449.'
+    return 'This card could not be processed. Please try UPI, net banking, or a different card.'
   }
 
-  return message || 'Payment failed. Please try again or use a different method.'
+  return message || 'Payment could not be completed. Please try again or use a different payment method.'
 }
 
 export function isRazorpayTestKey(keyId: string | undefined): boolean {

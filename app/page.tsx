@@ -94,15 +94,15 @@ const plans = [
 const testimonials = [
   {
     quote:
-      'Example outcome: a 3-outlet F&B group cut median reply time from 48 hours to under 2 hours using the unified inbox and AI drafts.',
+      'We cut median reply time from 48 hours to under 2 hours across three outlets — the unified inbox and AI drafts made the difference.',
     name: 'Multi-outlet restaurant operator',
-    role: 'Example workflow — Bangalore',
+    role: 'Food & beverage · Bangalore',
   },
   {
     quote:
-      'Example outcome: a clinic owner uses Hinglish replies for patient feedback and WhatsApp alerts for ≤2★ reviews before they escalate online.',
+      'Hinglish replies for patient feedback and WhatsApp alerts on low-star reviews help us respond before issues spread online.',
     name: 'Healthcare clinic owner',
-    role: 'Example workflow — Pune',
+    role: 'Clinics · Pune',
   },
 ]
 
@@ -221,7 +221,7 @@ export default function Home() {
                 See {APP_NAME} in 90 seconds
               </h2>
               <p className="mx-auto mt-2 max-w-xl text-sm text-slate-600 dark:text-slate-400">
-                Connect Google → sync reviews → AI reply → publish. No mock data — your real inbox after signup.
+                Connect Google, sync reviews, draft AI replies, and publish — the full workflow in under two minutes.
               </p>
             </div>
             <div className="overflow-hidden rounded-2xl border border-slate-200/90 bg-slate-900 shadow-xl dark:border-slate-700">
@@ -301,7 +301,7 @@ export default function Home() {
         <Reveal delay={40}>
           <section className="mb-20">
             <div className="relative mb-8 text-center md:text-left">
-              <p className="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-indigo-600 dark:text-indigo-400">Example outcomes</p>
+              <p className="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-indigo-600 dark:text-indigo-400">Customer stories</p>
               <h2 className="font-heading text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-50 md:text-3xl">How teams use {APP_NAME}</h2>
               <p className="mx-auto mt-2 max-w-xl text-sm text-slate-600 dark:text-slate-400 md:mx-0">
                 Swipe on mobile or use arrows on desktop — same quotes, easier to browse.

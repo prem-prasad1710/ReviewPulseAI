@@ -39,11 +39,10 @@ export default function BillingResumeButton({
         description,
         prefill,
         onConfirmed: async () => {
-          toast.success('Payment confirmed — billing updated.')
           router.refresh()
         },
         onDismiss: () => {
-          toast.message('Checkout closed — you can resume anytime from Billing.')
+          toast.message('Checkout closed. Resume payment anytime from Billing.')
         },
       })
     } catch (e) {
