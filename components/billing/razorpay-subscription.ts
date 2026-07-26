@@ -1,8 +1,13 @@
 'use client'
 
+import { formatRazorpayPaymentError } from '@/lib/razorpay-checkout-errors'
+
 declare global {
   interface Window {
-    Razorpay?: new (options: Record<string, unknown>) => { open: () => void }
+    Razorpay?: new (options: Record<string, unknown>) => {
+      open: () => void
+      on: (event: string, handler: (response: Record<string, unknown>) => void) => void
+    }
   }
 }
 
@@ -114,6 +119,7 @@ export function openRazorpayOrderModal(opts: {
   prefill?: RazorpayPrefill
   onSuccess: (response: RazorpayOrderCheckoutSuccess) => void | Promise<void>
   onDismiss?: () => void
+  onPaymentFailed?: (message: string) => void
   onOpen?: () => void
 }) {
   if (!window.Razorpay) {
@@ -127,6 +133,7 @@ export function openRazorpayOrderModal(opts: {
   const options: Record<string, unknown> = {
     key: opts.key,
     order_id: opts.orderId,
+    currency: 'INR',
     name: opts.name,
     description: opts.description,
     handler: (response: Record<string, unknown>) => {
@@ -142,6 +149,12 @@ export function openRazorpayOrderModal(opts: {
 
   try {
     const rzp = new window.Razorpay(options)
+    rzp.on('payment.failed', (response: { error?: { description?: string; reason?: string } }) => {
+      const message = formatRazorpayPaymentError(
+        response?.error?.description || response?.error?.reason
+      )
+      opts.onPaymentFailed?.(message)
+    })
     rzp.open()
     opts.onOpen?.()
   } catch (e) {

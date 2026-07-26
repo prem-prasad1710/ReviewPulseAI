@@ -20,6 +20,8 @@ export type BillingSummary = {
     plan: string
     status: string
     paidCount: number
+    firstOrderId?: string
+    firstPaymentId?: string
     createdAt: string
   }>
   dashboardLinks: {
@@ -78,6 +80,8 @@ export async function getBillingSummary(userId: string): Promise<BillingSummary 
       plan: s.plan,
       status: s.status,
       paidCount: s.paidCount ?? 0,
+      firstOrderId: s.firstOrderId,
+      firstPaymentId: s.firstPaymentId,
       createdAt: s.createdAt ? new Date(s.createdAt).toISOString() : '',
     })),
     dashboardLinks: {

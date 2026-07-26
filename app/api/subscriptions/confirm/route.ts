@@ -1,8 +1,8 @@
-import { validatePaymentVerification } from 'razorpay/dist/utils/razorpay-utils'
 import { z } from 'zod'
 import { err, ok } from '@/lib/api'
 import { requireAuth } from '@/lib/auth-helpers'
 import { connectDB } from '@/lib/mongodb'
+import { verifyStandardPaymentSignature, verifySubscriptionPaymentSignature } from '@/lib/razorpay-standard-checkout'
 import { ensureRazorpayCustomerId } from '@/lib/razorpay-customer'
 import {
   createRecurringSubscriptionAfterOrder,
@@ -74,9 +74,12 @@ async function completeOrderCheckout(
 ) {
   const { razorpay_payment_id, razorpay_order_id, razorpay_signature } = data
 
-  const valid = validatePaymentVerification(
-    { order_id: razorpay_order_id, payment_id: razorpay_payment_id },
-    razorpay_signature,
+  const valid = verifyStandardPaymentSignature(
+    {
+      razorpay_order_id,
+      razorpay_payment_id,
+      razorpay_signature,
+    },
     secret
   )
   if (!valid) return err('Invalid payment signature', 400)
@@ -143,9 +146,12 @@ async function completeSubscriptionCheckout(
 ) {
   const { razorpay_payment_id, razorpay_subscription_id, razorpay_signature } = data
 
-  const valid = validatePaymentVerification(
-    { subscription_id: razorpay_subscription_id, payment_id: razorpay_payment_id },
-    razorpay_signature,
+  const valid = verifySubscriptionPaymentSignature(
+    {
+      razorpay_subscription_id,
+      razorpay_payment_id,
+      razorpay_signature,
+    },
     secret
   )
   if (!valid) return err('Invalid payment signature', 400)

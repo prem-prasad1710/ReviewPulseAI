@@ -21,6 +21,10 @@ type StartOrderCheckoutOpts = {
   onDismiss?: () => void
 }
 
+function dismissToast(id: string | number | undefined) {
+  if (id !== undefined) toast.dismiss(id)
+}
+
 export async function startOrderCheckout(opts: StartOrderCheckoutOpts): Promise<void> {
   const res = await fetch('/api/subscriptions/create', {
     method: 'POST',
@@ -48,20 +52,17 @@ export async function startOrderCheckout(opts: StartOrderCheckoutOpts): Promise<
     throw new Error(amountError)
   }
 
-  let loadToast: string | number | undefined
-  const dismissLoading = () => {
-    if (loadToast !== undefined) {
-      toast.dismiss(loadToast)
-      loadToast = undefined
-    }
-  }
+  let toastId: string | number | undefined
 
   try {
-    loadToast = toast.loading('Opening Razorpay payment…')
+    toastId = toast.loading('Opening Razorpay payment…')
     await ensureRazorpayCheckoutReady()
-    dismissLoading()
+    dismissToast(toastId)
+    toastId = undefined
 
     await new Promise<void>((resolve, reject) => {
+      let modalOpened = false
+
       openRazorpayOrderModal({
         key: opts.razorpayKeyId,
         orderId,
@@ -69,25 +70,45 @@ export async function startOrderCheckout(opts: StartOrderCheckoutOpts): Promise<
         name: opts.displayName || json?.data?.displayName || RAZORPAY_PLAN_CHECKOUT_NAMES[opts.plan],
         description: opts.description,
         prefill: opts.prefill,
-        onOpen: () => dismissLoading(),
+        onOpen: () => {
+          modalOpened = true
+          dismissToast(toastId)
+          toastId = undefined
+        },
         onSuccess: async (checkout) => {
-          dismissLoading()
+          dismissToast(toastId)
+          toastId = undefined
+          toastId = toast.loading('Confirming payment…')
           try {
             await confirmSubscriptionWithServer(checkout)
+            dismissToast(toastId)
+            toastId = undefined
             await opts.onConfirmed?.()
             resolve()
           } catch (e) {
+            dismissToast(toastId)
+            toastId = undefined
             reject(e instanceof Error ? e : new Error('Could not confirm payment with server'))
           }
         },
+        onPaymentFailed: (message) => {
+          dismissToast(toastId)
+          toastId = undefined
+          toast.error(message, { duration: 12000 })
+          reject(new Error('PAYMENT_FAILED'))
+        },
         onDismiss: () => {
-          dismissLoading()
+          dismissToast(toastId)
+          toastId = undefined
+          if (!modalOpened) {
+            toast.message('Checkout closed — you can resume anytime from Billing.')
+          }
           opts.onDismiss?.()
           reject(new Error('CHECKOUT_DISMISSED'))
         },
       })
     })
   } finally {
-    dismissLoading()
+    dismissToast(toastId)
   }
 }

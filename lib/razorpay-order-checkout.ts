@@ -1,16 +1,16 @@
 import { addMonths } from 'date-fns'
 import { EXPECTED_PLAN_AMOUNT_PAISE } from '@/lib/razorpay-plan-validation'
+import { createStandardOrder } from '@/lib/razorpay-standard-checkout'
 import { getRazorpayClient, getRazorpayPlanId, type RazorpayPlanKey } from '@/lib/razorpay'
 
 type RazorpayOrder = { id: string; amount: number; currency: string; notes?: Record<string, string> }
 
 /** Full first-month charge via Orders API (checkout shows correct INR amount). */
 export async function createFirstMonthOrder(userId: string, planKey: RazorpayPlanKey): Promise<RazorpayOrder> {
-  const rz = getRazorpayClient()
   const amount = EXPECTED_PLAN_AMOUNT_PAISE[planKey]
   const receipt = `rp_${planKey}_${userId.slice(-8)}_${Date.now()}`.slice(0, 40)
 
-  const raw = await rz.orders.create({
+  const order = await createStandardOrder({
     amount,
     currency: 'INR',
     receipt,
@@ -21,7 +21,12 @@ export async function createFirstMonthOrder(userId: string, planKey: RazorpayPla
     },
   })
 
-  return raw as unknown as RazorpayOrder
+  return {
+    id: order.order_id,
+    amount: order.amount,
+    currency: order.currency,
+    notes: { userId, plan: planKey, checkout: 'first_month' },
+  }
 }
 
 /** Recurring mandate — starts next month because first month was paid via order. */

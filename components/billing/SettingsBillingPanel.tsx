@@ -2,12 +2,11 @@ import Link from 'next/link'
 import { CreditCard } from 'lucide-react'
 import { Card, CardDescription, CardTitle } from '@/components/ui/card'
 import BillingResumeButton from '@/components/agency/BillingResumeButton'
+import { needsCheckoutResume } from '@/lib/billing-checkout-state'
 import { PLAN_LIMITS } from '@/lib/plans'
 import { formatCurrencyINR } from '@/lib/utils'
 import type { BillingSummary } from '@/lib/billing-summary'
 import type { RazorpayPlanKey } from '@/lib/razorpay'
-
-const RESUMABLE = new Set(['created', 'authenticated', 'pending', 'halted'])
 
 export default function SettingsBillingPanel({
   summary,
@@ -19,7 +18,7 @@ export default function SettingsBillingPanel({
   prefill?: { email?: string; name?: string; contact?: string }
 }) {
   if (!summary?.primarySubscriptionId || !summary.primaryLive) return null
-  if (!RESUMABLE.has(summary.primaryLive.status)) return null
+  if (!needsCheckoutResume(summary)) return null
   if (!razorpayKeyId) return null
 
   const subPlan = summary.subscriptions.find((s) => s.razorpaySubscriptionId === summary.primarySubscriptionId)?.plan
