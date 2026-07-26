@@ -234,14 +234,16 @@ export default function Home() {
                   allowFullScreen
                 />
               ) : (
-                <div className="flex aspect-video flex-col items-center justify-center gap-4 bg-gradient-to-br from-indigo-950 via-slate-900 to-violet-950 px-6 text-center">
-                  <p className="max-w-md text-sm text-indigo-100">
-                    Set <code className="rounded bg-white/10 px-1">NEXT_PUBLIC_DEMO_VIDEO_URL</code> to your Loom or YouTube embed URL for a hosted demo video.
-                  </p>
-                  <Link href="/login">
-                    <Button className="rounded-xl">Start 14-day trial — see your real inbox</Button>
-                  </Link>
-                </div>
+                <video
+                  className="aspect-video w-full bg-black object-contain"
+                  controls
+                  playsInline
+                  preload="metadata"
+                  poster="/og.png"
+                >
+                  <source src="/brand/reviewpulse-product-video.mp4" type="video/mp4" />
+                  Your browser does not support embedded video.
+                </video>
               )}
             </div>
           </section>
