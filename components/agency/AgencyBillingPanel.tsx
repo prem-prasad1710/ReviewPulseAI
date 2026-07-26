@@ -1,8 +1,7 @@
 import type { BillingSummary } from '@/lib/billing-summary'
 import BillingResumeButton from '@/components/agency/BillingResumeButton'
 import type { RazorpayPrefill } from '@/components/billing/razorpay-subscription'
-
-const INCOMPLETE = new Set(['created', 'authenticated', 'pending'])
+import { needsCheckoutResume } from '@/lib/billing-checkout-state'
 
 export default function AgencyBillingPanel({
   billing,
@@ -17,7 +16,7 @@ export default function AgencyBillingPanel({
     (s) => s.razorpaySubscriptionId === billing.primarySubscriptionId
   )
   const primaryStatus = billing.primaryLive?.status ?? dbPrimary?.status ?? '—'
-  const needsResume = billing.primarySubscriptionId && razorpayKeyId && INCOMPLETE.has(primaryStatus)
+  const needsResume = Boolean(razorpayKeyId && needsCheckoutResume(billing))
 
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900/40">
