@@ -1,11 +1,14 @@
 import type { BillingSummary } from '@/lib/billing-summary'
 
 /** Razorpay subscription states that can mean "pay now" — but not after order-first checkout. */
-const RESUMABLE_RAZORPAY_STATUSES = new Set(['created', 'authenticated', 'pending', 'halted'])
+const RESUMABLE_RAZORPAY_STATUSES = new Set(['authenticated', 'pending', 'halted'])
 
 /**
  * Order-first billing: first month is paid via Orders API; the Razorpay subscription stays
  * `created` until `start_at` (next month). Hide resume banner when first month is already paid.
+ *
+ * Note: `created` alone is NOT treated as unpaid — it is the normal post-payment state for
+ * scheduled recurring subscriptions.
  */
 export function needsCheckoutResume(summary: BillingSummary): boolean {
   if (!summary.primarySubscriptionId || !summary.primaryLive) return false

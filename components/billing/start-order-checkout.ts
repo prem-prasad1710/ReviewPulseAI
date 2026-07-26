@@ -1,12 +1,17 @@
 'use client'
 
-import { toast } from 'sonner'
 import {
   confirmSubscriptionWithServer,
   ensureRazorpayCheckoutReady,
   openRazorpayOrderModal,
   type RazorpayPrefill,
 } from '@/components/billing/razorpay-subscription'
+import {
+  clearCheckoutToast,
+  showCheckoutError,
+  showCheckoutLoading,
+  showCheckoutSuccess,
+} from '@/lib/checkout-toast'
 import { checkoutAmountMismatch } from '@/lib/razorpay-checkout-amounts'
 import type { RazorpayPlanKey } from '@/lib/razorpay'
 import { RAZORPAY_PLAN_CHECKOUT_NAMES } from '@/lib/razorpay-plan-names'
@@ -21,11 +26,9 @@ type StartOrderCheckoutOpts = {
   onDismiss?: () => void
 }
 
-function dismissToast(id: string | number | undefined) {
-  if (id !== undefined) toast.dismiss(id)
-}
-
 export async function startOrderCheckout(opts: StartOrderCheckoutOpts): Promise<void> {
+  clearCheckoutToast()
+
   const res = await fetch('/api/subscriptions/create', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -52,17 +55,12 @@ export async function startOrderCheckout(opts: StartOrderCheckoutOpts): Promise<
     throw new Error(amountError)
   }
 
-  let toastId: string | number | undefined
-
   try {
-    toastId = toast.loading('Opening Razorpay payment…')
+    showCheckoutLoading('Opening secure payment…')
     await ensureRazorpayCheckoutReady()
-    dismissToast(toastId)
-    toastId = undefined
+    clearCheckoutToast()
 
     await new Promise<void>((resolve, reject) => {
-      let modalOpened = false
-
       openRazorpayOrderModal({
         key: opts.razorpayKeyId,
         orderId,
@@ -70,45 +68,34 @@ export async function startOrderCheckout(opts: StartOrderCheckoutOpts): Promise<
         name: opts.displayName || json?.data?.displayName || RAZORPAY_PLAN_CHECKOUT_NAMES[opts.plan],
         description: opts.description,
         prefill: opts.prefill,
-        onOpen: () => {
-          modalOpened = true
-          dismissToast(toastId)
-          toastId = undefined
-        },
+        onOpen: () => clearCheckoutToast(),
         onSuccess: async (checkout) => {
-          dismissToast(toastId)
-          toastId = undefined
-          toastId = toast.loading('Confirming payment…')
+          clearCheckoutToast()
+          showCheckoutLoading('Confirming your payment…')
           try {
             await confirmSubscriptionWithServer(checkout)
-            dismissToast(toastId)
-            toastId = undefined
+            clearCheckoutToast()
+            showCheckoutSuccess('Payment confirmed. Your plan is active.')
             await opts.onConfirmed?.()
             resolve()
           } catch (e) {
-            dismissToast(toastId)
-            toastId = undefined
+            clearCheckoutToast()
             reject(e instanceof Error ? e : new Error('Could not confirm payment with server'))
           }
         },
         onPaymentFailed: (message) => {
-          dismissToast(toastId)
-          toastId = undefined
-          toast.error(message, { duration: 12000 })
+          clearCheckoutToast()
+          showCheckoutError(message, 12000)
           reject(new Error('PAYMENT_FAILED'))
         },
         onDismiss: () => {
-          dismissToast(toastId)
-          toastId = undefined
-          if (!modalOpened) {
-            toast.message('Checkout closed — you can resume anytime from Billing.')
-          }
+          clearCheckoutToast()
           opts.onDismiss?.()
           reject(new Error('CHECKOUT_DISMISSED'))
         },
       })
     })
   } finally {
-    dismissToast(toastId)
+    clearCheckoutToast()
   }
 }

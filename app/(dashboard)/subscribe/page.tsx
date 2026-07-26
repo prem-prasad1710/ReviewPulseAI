@@ -119,7 +119,7 @@ export default async function SubscribePage({
           <CardTitle className="text-base dark:text-slate-100">Pay with Razorpay</CardTitle>
         </div>
         <CardDescription className="text-sm dark:text-slate-400">
-          Use a test card in Test mode, or your real card in Live mode. Your plan updates immediately after payment (server confirm); Razorpay webhooks keep billing in sync as a backup.
+          Pay securely with UPI, cards, or net banking via Razorpay. Your plan activates immediately after payment confirmation.
         </CardDescription>
         <div className="mt-5">
           <PlanCheckoutButtons
