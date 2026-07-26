@@ -2,7 +2,10 @@
 
 declare global {
   interface Window {
-    Razorpay?: new (options: Record<string, unknown>) => { open: () => void }
+    Razorpay?: new (options: Record<string, unknown>) => {
+      open: () => void
+      on: (event: string, handler: (response: Record<string, unknown>) => void) => void
+    }
   }
 }
 
@@ -114,6 +117,7 @@ export function openRazorpayOrderModal(opts: {
   prefill?: RazorpayPrefill
   onSuccess: (response: RazorpayOrderCheckoutSuccess) => void | Promise<void>
   onDismiss?: () => void
+  onPaymentFailed?: (message: string) => void
   onOpen?: () => void
 }) {
   if (!window.Razorpay) {
@@ -142,6 +146,13 @@ export function openRazorpayOrderModal(opts: {
 
   try {
     const rzp = new window.Razorpay(options)
+    rzp.on('payment.failed', (response: { error?: { description?: string; reason?: string } }) => {
+      const message =
+        response?.error?.description ||
+        response?.error?.reason ||
+        'Payment failed. Please try again or use a different method.'
+      opts.onPaymentFailed?.(message)
+    })
     rzp.open()
     opts.onOpen?.()
   } catch (e) {

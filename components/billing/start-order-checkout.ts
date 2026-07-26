@@ -80,6 +80,11 @@ export async function startOrderCheckout(opts: StartOrderCheckoutOpts): Promise<
             reject(e instanceof Error ? e : new Error('Could not confirm payment with server'))
           }
         },
+        onPaymentFailed: (message) => {
+          dismissLoading()
+          toast.error(message)
+          reject(new Error('PAYMENT_FAILED'))
+        },
         onDismiss: () => {
           dismissLoading()
           opts.onDismiss?.()
