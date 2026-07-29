@@ -1,4 +1,5 @@
 import { err, ok } from '@/lib/api'
+import { verifyCronRequest } from '@/lib/cron-auth'
 import { connectDB } from '@/lib/mongodb'
 import { sendMonthlyReportEmail } from '@/lib/email-monthly-report'
 import { generateMonthlyReportForLocation } from '@/lib/reports/generate-monthly-pdf'
@@ -12,11 +13,8 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const authHeader = request.headers.get('authorization')
-    const secret = process.env.CRON_SECRET
-    if (!secret || authHeader !== `Bearer ${secret}`) {
-      return err('Unauthorized', 401)
-    }
+    const denied = verifyCronRequest(request)
+    if (denied) return denied
 
     await connectDB()
 

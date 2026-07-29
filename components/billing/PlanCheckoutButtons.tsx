@@ -155,17 +155,16 @@ export default function PlanCheckoutButtons({
         Start or change subscription (Razorpay Checkout)
       </p>
       <p className="text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">
-        After you pick a plan, Razorpay opens as a <strong className="font-medium text-slate-600 dark:text-slate-300">secure overlay</strong> on this page (not always a new tab). Allow{' '}
-        <code className="rounded bg-slate-100 px-1 dark:bg-slate-800">checkout.razorpay.com</code> if an ad blocker hides it.
+        Razorpay opens as a secure payment overlay on this page. If it does not appear, disable ad blockers for this site.
       </p>
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
         {(['starter', 'growth', 'scale'] as const).map((p) => (
           <Button
             key={p}
             type="button"
             size="sm"
             variant="outline"
-            className="rounded-xl"
+            className="w-full rounded-xl sm:w-auto"
             disabled={busy !== null}
             onClick={() => start(p)}
           >
@@ -174,11 +173,11 @@ export default function PlanCheckoutButtons({
         ))}
       </div>
       {showAgencyRow ? (
-        <div className="flex flex-wrap gap-2 border-t border-slate-100 pt-3 dark:border-slate-700">
+        <div className="flex flex-col gap-2 border-t border-slate-100 pt-3 sm:flex-row sm:flex-wrap dark:border-slate-700">
           <Button
             type="button"
             size="sm"
-            className="rounded-xl bg-violet-600 text-white hover:bg-violet-700"
+            className="w-full rounded-xl bg-violet-600 text-white hover:bg-violet-700 sm:w-auto"
             disabled={busy !== null || userPlan === 'agency'}
             onClick={() => start('agency')}
           >

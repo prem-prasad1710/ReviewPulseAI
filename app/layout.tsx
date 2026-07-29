@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Manrope, Space_Grotesk } from 'next/font/google'
 import { Toaster } from 'sonner'
 import Providers from '@/components/providers/Providers'
@@ -61,10 +61,20 @@ export const metadata: Metadata = {
   robots: { index: true, follow: true },
 }
 
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#edf1fa' },
+    { media: '(prefers-color-scheme: dark)', color: '#0b0f19' },
+  ],
+}
+
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" suppressHydrationWarning className={`${manrope.variable} ${spaceGrotesk.variable} h-full`}>
-      <body className="min-h-full bg-background text-foreground antialiased [text-rendering:optimizeLegibility]">
+      <body className="min-h-full overflow-x-hidden bg-background text-foreground antialiased [text-rendering:optimizeLegibility] pb-[env(safe-area-inset-bottom)]">
         <Providers>
           {children}
           <Toaster richColors position="top-right" closeButton />

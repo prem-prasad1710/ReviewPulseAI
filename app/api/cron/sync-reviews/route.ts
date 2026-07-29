@@ -1,5 +1,6 @@
 import type { Types } from 'mongoose'
 import { err, ok } from '@/lib/api'
+import { verifyCronRequest } from '@/lib/cron-auth'
 import { connectDB } from '@/lib/mongodb'
 import { syncLocationReviewsForUser } from '@/lib/sync-location-reviews'
 import Location from '@/models/Location'
@@ -14,12 +15,8 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const authHeader = request.headers.get('authorization')
-    const secret = process.env.CRON_SECRET
-
-    if (!secret || authHeader !== `Bearer ${secret}`) {
-      return err('Unauthorized', 401)
-    }
+    const denied = verifyCronRequest(request)
+    if (denied) return denied
 
     await connectDB()
 

@@ -35,7 +35,7 @@ export default function TopBar({
     : 'Sentiment, inbox health, and reply velocity in one place.'
 
   return (
-    <header className="sticky top-0 z-20 shrink-0 border-b border-slate-200/80 bg-white/95 px-3 py-2 dark:border-slate-700/80 dark:bg-slate-900/98 sm:px-6 sm:py-3 lg:z-30 lg:bg-white/80 lg:px-8 lg:backdrop-blur-xl dark:lg:bg-slate-900/85">
+    <header className="sticky top-0 z-20 shrink-0 border-b border-slate-200/80 bg-white/95 px-3 py-2 pt-[max(0.5rem,env(safe-area-inset-top))] dark:border-slate-700/80 dark:bg-slate-900/98 sm:px-6 sm:py-3 lg:z-30 lg:bg-white/80 lg:px-8 lg:backdrop-blur-xl dark:lg:bg-slate-900/85">
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-indigo-300/50 to-transparent dark:via-indigo-500/30" aria-hidden />
       {/* Mobile: one compact row; sm+: room for description + looser actions */}
       <div className="mx-auto flex max-w-7xl flex-row items-center justify-between gap-2 sm:gap-4">

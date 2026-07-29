@@ -192,8 +192,8 @@ export default function ReplyModal({
 
   return (
     <>
-      <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 p-4 backdrop-blur-sm">
-        <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-slate-200/90 bg-white p-6 shadow-2xl dark:border-slate-700 dark:bg-slate-900">
+      <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-[max(1rem,env(safe-area-inset-top))] backdrop-blur-sm">
+        <div className="max-h-[min(90dvh,calc(100dvh-env(safe-area-inset-top)-env(safe-area-inset-bottom)-2rem))] w-full max-w-2xl overflow-y-auto rounded-2xl border border-slate-200/90 bg-white p-4 shadow-2xl sm:p-6 dark:border-slate-700 dark:bg-slate-900">
           <div className="mb-4 flex items-center justify-between gap-3">
             <div>
               <h3 className="font-heading text-lg font-bold text-slate-900 dark:text-slate-50">AI Reply Studio</h3>
