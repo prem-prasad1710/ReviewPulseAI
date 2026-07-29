@@ -39,6 +39,17 @@ Boot-time logs from **`instrumentation.ts`** summarize missing optional integrat
 - [ ] Rollback playbook (previous deployment + revert DB migrations if manual)
 - [ ] Document support contact + **docs/FEATURE_CATALOG.md** ownership
 
+## 7. Pre-launch code hardening (built-in)
+
+- [ ] Boot logs from **`instrumentation.ts`** show no production misconfiguration errors (`lib/production-env.ts`)
+- [ ] `CRON_SECRET` set — cron routes return 503 without it
+- [ ] `/api/dev/*` returns 404 in production (proxy guard)
+- [ ] Dashboard routes redirect to login when session missing (fail-closed proxy)
+- [ ] `ENABLE_HSTS=true` after HTTPS verified on custom domain
+- [ ] Remove from Vercel env: `ALLOW_DEV_SEED`, `NODE_TLS_REJECT_UNAUTHORIZED`, `ALLOW_INSECURE_TLS_FOR_DEV`
+- [ ] Switch Razorpay to **live** keys (`rzp_live_…`) before real billing
+- [ ] `npm run build` passes locally before deploy
+
 ## 6. Post-deploy smoke (staging conversion funnel)
 
 - [ ] Landing → `/tools/free-reply` → copy reply → sign up with Google

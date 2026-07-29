@@ -8,7 +8,8 @@ function requiresDashboardSession(pathname: string): boolean {
     pathname.startsWith('/join/') ||
     pathname.startsWith('/score/') ||
     pathname.startsWith('/r/') ||
-    pathname.startsWith('/visit/')
+    pathname.startsWith('/visit/') ||
+    pathname.startsWith('/tools/')
   ) {
     return false
   }
@@ -62,13 +63,22 @@ function applyAgencyHostHeader(request: NextRequest): NextResponse {
 
 export async function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl
+  const isProd = process.env.NODE_ENV === 'production'
+
+  if (isProd && pathname.startsWith('/api/dev')) {
+    return new NextResponse(null, { status: 404 })
+  }
 
   const devBypass =
     process.env.NODE_ENV === 'development' && process.env.ENABLE_AUTH_IN_DEV !== 'true'
 
   if (!devBypass && requiresDashboardSession(pathname)) {
     const secret = process.env.NEXTAUTH_SECRET || process.env.AUTH_SECRET
-    if (secret) {
+    if (!secret) {
+      if (isProd) {
+        return new NextResponse('Authentication is not configured', { status: 503 })
+      }
+    } else {
       try {
         const token = await getToken({
           req: request,
@@ -83,6 +93,11 @@ export async function proxy(request: NextRequest) {
         }
       } catch (e) {
         console.error('proxy getToken:', e)
+        if (isProd) {
+          const login = new URL('/login', request.nextUrl.origin)
+          login.searchParams.set('callbackUrl', pathname + search)
+          return NextResponse.redirect(login)
+        }
       }
     }
   }

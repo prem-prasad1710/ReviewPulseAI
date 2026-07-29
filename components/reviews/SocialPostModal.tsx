@@ -160,7 +160,7 @@ export default function SocialPostModal({
       </div>
       <div className="flex flex-1 flex-col gap-4 overflow-y-auto p-4 md:flex-row">
         <div className="flex-1 space-y-3">
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             {(['instagram', 'whatsapp', 'google'] as const).map((t) => (
               <Button
                 key={t}

@@ -1,4 +1,5 @@
 import { err, ok } from '@/lib/api'
+import { verifyCronRequest } from '@/lib/cron-auth'
 import { connectDB } from '@/lib/mongodb'
 import { getCurrentFestival } from '@/lib/festivals'
 import { planAllowsWhatsApp } from '@/lib/plan-access'
@@ -11,11 +12,8 @@ import mongoose from 'mongoose'
 /** B2 weekly review-request + B3 occasional festival WhatsApp (cron). */
 export async function POST(request: Request) {
   try {
-    const authHeader = request.headers.get('authorization')
-    const secret = process.env.CRON_SECRET
-    if (!secret || authHeader !== `Bearer ${secret}`) {
-      return err('Unauthorized', 401)
-    }
+    const denied = verifyCronRequest(request)
+    if (denied) return denied
     await connectDB()
 
     let sent = 0

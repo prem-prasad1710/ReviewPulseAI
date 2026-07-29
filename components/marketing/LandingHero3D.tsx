@@ -35,7 +35,7 @@ export default function LandingHero3D() {
         }}
         className="motion-reduce:transform-none rounded-3xl border border-slate-200/90 bg-white/95 p-6 shadow-2xl shadow-indigo-900/10 ring-1 ring-slate-900/[0.04] transition-[transform,box-shadow] duration-200 ease-out [transform-style:preserve-3d] will-change-transform dark:border-slate-700/90 dark:bg-slate-900/90 dark:shadow-black/40 dark:ring-white/[0.06] md:p-7"
       >
-        <div className="mb-4 grid grid-cols-3 gap-3">
+        <div className="mb-4 grid grid-cols-1 gap-3 min-[380px]:grid-cols-3">
           {[
             { label: 'Total reviews', value: '1,274', tone: 'text-slate-900 dark:text-slate-100' },
             { label: 'Avg rating', value: '4.6', tone: 'text-slate-900 dark:text-slate-100' },

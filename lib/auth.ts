@@ -23,7 +23,7 @@ bootstrapCanonicalAuthUrl()
 export const authConfig: NextAuthConfig = {
   secret: process.env.NEXTAUTH_SECRET || process.env.AUTH_SECRET,
   trustHost: true,
-  debug: process.env.AUTH_DEBUG === 'true',
+  debug: process.env.NODE_ENV !== 'production' && process.env.AUTH_DEBUG === 'true',
   session: { strategy: 'jwt' },
   providers: [
     Google({

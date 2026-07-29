@@ -39,7 +39,7 @@ export default function LandingNav() {
 
   return (
     <>
-      <header className="animate-fade-in sticky top-4 z-50 mb-12 flex items-center justify-between rounded-2xl border border-white/50 bg-white/45 px-4 py-3 shadow-[0_8px_40px_-12px_rgba(15,23,42,0.12),inset_0_1px_0_0_rgba(255,255,255,0.75)] ring-1 ring-slate-900/[0.04] backdrop-blur-2xl backdrop-saturate-150 supports-[backdrop-filter]:bg-white/40 dark:border-white/[0.12] dark:bg-slate-950/35 dark:shadow-[0_12px_48px_-12px_rgba(0,0,0,0.55),inset_0_1px_0_0_rgba(255,255,255,0.06)] dark:ring-white/[0.06] dark:supports-[backdrop-filter]:bg-slate-950/30 md:px-6">
+      <header className="animate-fade-in sticky top-[max(1rem,env(safe-area-inset-top))] z-50 mb-12 flex items-center justify-between rounded-2xl border border-white/50 bg-white/45 px-4 py-3 shadow-[0_8px_40px_-12px_rgba(15,23,42,0.12),inset_0_1px_0_0_rgba(255,255,255,0.75)] ring-1 ring-slate-900/[0.04] backdrop-blur-2xl backdrop-saturate-150 supports-[backdrop-filter]:bg-white/40 dark:border-white/[0.12] dark:bg-slate-950/35 dark:shadow-[0_12px_48px_-12px_rgba(0,0,0,0.55),inset_0_1px_0_0_rgba(255,255,255,0.06)] dark:ring-white/[0.06] dark:supports-[backdrop-filter]:bg-slate-950/30 md:px-6">
         <Link
           href="/"
           className="flex items-center gap-2.5 text-sm font-bold text-slate-900 transition hover:opacity-90 active:scale-[0.98] dark:text-white"

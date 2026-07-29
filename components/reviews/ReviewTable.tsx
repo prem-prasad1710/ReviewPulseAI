@@ -65,7 +65,7 @@ function StatusBadge({ status }: { status: ReviewRow['status'] }) {
   )
 }
 
-function ReviewTextCell({ review }: { review: ReviewRow }) {
+function ReviewTextCell({ review, compact }: { review: ReviewRow; compact?: boolean }) {
   const [showTranslation, setShowTranslation] = useState(false)
   const flag = review.detectedLanguage
     ? LANGUAGE_FLAG_LABEL[review.detectedLanguage] || `🌐 ${review.detectedLanguage}`
@@ -73,10 +73,10 @@ function ReviewTextCell({ review }: { review: ReviewRow }) {
   const hasTranslation = Boolean(review.translatedText && review.detectedLanguage && review.detectedLanguage !== 'en')
 
   return (
-    <div className="max-w-[min(320px,44vw)] text-slate-700 dark:text-slate-300">
+    <div className={cn('text-slate-700 dark:text-slate-300', compact ? 'w-full' : 'max-w-[min(320px,44vw)]')}>
       <div className="flex flex-wrap items-center gap-1.5">
         {flag ? <span className="text-xs" title={review.detectedLanguage}>{flag}</span> : null}
-        <span className="line-clamp-2" title={review.comment || undefined}>
+        <span className={compact ? 'text-sm leading-relaxed' : 'line-clamp-2'} title={review.comment || undefined}>
           {review.comment || 'No text review'}
         </span>
       </div>
@@ -98,13 +98,87 @@ function ReviewTextCell({ review }: { review: ReviewRow }) {
   )
 }
 
+function ReviewActions({
+  review,
+  onGenerate,
+  onShare,
+  fullWidth,
+}: {
+  review: ReviewRow
+  onGenerate: (reviewId: string) => void
+  onShare: (review: ReviewRow) => void
+  fullWidth?: boolean
+}) {
+  return (
+    <div className={cn('flex items-center gap-2', fullWidth ? 'w-full' : 'justify-end')}>
+      {review.rating >= 4 ? (
+        <button
+          type="button"
+          title="Generate social share card"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-violet-600 transition-colors hover:bg-violet-50 dark:text-violet-400 dark:hover:bg-violet-950/40"
+          onClick={() => onShare(review)}
+        >
+          <Share2 className="h-4 w-4" />
+        </button>
+      ) : null}
+      <Button
+        size="sm"
+        variant={review.status === 'replied' ? 'outline' : 'default'}
+        className={cn('rounded-xl shadow-sm dark:shadow-none', fullWidth && 'min-h-10 flex-1')}
+        onClick={() => onGenerate(review._id)}
+      >
+        {review.status === 'replied' ? 'New draft' : 'Generate reply'}
+      </Button>
+    </div>
+  )
+}
+
+function MobileReviewCard({
+  review,
+  highlighted,
+  onGenerate,
+  onShare,
+}: {
+  review: ReviewRow
+  highlighted: boolean
+  onGenerate: (reviewId: string) => void
+  onShare: (review: ReviewRow) => void
+}) {
+  return (
+    <article
+      id={`review-row-${review._id}`}
+      className={cn(
+        'rounded-2xl border border-slate-200/90 bg-white p-4 shadow-sm dark:border-slate-700/80 dark:bg-slate-900/50',
+        highlighted && 'ring-2 ring-indigo-500/55 bg-indigo-50/40 dark:bg-indigo-950/20'
+      )}
+    >
+      <div className="mb-3 flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="truncate font-semibold text-slate-900 dark:text-slate-100">{review.reviewerName}</p>
+          <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">{review.rating}/5 stars</p>
+        </div>
+        <div className="flex shrink-0 flex-wrap items-center justify-end gap-1.5">
+          <SentimentBadge sentiment={review.sentiment} />
+          <StatusBadge status={review.status} />
+        </div>
+      </div>
+      <ReviewTextCell review={review} compact />
+      <div className="mt-2">
+        <TrustBadge review={review} />
+      </div>
+      <div className="mt-4">
+        <ReviewActions review={review} onGenerate={onGenerate} onShare={onShare} fullWidth />
+      </div>
+    </article>
+  )
+}
+
 export default function ReviewTable({
   reviews,
   highlightReviewId,
   onGenerate,
 }: {
   reviews: ReviewRow[]
-  /** Deep link from alerts (WhatsApp, email): scroll + ring matching row. */
   highlightReviewId?: string | null
   onGenerate: (reviewId: string) => void
 }) {
@@ -123,92 +197,87 @@ export default function ReviewTable({
 
   return (
     <>
-    <div className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-[0_8px_30px_-18px_rgba(15,23,42,0.08)] ring-1 ring-slate-900/[0.03] dark:border-slate-700/80 dark:bg-slate-900/50 dark:shadow-black/25 dark:ring-white/[0.04]">
-      <div className="overflow-x-auto">
-        <Table>
-          <thead>
-            <tr className="border-b border-slate-200/90 bg-gradient-to-r from-slate-50 via-white to-indigo-50/50 dark:border-slate-700/80 dark:from-slate-800/80 dark:via-slate-900/90 dark:to-slate-900">
-              <TH>Reviewer</TH>
-              <TH>Rating</TH>
-              <TH>Review</TH>
-              <TH>Sentiment</TH>
-              <TH>Trust</TH>
-              <TH>Status</TH>
-              <TH className="text-right">Action</TH>
-            </tr>
-          </thead>
-          <tbody>
-            {reviews.map((review) => {
-              const highlighted = highlightReviewId === review._id
-              const rowStyle: CSSProperties | undefined = highlighted
-                ? { boxShadow: 'inset 0 0 0 2px rgba(37, 99, 235, 0.55)' }
-                : undefined
-              return (
-              <tr
-                key={review._id}
-                id={`review-row-${review._id}`}
-                style={rowStyle}
-                className={`transition-colors hover:bg-slate-50/90 dark:hover:bg-slate-800/40 ${
-                  highlighted ? 'bg-indigo-50/50 dark:bg-indigo-950/25' : ''
-                }`}
-              >
-                <TD className="font-medium text-slate-900 dark:text-slate-100">{review.reviewerName}</TD>
-                <TD>
-                  <span className="inline-flex min-w-[2.5rem] items-center justify-center rounded-lg bg-slate-100 px-2 py-0.5 text-xs font-semibold tabular-nums text-slate-800 ring-1 ring-slate-200/80 dark:bg-slate-800 dark:text-slate-200 dark:ring-slate-600/80">
-                    {review.rating}/5
-                  </span>
-                </TD>
-                <TD>
-                  <ReviewTextCell review={review} />
-                </TD>
-                <TD>
-                  <SentimentBadge sentiment={review.sentiment} />
-                </TD>
-                <TD>
-                  <TrustBadge review={review} />
-                </TD>
-                <TD>
-                  <StatusBadge status={review.status} />
-                </TD>
-                <TD className="text-right">
-                  <div className="flex items-center justify-end gap-1.5">
-                    {review.rating >= 4 && (
-                      <button
-                        type="button"
-                        title="Generate social share card"
-                        className="h-8 w-8 rounded-xl text-violet-600 hover:bg-violet-50 dark:text-violet-400 dark:hover:bg-violet-950/40 flex items-center justify-center transition-colors"
-                        onClick={() => setShareReview(review)}
-                      >
-                        <Share2 className="h-3.5 w-3.5" />
-                      </button>
-                    )}
-                    <Button
-                      size="sm"
-                      variant={review.status === 'replied' ? 'outline' : 'default'}
-                      className="rounded-xl shadow-sm dark:shadow-none"
-                      onClick={() => onGenerate(review._id)}
-                    >
-                      {review.status === 'replied' ? 'New draft' : 'Generate reply'}
-                    </Button>
-                  </div>
-                </TD>
-              </tr>
-              )
-            })}
-          </tbody>
-        </Table>
+      {/* Mobile: card stack */}
+      <div className="space-y-3 md:hidden">
+        {reviews.map((review) => (
+          <MobileReviewCard
+            key={review._id}
+            review={review}
+            highlighted={highlightReviewId === review._id}
+            onGenerate={onGenerate}
+            onShare={setShareReview}
+          />
+        ))}
       </div>
-    </div>
 
-    {shareReview ? (
-      <ShareCardModal
-        reviewId={shareReview._id}
-        reviewerName={shareReview.reviewerName}
-        rating={shareReview.rating}
-        comment={shareReview.comment}
-        onClose={() => setShareReview(null)}
-      />
-    ) : null}
+      {/* Desktop: table */}
+      <div className="hidden overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-[0_8px_30px_-18px_rgba(15,23,42,0.08)] ring-1 ring-slate-900/[0.03] dark:border-slate-700/80 dark:bg-slate-900/50 dark:shadow-black/25 dark:ring-white/[0.04] md:block">
+        <div className="overflow-x-auto">
+          <Table>
+            <thead>
+              <tr className="border-b border-slate-200/90 bg-gradient-to-r from-slate-50 via-white to-indigo-50/50 dark:border-slate-700/80 dark:from-slate-800/80 dark:via-slate-900/90 dark:to-slate-900">
+                <TH>Reviewer</TH>
+                <TH>Rating</TH>
+                <TH>Review</TH>
+                <TH>Sentiment</TH>
+                <TH className="hidden lg:table-cell">Trust</TH>
+                <TH>Status</TH>
+                <TH className="text-right">Action</TH>
+              </tr>
+            </thead>
+            <tbody>
+              {reviews.map((review) => {
+                const highlighted = highlightReviewId === review._id
+                const rowStyle: CSSProperties | undefined = highlighted
+                  ? { boxShadow: 'inset 0 0 0 2px rgba(37, 99, 235, 0.55)' }
+                  : undefined
+                return (
+                  <tr
+                    key={review._id}
+                    id={`review-row-${review._id}`}
+                    style={rowStyle}
+                    className={`transition-colors hover:bg-slate-50/90 dark:hover:bg-slate-800/40 ${
+                      highlighted ? 'bg-indigo-50/50 dark:bg-indigo-950/25' : ''
+                    }`}
+                  >
+                    <TD className="font-medium text-slate-900 dark:text-slate-100">{review.reviewerName}</TD>
+                    <TD>
+                      <span className="inline-flex min-w-[2.5rem] items-center justify-center rounded-lg bg-slate-100 px-2 py-0.5 text-xs font-semibold tabular-nums text-slate-800 ring-1 ring-slate-200/80 dark:bg-slate-800 dark:text-slate-200 dark:ring-slate-600/80">
+                        {review.rating}/5
+                      </span>
+                    </TD>
+                    <TD>
+                      <ReviewTextCell review={review} />
+                    </TD>
+                    <TD>
+                      <SentimentBadge sentiment={review.sentiment} />
+                    </TD>
+                    <TD className="hidden lg:table-cell">
+                      <TrustBadge review={review} />
+                    </TD>
+                    <TD>
+                      <StatusBadge status={review.status} />
+                    </TD>
+                    <TD className="text-right">
+                      <ReviewActions review={review} onGenerate={onGenerate} onShare={setShareReview} />
+                    </TD>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </Table>
+        </div>
+      </div>
+
+      {shareReview ? (
+        <ShareCardModal
+          reviewId={shareReview._id}
+          reviewerName={shareReview.reviewerName}
+          rating={shareReview.rating}
+          comment={shareReview.comment}
+          onClose={() => setShareReview(null)}
+        />
+      ) : null}
     </>
   )
 }

@@ -1,9 +1,11 @@
 import { bootstrapCanonicalAuthUrl } from '@/lib/bootstrap-auth-url'
+import { validateProductionEnvironment } from '@/lib/production-env'
 
 export async function register() {
   if (process.env.NEXT_RUNTIME !== 'nodejs') return
 
   bootstrapCanonicalAuthUrl()
+  validateProductionEnvironment()
 
   const critical: string[] = []
   if (!process.env.MONGODB_URI?.trim()) critical.push('MONGODB_URI')
