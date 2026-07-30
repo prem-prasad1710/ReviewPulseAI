@@ -32,6 +32,7 @@ export const metadata: Metadata = {
   applicationName: APP_NAME,
   keywords: ['Google reviews', 'Business Profile', 'AI replies', 'SMB', 'India', 'review management', 'ReviewsPulse'],
   authors: [{ name: APP_NAME }],
+  alternates: { canonical: appUrl },
   ...(googleSiteVerification
     ? { verification: { google: googleSiteVerification } }
     : {}),
