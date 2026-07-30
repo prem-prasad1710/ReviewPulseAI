@@ -1,13 +1,13 @@
 /** Canonical public origin for links, SEO, sitemap, and Open Graph. */
 export function getAppUrl(): string {
-  const explicit = process.env.NEXT_PUBLIC_APP_URL?.trim()
-  if (explicit) return explicit.replace(/\/$/, '')
+  const raw =
+    process.env.NEXT_PUBLIC_APP_URL?.trim() ||
+    process.env.VERCEL_URL?.trim() ||
+    process.env.NEXTAUTH_URL?.trim() ||
+    ''
 
-  const vercel = process.env.VERCEL_URL?.trim()
-  if (vercel) return `https://${vercel.replace(/\/$/, '')}`
+  if (!raw) return 'http://localhost:3000'
 
-  const nextAuth = process.env.NEXTAUTH_URL?.trim()
-  if (nextAuth) return nextAuth.replace(/\/$/, '')
-
-  return 'http://localhost:3000'
+  const withProtocol = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`
+  return withProtocol.replace(/\/$/, '')
 }

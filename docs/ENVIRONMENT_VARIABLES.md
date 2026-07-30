@@ -10,16 +10,16 @@ Copy **`.env.example`** to `.env.local` for local development. Never commit secr
 | `MONGODB_DB_NAME` | Optional database name override |
 | `NEXTAUTH_SECRET` or `AUTH_SECRET` | JWT encryption for Auth.js session |
 | `NEXTAUTH_URL` | Canonical OAuth callback base URL — **production:** `https://reviewspulse.in` (not `*.vercel.app`) |
-| `NEXT_PUBLIC_APP_URL` | Public site URL for SEO, sitemap, OG — **production:** `https://reviewspulse.in` |
+| `NEXT_PUBLIC_APP_URL` | Public site URL for SEO, sitemap, OG — **must match your Vercel primary domain**, e.g. `https://www.reviewspulse.in` |
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Google OAuth (`lib/auth.ts`, `lib/gbp.ts`) |
 | `GOOGLE_REDIRECT_URI` | Optional override; defaults to `{NEXT_PUBLIC_APP_URL}/api/auth/callback/google` |
 | `ENCRYPTION_KEY` | AES-256-GCM key for encrypting Google OAuth tokens stored per location (`lib/crypto.ts`). Generate: `openssl rand -hex 32`. **Must be identical across all deploys** — if you change it, users must reconnect Google at `/locations/connect`. |
 
-Also set **`NEXT_PUBLIC_APP_URL`** to your **Vercel primary domain** (either `https://reviewspulse.in` or `https://www.reviewspulse.in` — pick one and use it everywhere).
+Also set **`NEXT_PUBLIC_APP_URL`** to your **Vercel primary domain** (check Vercel → Domains → Primary — for reviewspulse.in this is `https://www.reviewspulse.in`).
 
-**Avoid redirect loops:** In Vercel → Domains, set one domain as **Primary** and do not add conflicting www↔apex redirects in code *and* Vercel at the same time. Leave `NEXTAUTH_URL` unset in Production (or set it to the same primary host as `NEXT_PUBLIC_APP_URL`). Auth.js uses `trustHost` so both www and apex work for OAuth if both are on the project.
+**Avoid redirect loops:** Do **not** add www↔apex redirects in `vercel.json` or `proxy.ts` when Vercel Domains already redirects the non-primary host. Only Vercel should handle host redirects. Leave `NEXTAUTH_URL` unset in Production (Auth.js `trustHost` handles the primary host).
 
-**OAuth troubleshooting (`CallbackRouteError`):** ensure Production env has `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, and `NEXTAUTH_SECRET` matching Google Cloud / your local `.env`. Redirect URI in Google must be exactly `https://reviewspulse.in/api/auth/callback/google`. Sign in from `https://reviewspulse.in/login` (www redirects to apex).
+**OAuth troubleshooting (`CallbackRouteError`):** ensure Production env has `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, and `NEXTAUTH_SECRET`. Redirect URIs in Google must include both:
 
 ## Google OAuth redirect URIs (Cloud Console)
 
