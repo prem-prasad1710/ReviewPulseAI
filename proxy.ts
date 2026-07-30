@@ -1,6 +1,7 @@
 import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
 import { getToken } from 'next-auth/jwt'
+import { getAlternateHost, getCanonicalHost } from '@/lib/canonical-host'
 
 function requiresDashboardSession(pathname: string): boolean {
   if (pathname.startsWith('/api/') || pathname === '/login' || pathname === '/') return false
@@ -61,7 +62,29 @@ function applyAgencyHostHeader(request: NextRequest): NextResponse {
   return NextResponse.next()
 }
 
+/** 301 www ↔ apex so Google sees one canonical host (see NEXT_PUBLIC_APP_URL). */
+function redirectToCanonicalHost(request: NextRequest): NextResponse | null {
+  if (process.env.NODE_ENV !== 'production') return null
+
+  const canonicalHost = getCanonicalHost()
+  if (!canonicalHost) return null
+
+  const requestHost = request.headers.get('host')?.split(':')[0]
+  if (!requestHost || requestHost === canonicalHost) return null
+
+  const alternateHost = getAlternateHost(canonicalHost)
+  if (requestHost !== alternateHost) return null
+
+  const url = request.nextUrl.clone()
+  url.protocol = 'https:'
+  url.host = canonicalHost
+  return NextResponse.redirect(url, 308)
+}
+
 export async function proxy(request: NextRequest) {
+  const canonicalRedirect = redirectToCanonicalHost(request)
+  if (canonicalRedirect) return canonicalRedirect
+
   const { pathname, search } = request.nextUrl
   const isProd = process.env.NODE_ENV === 'production'
 

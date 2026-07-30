@@ -24,7 +24,7 @@ export default function FreeReplyPage() {
   return (
     <div className="bg-mesh relative min-h-screen">
       <header className="mx-auto flex max-w-3xl items-center justify-between px-5 py-6">
-        <Link href="/" className="inline-flex items-center gap-2.5 text-sm font-semibold text-slate-700 dark:text-slate-200">
+        <Link href="/" aria-label="ReviewsPulse home" className="inline-flex items-center gap-2.5 text-sm font-semibold text-slate-700 dark:text-slate-200">
           <ArrowLeft className="h-4 w-4 shrink-0" />
           <AppLogo variant="wordmark" wordmarkHeight={26} iconSize={30} priority />
         </Link>

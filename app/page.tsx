@@ -4,6 +4,7 @@ import { ArrowRight, Clock3, ShieldCheck, Sparkles } from 'lucide-react'
 import { AppLogo } from '@/components/brand/AppLogo'
 import LandingBusinessOwners from '@/components/marketing/LandingBusinessOwners'
 import LandingEdgeCards from '@/components/marketing/LandingEdgeCards'
+import LandingDemoVideo from '@/components/marketing/LandingDemoVideo'
 import LandingElectricFlow from '@/components/marketing/LandingElectricFlow'
 import LandingFaq from '@/components/marketing/LandingFaq'
 import LandingFeaturesExplorer, { type LandingFeatureItem } from '@/components/marketing/LandingFeaturesExplorer'
@@ -234,16 +235,7 @@ export default function Home() {
                   allowFullScreen
                 />
               ) : (
-                <video
-                  className="aspect-video w-full bg-black object-contain"
-                  controls
-                  playsInline
-                  preload="metadata"
-                  poster="/og.png"
-                >
-                  <source src="/brand/reviewpulse-product-video.mp4" type="video/mp4" />
-                  Your browser does not support embedded video.
-                </video>
+                <LandingDemoVideo title={`${APP_NAME} product demo`} />
               )}
             </div>
           </section>
@@ -327,7 +319,11 @@ export default function Home() {
 
         <footer className="mt-20 border-t border-slate-200/80 pt-12 text-sm text-slate-600 dark:border-slate-700/80 dark:text-slate-400">
           <div className="flex flex-col items-center justify-between gap-8 md:flex-row">
-            <Link href="/" className="flex items-center gap-3 font-bold text-slate-900 transition hover:opacity-90 dark:text-slate-100">
+            <Link
+              href="/"
+              aria-label={`${APP_NAME} home`}
+              className="flex items-center gap-3 font-bold text-slate-900 transition hover:opacity-90 dark:text-slate-100"
+            >
               <AppLogo variant="wordmark" wordmarkHeight={36} iconSize={40} className="rounded-xl" />
               <span className="hidden text-xs font-medium text-slate-500 dark:text-slate-400 sm:block">
                 Reputation for Indian SMBs
