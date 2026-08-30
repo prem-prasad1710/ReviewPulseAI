@@ -70,7 +70,11 @@ export default function PlanCheckoutButtons({
       })
     } catch (e) {
       if (e instanceof Error && (e.message === 'CHECKOUT_DISMISSED' || e.message === 'PAYMENT_FAILED')) return
-      toast.error('Checkout could not be completed. Please try again or contact support.')
+      const message =
+        e instanceof Error && e.message && e.message !== 'Could not start checkout'
+          ? e.message
+          : 'Checkout could not be completed. Please try again or contact support.'
+      toast.error(message)
       router.refresh()
     } finally {
       setBusy(null)
