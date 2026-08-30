@@ -1,5 +1,7 @@
 import { getAppUrl } from '@/lib/app-url'
 import { APP_NAME, APP_TAGLINE, SUPPORT_EMAIL } from '@/lib/brand'
+import { PLAN_LIMITS } from '@/lib/plan-limits'
+import { formatCurrencyINR } from '@/lib/utils'
 
 type LandingJsonLdProps = {
   appUrl?: string
@@ -33,8 +35,8 @@ export default function LandingJsonLd({ appUrl = getAppUrl() }: LandingJsonLdPro
         offers: {
           '@type': 'Offer',
           priceCurrency: 'INR',
-          price: '999',
-          description: 'Starter plan from ₹999/month',
+          price: String(PLAN_LIMITS.starter.price),
+          description: `Starter plan from ${formatCurrencyINR(PLAN_LIMITS.starter.price)}/month`,
         },
       },
       {

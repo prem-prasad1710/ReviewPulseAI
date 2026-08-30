@@ -1,4 +1,4 @@
-import { PLAN_LIMITS } from '@/lib/plan-limits'
+import { AGENCY_LOCATION_ADDON_PRICE, PLAN_LIMITS } from '@/lib/plan-limits'
 import type { RazorpayPlanKey } from '@/lib/razorpay'
 
 /** First-month order amount in paise — safe for client + server. */
@@ -7,7 +7,7 @@ export const PLAN_CHECKOUT_AMOUNT_PAISE: Record<RazorpayPlanKey, number> = {
   growth: PLAN_LIMITS.growth.price * 100,
   scale: PLAN_LIMITS.scale.price * 100,
   agency: PLAN_LIMITS.agency.price * 100,
-  agency_addon: 299 * 100,
+  agency_addon: AGENCY_LOCATION_ADDON_PRICE * 100,
 }
 
 export function formatCheckoutInr(paise: number): string {

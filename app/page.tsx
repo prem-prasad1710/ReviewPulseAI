@@ -22,6 +22,8 @@ import { Reveal } from '@/components/motion/Reveal'
 import { Button } from '@/components/ui/button'
 import { getAppUrl } from '@/lib/app-url'
 import { APP_NAME } from '@/lib/brand'
+import { PLAN_LIMITS } from '@/lib/plan-limits'
+import { formatCurrencyINR } from '@/lib/utils'
 import { SpeedInsights } from "@vercel/speed-insights/next"
 
 
@@ -69,7 +71,7 @@ const plans = [
   {
     planKey: 'starter' as const,
     name: 'Starter',
-    price: '₹999',
+    price: formatCurrencyINR(PLAN_LIMITS.starter.price),
     subtitle: 'Perfect for one location',
     points: ['1 location', '100 AI replies/month', 'Google review sync', 'Email support'],
     highlighted: false,
@@ -77,7 +79,7 @@ const plans = [
   {
     planKey: 'growth' as const,
     name: 'Growth',
-    price: '₹2,499',
+    price: formatCurrencyINR(PLAN_LIMITS.growth.price),
     subtitle: 'For multi-outlet operators',
     points: ['3 locations', '500 AI replies/month', 'Priority sync', 'Weekly digest email'],
     highlighted: true,
@@ -85,7 +87,7 @@ const plans = [
   {
     planKey: 'scale' as const,
     name: 'Scale',
-    price: '₹5,999',
+    price: formatCurrencyINR(PLAN_LIMITS.scale.price),
     subtitle: 'For serious expansion',
     points: ['10 locations', 'Unlimited AI replies', 'White-label ready', 'Priority support'],
     highlighted: false,

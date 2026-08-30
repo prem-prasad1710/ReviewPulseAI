@@ -17,7 +17,7 @@ type RazorpayPlanEntity = {
 
 /**
  * Ensures the Razorpay plan id in env charges the price shown in the app.
- * Prevents checkout at ₹5 when UI says ₹999 / ₹2,499 etc.
+ * Prevents checkout at ₹5 when UI says ₹499 / ₹999 etc.
  */
 export async function assertRazorpayPlanAmount(planKey: RazorpayPlanKey, razorpayPlanId: string): Promise<void> {
   if (process.env.RAZORPAY_SKIP_PLAN_AMOUNT_CHECK === 'true') return
