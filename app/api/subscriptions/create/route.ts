@@ -2,6 +2,7 @@ import { z } from 'zod'
 import { err, ok } from '@/lib/api'
 import { requireAuth } from '@/lib/auth-helpers'
 import { connectDB } from '@/lib/mongodb'
+import { isRazorpayInvalidIdError, razorpayInvalidPlanIdMessage } from '@/lib/razorpay-api-error'
 import { assertRazorpayKeysMatch, cleanupStalePendingSubscriptions } from '@/lib/razorpay-checkout-cleanup'
 import { createFirstMonthOrder, razorpaySubscriptionExists } from '@/lib/razorpay-order-checkout'
 import { getRazorpayPlanId, type RazorpayPlanKey } from '@/lib/razorpay'
@@ -10,6 +11,14 @@ import { RAZORPAY_PLAN_CHECKOUT_NAMES } from '@/lib/razorpay-plan-names'
 import { subscriptionCreateLimiter } from '@/lib/rate-limit'
 import Subscription from '@/models/Subscription'
 import User from '@/models/User'
+
+const PLAN_ENV_VARS: Record<RazorpayPlanKey, string> = {
+  starter: 'RAZORPAY_PLAN_STARTER',
+  growth: 'RAZORPAY_PLAN_GROWTH',
+  scale: 'RAZORPAY_PLAN_SCALE',
+  agency: 'RAZORPAY_PLAN_AGENCY',
+  agency_addon: 'RAZORPAY_PLAN_AGENCY_ADDON',
+}
 
 const bodySchema = z.object({
   plan: z.enum(['starter', 'growth', 'scale', 'agency', 'agency_addon']),
@@ -38,7 +47,15 @@ export async function POST(request: Request) {
 
     const planKey = parsed.data.plan as RazorpayPlanKey
     const razorpayPlanId = getRazorpayPlanId(planKey)
-    await assertRazorpayPlanAmount(planKey, razorpayPlanId)
+
+    try {
+      await assertRazorpayPlanAmount(planKey, razorpayPlanId)
+    } catch (planError) {
+      if (isRazorpayInvalidIdError(planError)) {
+        return err(razorpayInvalidPlanIdMessage(planKey, PLAN_ENV_VARS[planKey], razorpayPlanId), 502)
+      }
+      throw planError
+    }
 
     const activeSub = await Subscription.findOne({
       userId: user._id,
@@ -72,6 +89,12 @@ export async function POST(request: Request) {
     })
   } catch (error) {
     console.error('POST /api/subscriptions/create failed:', error)
+    if (isRazorpayInvalidIdError(error)) {
+      return err(
+        'Razorpay rejected a configured id (invalid or not found). Verify each RAZORPAY_PLAN_* env var is a plan_… id from the same Razorpay mode (test vs live) as RAZORPAY_KEY_ID, then redeploy.',
+        502
+      )
+    }
     if (error instanceof Error && error.message === 'UNAUTHORIZED') return err('Unauthorized', 401)
     if (error instanceof Error && error.message.includes('RAZORPAY_KEY_ID and NEXT_PUBLIC')) {
       return err(error.message, 500)
