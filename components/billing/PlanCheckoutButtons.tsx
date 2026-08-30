@@ -7,14 +7,23 @@ import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { startOrderCheckout } from '@/components/billing/start-order-checkout'
 import { loadRazorpayScript, type RazorpayPrefill } from '@/components/billing/razorpay-subscription'
+import { AGENCY_LOCATION_ADDON_PRICE, PLAN_LIMITS } from '@/lib/plan-limits'
 import type { RazorpayPlanKey } from '@/lib/razorpay'
+import { formatCurrencyINR } from '@/lib/utils'
+
+function planCheckoutLabel(plan: Exclude<RazorpayPlanKey, 'agency_addon'>): string {
+  const title = plan.charAt(0).toUpperCase() + plan.slice(1)
+  const price = formatCurrencyINR(PLAN_LIMITS[plan].price)
+  if (plan === 'agency') return `${title} — ${price}/mo (20 client locations)`
+  return `${title} — ${price}/mo`
+}
 
 const LABELS: Record<RazorpayPlanKey, string> = {
-  starter: 'Starter — ₹999/mo',
-  growth: 'Growth — ₹2,499/mo',
-  scale: 'Scale — ₹5,999/mo',
-  agency: 'Agency — ₹9,999/mo (20 client locations)',
-  agency_addon: 'Extra agency location — ₹299/mo',
+  starter: planCheckoutLabel('starter'),
+  growth: planCheckoutLabel('growth'),
+  scale: planCheckoutLabel('scale'),
+  agency: planCheckoutLabel('agency'),
+  agency_addon: `Extra agency location — ${formatCurrencyINR(AGENCY_LOCATION_ADDON_PRICE)}/mo`,
 }
 
 type FocusedSmbPlan = 'starter' | 'growth' | 'scale'
@@ -202,7 +211,7 @@ export default function PlanCheckoutButtons({
         </div>
       ) : null}
       <p className="text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">
-        Checkout charges the full first month (₹999–₹9,999) via Razorpay Orders. Recurring billing starts next month.
+        Checkout charges the full first month ({formatCurrencyINR(PLAN_LIMITS.starter.price)}–{formatCurrencyINR(PLAN_LIMITS.agency.price)}) via Razorpay Orders. Recurring billing starts next month.
       </p>
     </div>
   )

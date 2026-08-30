@@ -5,6 +5,8 @@ import { useState } from 'react'
 import { BookOpen, Copy, ExternalLink, Mail, MessageCircleQuestion } from 'lucide-react'
 import { toast } from 'sonner'
 import { APP_NAME, SUPPORT_EMAIL } from '@/lib/brand'
+import { PLAN_LIMITS } from '@/lib/plan-limits'
+import { formatCurrencyINR } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 
 export default function SupportPageClient() {
@@ -66,7 +68,10 @@ export default function SupportPageClient() {
         </h2>
         <ul className="mt-4 space-y-3 text-sm text-slate-700 dark:text-slate-300">
           <li>
-            <strong>Billing / Razorpay:</strong> Plans are Starter ₹999, Growth ₹2,499, Scale ₹5,999 per month. If checkout shows the wrong amount, your Razorpay plan ids in Vercel need updating — email us with a screenshot.
+            <strong>Billing / Razorpay:</strong> Plans are Starter {formatCurrencyINR(PLAN_LIMITS.starter.price)},{' '}
+            Growth {formatCurrencyINR(PLAN_LIMITS.growth.price)}, Scale {formatCurrencyINR(PLAN_LIMITS.scale.price)} per
+            month. If checkout shows the wrong amount, your Razorpay plan ids in Vercel need updating — email us with a
+            screenshot.
           </li>
           <li>
             <strong>Google sign-in:</strong> Use the same Google account that manages your Business Profile. Reconnect from{' '}

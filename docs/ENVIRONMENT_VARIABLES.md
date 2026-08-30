@@ -105,10 +105,10 @@ Create plans in Razorpay Dashboard → Subscriptions → Plans with these **mont
 
 | Env var | Plan | Amount |
 |---------|------|--------|
-| `RAZORPAY_PLAN_STARTER` | Starter | ₹999 |
-| `RAZORPAY_PLAN_GROWTH` | Growth | ₹2,499 |
-| `RAZORPAY_PLAN_SCALE` | Scale | ₹5,999 |
-| `RAZORPAY_PLAN_AGENCY` | Agency | ₹9,999 |
+| `RAZORPAY_PLAN_STARTER` | Starter | ₹499 |
+| `RAZORPAY_PLAN_GROWTH` | Growth | ₹999 |
+| `RAZORPAY_PLAN_SCALE` | Scale | ₹1,999 |
+| `RAZORPAY_PLAN_AGENCY` | Agency | ₹2,999 |
 | `RAZORPAY_PLAN_AGENCY_ADDON` | Extra agency location | ₹299 |
 
 Checkout blocks mismatched plans (e.g. ₹5 test plans). Set `RAZORPAY_SKIP_PLAN_AMOUNT_CHECK=true` only for local experiments.

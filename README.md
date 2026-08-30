@@ -14,7 +14,7 @@
 | **AI replies** | Hindi, English, and Hinglish drafts with tone controls — you approve before publish |
 | **Google sync** | OAuth-connected GBP locations with encrypted token storage |
 | **WhatsApp bridge** | Alerts for low-star reviews and digest notifications via Twilio |
-| **Billing** | Razorpay Standard Checkout — UPI, cards, net banking; INR plans from ₹999/mo |
+| **Billing** | Razorpay Standard Checkout — UPI, cards, net banking; INR plans from ₹499/mo |
 | **Agency mode** | White-label headers, multi-client locations, partner join links |
 | **Public tools** | Free AI reply generator, embeddable reputation score, review widgets |
 | **Automation** | Cron-driven sync, scheduled replies, monthly PDF reports |
@@ -123,10 +123,10 @@ Boot-time `instrumentation.ts` validates critical env vars and warns on missing 
 | Plan | Price | Locations | AI replies |
 |------|-------|-----------|------------|
 | Free | ₹0 | 1 | 10/mo |
-| Starter | ₹999 | 1 | 100/mo |
-| Growth | ₹2,499 | 3 | 500/mo |
-| Scale | ₹5,999 | 10 | Unlimited |
-| Agency | ₹9,999 | 20 clients | Unlimited |
+| Starter | ₹499 | 1 | 100/mo |
+| Growth | ₹999 | 3 | 500/mo |
+| Scale | ₹1,999 | 10 | Unlimited |
+| Agency | ₹2,999 | 20 clients | Unlimited |
 
 New accounts receive a **14-day Growth trial** (no card required).
 
