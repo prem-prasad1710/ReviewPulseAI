@@ -192,7 +192,7 @@ function NodeButton({
         align === 'left' ? 'flex-row' : 'flex-row-reverse text-right',
         active
           ? 'border-indigo-400/50 bg-gradient-to-br from-indigo-50/90 to-cyan-50/80 shadow-[0_0_20px_-4px_rgba(99,102,241,0.2)] dark:border-indigo-500/45 dark:from-slate-800/95 dark:to-slate-900/95 dark:bg-slate-900/90 dark:shadow-[0_0_20px_-4px_rgba(99,102,241,0.2)]'
-          : 'border-slate-200/90 bg-white/90 hover:border-indigo-300/70 hover:bg-slate-50/95 dark:border-slate-700/90 dark:bg-slate-900/75 dark:hover:border-indigo-500/40 dark:hover:bg-slate-900/90'
+          : 'border-slate-200/90 bg-white/90 hover:border-indigo-300/70 hover:bg-slate-50/95 dark:border-indigo-500/25 dark:bg-slate-900/80 dark:shadow-[inset_0_1px_0_0_rgba(129,140,248,0.08)] dark:hover:border-indigo-400/40 dark:hover:bg-slate-900/90'
       )}
     >
       <span
@@ -200,14 +200,14 @@ function NodeButton({
           'flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border transition-all duration-300',
           active
             ? 'border-indigo-400/40 bg-indigo-100 text-indigo-900 dark:border-indigo-500/40 dark:bg-indigo-950/60 dark:text-indigo-200'
-            : 'border-slate-200 bg-slate-50 text-slate-600 group-hover:border-indigo-300 group-hover:text-indigo-800 dark:border-slate-600/80 dark:bg-slate-950/70 dark:text-slate-300 dark:group-hover:border-indigo-500/40 dark:group-hover:text-indigo-200'
+            : 'border-indigo-200/80 bg-indigo-50/90 text-indigo-700 group-hover:border-indigo-300 group-hover:text-indigo-800 dark:border-indigo-500/35 dark:bg-indigo-950/45 dark:text-indigo-300 dark:group-hover:border-indigo-400/50 dark:group-hover:text-indigo-200'
         )}
       >
         <Icon className="h-[18px] w-[18px]" aria-hidden />
       </span>
       <span className="min-w-0">
         <span className="block text-[13px] font-semibold leading-tight text-slate-900 dark:text-white">{node.label}</span>
-        <span className="mt-0.5 block text-[11px] font-medium text-slate-600 dark:text-slate-400">{node.sub}</span>
+        <span className="mt-0.5 block text-[11px] font-medium text-slate-600 dark:text-indigo-200/70">{node.sub}</span>
       </span>
     </button>
   )
@@ -387,7 +387,7 @@ export default function LandingElectricFlow() {
                 className={cn(
                   'pointer-events-none absolute z-[1] max-w-[7rem] truncate rounded-full border px-2 py-0.5 text-[10px] font-semibold backdrop-blur-md transition-opacity duration-300',
                   hoverIn === i || hoverIn === null ? 'opacity-100' : 'opacity-25',
-                  'border-indigo-500/25 bg-indigo-100/90 text-indigo-900 backdrop-blur-md dark:border-indigo-500/35 dark:bg-slate-900/90 dark:text-indigo-200/95'
+                  'border-indigo-500/25 bg-indigo-100/90 text-indigo-900 backdrop-blur-md dark:border-indigo-400/40 dark:bg-indigo-950/55 dark:text-indigo-200'
                 )}
                 style={{
                   left: `${(p.x / geom.w) * 100}%`,
@@ -405,7 +405,7 @@ export default function LandingElectricFlow() {
                 className={cn(
                   'pointer-events-none absolute z-[1] max-w-[7rem] truncate rounded-full border px-2 py-0.5 text-[10px] font-semibold backdrop-blur-md transition-opacity duration-300',
                   hoverOut === i || hoverOut === null ? 'opacity-100' : 'opacity-25',
-                  'border-violet-500/25 bg-violet-100/90 text-violet-900 backdrop-blur-md dark:border-violet-500/35 dark:bg-slate-900/90 dark:text-violet-200/95'
+                  'border-violet-500/25 bg-violet-100/90 text-violet-900 backdrop-blur-md dark:border-violet-400/40 dark:bg-violet-950/55 dark:text-violet-200'
                 )}
                 style={{
                   left: `${(p.x / geom.w) * 100}%`,
