@@ -26,6 +26,7 @@ export default function robots(): MetadataRoute.Robots {
           '/support',
           '/docs',
           '/v2',
+          '/sentry-example-page',
         ],
       },
     ],
