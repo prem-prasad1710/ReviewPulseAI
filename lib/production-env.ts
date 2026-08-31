@@ -97,6 +97,10 @@ export function validateProductionEnvironment(): void {
     optionalMissing.push('OPENAI_API_KEY and/or GROQ_API_KEY (AI replies)')
   }
 
+  if (!process.env.NEXT_PUBLIC_SENTRY_DSN?.trim() && !process.env.SENTRY_DSN?.trim()) {
+    optionalMissing.push('NEXT_PUBLIC_SENTRY_DSN (error monitoring)')
+  }
+
   for (const msg of warnings) {
     console.warn(`[ReviewPulse] Production warning: ${msg}`)
   }

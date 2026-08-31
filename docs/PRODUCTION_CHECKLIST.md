@@ -17,7 +17,7 @@ Boot-time logs from **`instrumentation.ts`** summarize missing optional integrat
 ## 2. Observability & health
 
 - [ ] Probe **`GET /api/health`** (readiness incl. Mongo); use **`GET /api/health?live=1`** for cheap liveness
-- [ ] Wire Sentry DSN (`@sentry/nextjs`)
+- [ ] Set `NEXT_PUBLIC_SENTRY_DSN` (and `SENTRY_ORG` / `SENTRY_PROJECT` / `SENTRY_AUTH_TOKEN` for source maps). Create a Sentry alert for new issues.
 - [ ] dashboards for 5xx + latency (`/api/*`, especially AI + GBP sync routes)
 
 ## 3. Security

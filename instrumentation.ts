@@ -1,7 +1,15 @@
+import * as Sentry from '@sentry/nextjs'
 import { bootstrapCanonicalAuthUrl } from '@/lib/bootstrap-auth-url'
 import { validateProductionEnvironment } from '@/lib/production-env'
 
 export async function register() {
+  if (process.env.NEXT_RUNTIME === 'nodejs') {
+    await import('./sentry.server.config')
+  }
+  if (process.env.NEXT_RUNTIME === 'edge') {
+    await import('./sentry.edge.config')
+  }
+
   if (process.env.NEXT_RUNTIME !== 'nodejs') return
 
   bootstrapCanonicalAuthUrl()
@@ -24,3 +32,5 @@ export async function register() {
     }
   }
 }
+
+export const onRequestError = Sentry.captureRequestError

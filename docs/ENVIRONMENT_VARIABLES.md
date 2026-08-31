@@ -142,7 +142,12 @@ Subscriptions collect the **first month upfront** at checkout (via Razorpay addo
 | Variable | Purpose |
 |----------|---------|
 | `ENABLE_HSTS` | `true` → `Strict-Transport-Security` |
-| `SENTRY_*` | `@sentry/nextjs` |
+| `NEXT_PUBLIC_SENTRY_DSN` | Sentry project DSN (browser + server). Create a Next.js project at sentry.io |
+| `SENTRY_DSN` | Optional server-only DSN fallback if the public DSN is unset |
+| `SENTRY_ORG` / `SENTRY_PROJECT` | Org + project slugs for source-map upload during `next build` |
+| `SENTRY_AUTH_TOKEN` | CI/Vercel secret for source-map upload (never expose to the browser) |
+| `SENTRY_ENVIRONMENT` | Optional override (`production`, `preview`, `development`) |
+| `SENTRY_DISABLED` | `true` to turn Sentry off without removing the DSN |
 
 ## Observatory
 
