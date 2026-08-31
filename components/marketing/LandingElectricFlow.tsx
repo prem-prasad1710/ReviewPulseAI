@@ -192,7 +192,7 @@ function NodeButton({
         align === 'left' ? 'flex-row' : 'flex-row-reverse text-right',
         active
           ? 'border-indigo-400/50 bg-gradient-to-br from-indigo-50/90 to-cyan-50/80 shadow-[0_0_20px_-4px_rgba(99,102,241,0.2)] dark:border-indigo-500/45 dark:from-slate-800/95 dark:to-slate-900/95 dark:bg-slate-900/90 dark:shadow-[0_0_20px_-4px_rgba(99,102,241,0.2)]'
-          : 'border-slate-200/90 bg-white/90 hover:border-indigo-300/70 hover:bg-slate-50/95 dark:border-indigo-500/25 dark:bg-slate-900/80 dark:shadow-[inset_0_1px_0_0_rgba(129,140,248,0.08)] dark:hover:border-indigo-400/40 dark:hover:bg-slate-900/90'
+          : 'border-slate-200/90 bg-white/90 hover:border-indigo-300/70 hover:bg-slate-50/95 dark:border-indigo-400/40 dark:bg-slate-900/80 dark:shadow-[inset_0_1px_0_0_rgba(129,140,248,0.12)] dark:hover:border-indigo-300/55 dark:hover:bg-slate-900/90'
       )}
     >
       <span
@@ -207,7 +207,7 @@ function NodeButton({
       </span>
       <span className="min-w-0">
         <span className="block text-[13px] font-semibold leading-tight text-slate-900 dark:text-white">{node.label}</span>
-        <span className="mt-0.5 block text-[11px] font-medium text-slate-600 dark:text-indigo-200/70">{node.sub}</span>
+        <span className="mt-0.5 block text-[11px] font-medium text-slate-600 dark:text-indigo-200">{node.sub}</span>
       </span>
     </button>
   )
@@ -360,7 +360,14 @@ export default function LandingElectricFlow() {
             aria-hidden
           >
             <defs>
-              <linearGradient id={gradId} x1="0%" y1="0%" x2="100%" y2="0%">
+              <linearGradient
+                id={gradId}
+                gradientUnits="userSpaceOnUse"
+                x1={0}
+                y1={(geom?.h ?? 520) / 2}
+                x2={geom?.w ?? 1000}
+                y2={(geom?.h ?? 520) / 2}
+              >
                 <stop offset="0%" stopColor="#22d3ee" />
                 <stop offset="45%" stopColor="#818cf8" />
                 <stop offset="100%" stopColor="#c084fc" />
@@ -368,13 +375,13 @@ export default function LandingElectricFlow() {
             </defs>
             {(geom?.dIn ?? []).map((d, i) => (
               <g key={`in-g-${i}`}>
-                <path d={d} stroke="currentColor" className={cn(pathClass('in', i), 'text-indigo-300/25 dark:text-indigo-400/20')} strokeWidth={4} />
+                <path d={d} stroke="currentColor" className={cn(pathClass('in', i), 'text-indigo-300/40 dark:text-cyan-400/35')} strokeWidth={4} />
                 <path d={d} stroke={`url(#${gradId})`} className={pathClass('in', i)} />
               </g>
             ))}
             {(geom?.dOut ?? []).map((d, i) => (
               <g key={`out-g-${i}`}>
-                <path d={d} stroke="currentColor" className={cn(pathClass('out', i), 'text-indigo-300/25 dark:text-indigo-400/20')} strokeWidth={4} />
+                <path d={d} stroke="currentColor" className={cn(pathClass('out', i), 'text-indigo-300/40 dark:text-cyan-400/35')} strokeWidth={4} />
                 <path d={d} stroke={`url(#${gradId})`} className={pathClass('out', i)} />
               </g>
             ))}
