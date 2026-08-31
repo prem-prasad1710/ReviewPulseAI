@@ -33,6 +33,6 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   } catch (error) {
     console.error('POST /api/reviews/[id]/reply failed:', error)
     if (error instanceof Error && error.message === 'UNAUTHORIZED') return err('Unauthorized', 401)
-    return err('Failed to publish reply', 500)
+    return err('Failed to publish reply', 500, error)
   }
 }

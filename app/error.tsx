@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { useEffect } from 'react'
+import { reportException } from '@/lib/report-exception'
 
 export default function AppError({
   error,
@@ -12,6 +13,10 @@ export default function AppError({
 }) {
   useEffect(() => {
     console.error('[ReviewPulse]', error.message, error.digest)
+    reportException(error, {
+      tags: { source: 'app-error' },
+      extra: { digest: error.digest },
+    })
   }, [error.digest, error.message])
 
   return (

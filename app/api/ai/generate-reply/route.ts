@@ -182,6 +182,6 @@ export async function POST(request: Request) {
         400
       )
     }
-    return err('Failed to generate reply', 500)
+    return err('Failed to generate reply', 500, error)
   }
 }

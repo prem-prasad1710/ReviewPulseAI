@@ -9,5 +9,5 @@ export function serverErr(context: string, error: unknown, status = 500) {
       : error instanceof Error
         ? error.message
         : 'Unexpected error'
-  return err(safe, status)
+  return err(safe, status, error)
 }
