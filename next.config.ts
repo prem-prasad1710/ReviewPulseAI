@@ -155,8 +155,8 @@ const nextConfig: NextConfig = {
 }
 
 export default withSentryConfig(nextConfig, {
-  org: process.env.SENTRY_ORG,
-  project: process.env.SENTRY_PROJECT,
+  org: process.env.SENTRY_ORG || 'prem-prasad1710',
+  project: process.env.SENTRY_PROJECT || 'javascript-nextjs-2x',
   authToken: process.env.SENTRY_AUTH_TOKEN,
   silent: !process.env.CI,
   widenClientFileUpload: true,
