@@ -4,7 +4,7 @@
  * Supports Hindi, English, and Hinglish
  */
 
-import { getOpenAI, resolveLlmChatModel } from '@/lib/openai'
+import { createChatCompletionWithFallback, resolveLlmChatModel } from '@/lib/openai'
 import { buildAiCacheKey, defaultAiCacheTtlSeconds, withCachedAiJson } from '@/lib/ai-redis-cache'
 
 export type ReplyTone = 'professional' | 'friendly' | 'formal' | 'grateful' | 'concise' | 'apologetic'
@@ -74,7 +74,7 @@ FINANCIAL COMPLIANCE:
         cacheKey,
         ttlSeconds: defaultAiCacheTtlSeconds(),
         produce: async () => {
-          const response = await getOpenAI().chat.completions.create({
+          const { response } = await createChatCompletionWithFallback({
             model: resolveLlmChatModel(),
             messages: [
               {
@@ -302,7 +302,7 @@ Hinglish Guidelines:
    */
   async extractKeyConcerns(reviewText: string): Promise<string[]> {
     try {
-      const response = await getOpenAI().chat.completions.create({
+      const { response } = await createChatCompletionWithFallback({
         model: resolveLlmChatModel(),
         messages: [
           {

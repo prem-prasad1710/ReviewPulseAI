@@ -3,7 +3,7 @@
  * Supports English, Hindi, and Hinglish with nuanced emotion detection
  */
 
-import { getOpenAI, resolveLlmChatModel } from '@/lib/openai'
+import { createChatCompletionWithFallback, resolveLlmChatModel } from '@/lib/openai'
 import {
   buildAiCacheKey,
   normalizeGenericTextInput,
@@ -52,7 +52,7 @@ class MultilingualSentimentAnalyzer {
         cacheKey,
         ttlSeconds: sentimentCacheTtlSeconds(),
         produce: async () => {
-          const response = await getOpenAI().chat.completions.create({
+          const { response } = await createChatCompletionWithFallback({
             model: resolveLlmChatModel(),
             messages: [
               {

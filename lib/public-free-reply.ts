@@ -1,4 +1,4 @@
-import { getOpenAI, resolveLlmChatModel } from '@/lib/openai'
+import { createChatCompletionWithFallback, resolveLlmChatModel } from '@/lib/openai'
 import {
   buildAiCacheKey,
   normalizeGenericTextInput,
@@ -28,7 +28,6 @@ export async function generatePublicFreeReply(params: {
         ? 'Write in natural Hinglish (Hindi + English mix) as Indian SMB owners use on WhatsApp.'
         : 'Write in clear Indian English, warm and professional.'
 
-  const openai = getOpenAI()
   const userContent = `Business: ${name}\nStar rating: ${rating}/5\nReview:\n${text}`
 
   const cacheKey = buildAiCacheKey(
@@ -44,7 +43,7 @@ export async function generatePublicFreeReply(params: {
     cacheKey,
     ttlSeconds: publicFreeReplyCacheTtlSeconds(),
     produce: async () => {
-      const completion = await openai.chat.completions.create({
+      const { response } = await createChatCompletionWithFallback({
         model: resolveLlmChatModel(),
         temperature: 0.45,
         max_tokens: 500,
@@ -68,7 +67,7 @@ Rules:
           },
         ],
       })
-      const out = completion.choices[0]?.message?.content?.trim() || ''
+      const out = response.choices[0]?.message?.content?.trim() || ''
       return out.slice(0, 1500)
     },
   })
