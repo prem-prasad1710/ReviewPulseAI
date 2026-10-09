@@ -61,11 +61,21 @@ export default function NotificationBell() {
     } catch { /* silent */ }
   }, [])
 
-  // Poll every 60 s
   useEffect(() => {
-    void fetchNotifs()
-    const id = setInterval(() => void fetchNotifs(), 60_000)
-    return () => clearInterval(id)
+    const tick = () => {
+      if (typeof document !== 'undefined' && document.visibilityState === 'hidden') return
+      void fetchNotifs()
+    }
+    tick()
+    const id = setInterval(tick, 60_000)
+    const onVis = () => {
+      if (document.visibilityState === 'visible') void fetchNotifs()
+    }
+    document.addEventListener('visibilitychange', onVis)
+    return () => {
+      clearInterval(id)
+      document.removeEventListener('visibilitychange', onVis)
+    }
   }, [fetchNotifs])
 
   // Close on outside click

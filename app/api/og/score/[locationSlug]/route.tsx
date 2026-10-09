@@ -19,7 +19,10 @@ export async function GET(
       return new Response('Not found', { status: 404 })
     }
 
-    const reviews = await Review.find({ locationId: location._id }).lean()
+    const reviews = await Review.find({ locationId: location._id })
+      .select('rating sentiment status')
+      .limit(400)
+      .lean()
     const total = reviews.length
     const replied = reviews.filter((r) => r.status === 'replied').length
     const replyRate = total > 0 ? replied / total : 0
@@ -59,7 +62,13 @@ export async function GET(
           ) : null}
         </div>
       ),
-      { width: 1200, height: 630 }
+      {
+        width: 1200,
+        height: 630,
+        headers: {
+          'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400',
+        },
+      }
     )
   } catch (error) {
     console.error('OG score failed:', error)

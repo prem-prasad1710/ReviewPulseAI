@@ -141,6 +141,11 @@ export default function ReviewsInbox() {
         reviewId={selectedReviewId}
         open={!!selectedReviewId}
         onClose={() => setSelectedReviewId(null)}
+        onPublished={() => {
+          const id = selectedReviewId
+          if (!id) return
+          setReviews((prev) => prev.map((r) => (r._id === id ? { ...r, status: 'replied' } : r)))
+        }}
       />
     </div>
   )

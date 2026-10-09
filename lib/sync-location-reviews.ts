@@ -88,35 +88,60 @@ export async function syncLocationReviewsForUser(
       0
     )
 
+    const googleIds = (reviews as GbpReview[])
+      .map((item) => item.reviewId || item.name?.split('/').pop())
+      .filter((id): id is string => Boolean(id))
+    const priorDocs = googleIds.length
+      ? await Review.find({ userId, googleReviewId: { $in: googleIds } })
+          .select(
+            'googleReviewId rating comment sentiment sentimentScore status publishedReply ratingMonitoringUntil ratingRecovered'
+          )
+          .lean()
+      : []
+    const priorById = new Map(priorDocs.map((doc) => [String(doc.googleReviewId), doc]))
+
     for (const item of reviews as GbpReview[]) {
       const reviewId = item.reviewId || item.name?.split('/').pop()
       if (!reviewId) continue
 
-      const prior = await Review.findOne({ userId, googleReviewId: reviewId })
-        .select('rating ratingMonitoringUntil ratingRecovered')
-        .lean()
-
+      const prior = priorById.get(reviewId)
       const rating = normalizeRating(item.starRating || undefined)
       const comment = item.comment || ''
-      const sentimentPayload = await analyzeSentiment(comment || 'No text review', rating || 3)
+      const unchanged = Boolean(prior && prior.comment === comment && prior.rating === rating)
+      const sentimentPayload =
+        unchanged && prior?.sentiment
+          ? { sentiment: prior.sentiment, sentimentScore: prior.sentimentScore ?? 0 }
+          : await analyzeSentiment(comment || 'No text review', rating || 3)
+
+      const setFields: Record<string, unknown> = {
+        locationId: location._id,
+        userId,
+        googleReviewId: reviewId,
+        reviewerName: item.reviewer?.displayName || 'Google User',
+        reviewerPhoto: item.reviewer?.profilePhotoUrl,
+        rating,
+        comment,
+        sentiment: sentimentPayload.sentiment,
+        sentimentScore: sentimentPayload.sentimentScore,
+        reviewCreatedAt: item.createTime ? new Date(item.createTime) : new Date(),
+        syncedAt: new Date(),
+      }
+
+      const gbpReply = item.reviewReply
+      const keepLocalStatus =
+        prior?.status === 'replied' || prior?.status === 'scheduled' || prior?.status === 'ignored'
+      if (gbpReply && !keepLocalStatus) {
+        setFields.status = 'replied'
+        if (gbpReply.comment) setFields.publishedReply = gbpReply.comment
+        if (gbpReply.updateTime) setFields.repliedAt = new Date(gbpReply.updateTime)
+      } else if (gbpReply?.comment && prior?.status === 'replied' && !prior.publishedReply) {
+        setFields.publishedReply = gbpReply.comment
+        if (gbpReply.updateTime) setFields.repliedAt = new Date(gbpReply.updateTime)
+      }
 
       const reviewDoc = await Review.findOneAndUpdate(
         { userId, googleReviewId: reviewId },
-        {
-          $set: {
-            locationId: location._id,
-            userId,
-            googleReviewId: reviewId,
-            reviewerName: item.reviewer?.displayName || 'Google User',
-            reviewerPhoto: item.reviewer?.profilePhotoUrl,
-            rating,
-            comment,
-            sentiment: sentimentPayload.sentiment,
-            sentimentScore: sentimentPayload.sentimentScore,
-            reviewCreatedAt: item.createTime ? new Date(item.createTime) : new Date(),
-            syncedAt: new Date(),
-          },
-        },
+        { $set: setFields },
         { upsert: true, new: true, setDefaultsOnInsert: true }
       )
 

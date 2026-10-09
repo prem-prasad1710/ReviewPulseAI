@@ -31,7 +31,13 @@ export async function GET(request: Request) {
     if (parsed.data.status) filter.status = parsed.data.status
     if (parsed.data.locationId) filter.locationId = parsed.data.locationId
 
-    const reviews = await Review.find(filter).sort({ reviewCreatedAt: -1 }).lean()
+    const reviews = await Review.find(filter)
+      .select(
+        'reviewerName rating comment sentiment status detectedLanguage translatedText fakeScore fakeSignals reviewCreatedAt locationId'
+      )
+      .sort({ reviewCreatedAt: -1 })
+      .limit(150)
+      .lean()
     return ok(reviews)
   } catch (error) {
     console.error('GET /api/reviews failed:', error)

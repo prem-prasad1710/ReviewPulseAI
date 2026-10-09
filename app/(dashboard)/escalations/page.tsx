@@ -19,14 +19,28 @@ type Task = {
 export default function EscalationsPage() {
   const [tasks, setTasks] = useState<Task[]>([])
   const [loading, setLoading] = useState(true)
+  const [fetchError, setFetchError] = useState<string | null>(null)
 
-  useEffect(() => {
-    void (async () => {
+  const load = async () => {
+    setLoading(true)
+    setFetchError(null)
+    try {
       const res = await fetch('/api/escalations')
       const j = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        setFetchError(res.status === 401 ? 'Your session has expired. Please sign in again.' : 'Could not load escalations.')
+        return
+      }
+      setTasks((j?.data as Task[]) || [])
+    } catch {
+      setFetchError('Network error — check your connection and try again.')
+    } finally {
       setLoading(false)
-      if (res.ok) setTasks((j?.data as Task[]) || [])
-    })()
+    }
+  }
+
+  useEffect(() => {
+    void load()
   }, [])
 
   const resolveOne = async (id: string) => {
@@ -57,7 +71,18 @@ export default function EscalationsPage() {
 
       <Card className="border-slate-200/90 divide-y divide-slate-100 dark:border-slate-700/80 dark:divide-slate-800">
         {loading ? (
-          <p className="p-6 text-sm text-slate-500">Loading…</p>
+          <p className="p-6 text-sm text-slate-500 dark:text-slate-400">Loading…</p>
+        ) : fetchError ? (
+          <div className="p-6">
+            <p className="text-sm font-medium text-red-800 dark:text-red-200">{fetchError}</p>
+            <button
+              type="button"
+              onClick={() => void load()}
+              className="mt-3 rounded-xl bg-red-600 px-4 py-2 text-xs font-semibold text-white hover:bg-red-700"
+            >
+              Retry
+            </button>
+          </div>
         ) : tasks.length === 0 ? (
           <p className="p-6 text-sm text-slate-600 dark:text-slate-300">No open escalations 🎉</p>
         ) : (

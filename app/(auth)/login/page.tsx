@@ -82,7 +82,7 @@ export default async function LoginPage({
           ) : null}
 
           {errorMessage ? (
-            <div className="mb-5 rounded-xl border border-red-200/90 bg-red-50/90 px-4 py-3 text-sm leading-relaxed text-red-800">
+            <div className="mb-5 rounded-xl border border-red-200/90 bg-red-50/90 px-4 py-3 text-sm leading-relaxed text-red-800 dark:border-red-900/40 dark:bg-red-950/50 dark:text-red-200">
               {errorMessage}
             </div>
           ) : null}
@@ -92,7 +92,7 @@ export default async function LoginPage({
             className="h-11 w-full rounded-xl text-base font-semibold shadow-md shadow-indigo-600/20"
           />
 
-          <p className="mt-6 text-center text-[11px] leading-relaxed text-slate-500 dark:text-slate-500">
+          <p className="mt-6 text-center text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">
             By continuing you agree to our acceptable use of Google Business data for review management only.
           </p>
         </div>

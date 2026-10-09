@@ -1,5 +1,3 @@
-'use client'
-
 import { MessageSquareText, Timer, Languages } from 'lucide-react'
 import { cn } from '@/lib/utils'
 

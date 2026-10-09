@@ -257,7 +257,7 @@ export default function LandingElectricFlow() {
 
   useLayoutEffect(() => {
     remesh()
-  }, [remesh, hoverIn, hoverOut])
+  }, [remesh])
 
   const pathClass = (side: FlowSide, index: number) => {
     const active = side === 'in' ? hoverIn === index : hoverOut === index
@@ -311,7 +311,7 @@ export default function LandingElectricFlow() {
         {/* Mobile: stacked flow */}
         <div className="mx-auto max-w-md space-y-8 lg:hidden">
           <div className="space-y-2">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-500">Into the hub</p>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">Into the hub</p>
             <div className="space-y-2">
               {NODES_IN.map((n, i) => (
                 <NodeButton
@@ -329,7 +329,7 @@ export default function LandingElectricFlow() {
           <HubCard />
 
           <div className="space-y-2">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-500">Out to the market</p>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">Out to the market</p>
             <div className="space-y-2">
               {NODES_OUT.map((n, i) => (
                 <NodeButton
@@ -343,7 +343,7 @@ export default function LandingElectricFlow() {
               ))}
             </div>
           </div>
-          <p className="text-center text-[11px] text-slate-500 dark:text-slate-500">On desktop, hover the nodes to trace each live path.</p>
+          <p className="text-center text-[11px] text-slate-500 dark:text-slate-400">On desktop, hover the nodes to trace each live path.</p>
         </div>
 
         {/* Desktop: SVG electric mesh — paths measured from real node + hub geometry */}
@@ -468,7 +468,7 @@ export default function LandingElectricFlow() {
         </div>
 
         <footer className="relative z-[4] mt-12 border-t border-slate-200/90 pt-8 dark:border-slate-700/80 md:mt-14">
-          <p className="mb-4 text-center text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-500">Built to sit beside tools you already use</p>
+          <p className="mb-4 text-center text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">Built to sit beside tools you already use</p>
           <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3 opacity-90 grayscale transition hover:grayscale-0 hover:opacity-100 dark:opacity-80">
             {['Google Business', 'Gmail', 'Slack', 'WhatsApp', 'Razorpay', 'Resend'].map((name) => (
               <span key={name} className="text-xs font-semibold tracking-wide text-slate-500 dark:text-slate-400">
@@ -503,7 +503,7 @@ function HubCard() {
 
       <div className="relative mt-4 space-y-3 text-[11px]">
         <div className="rounded-xl border border-slate-200/90 bg-slate-50/90 px-3 py-2 dark:border-slate-700/80 dark:bg-slate-950/70">
-          <p className="mb-1.5 font-semibold uppercase tracking-wide text-slate-500">Conditions</p>
+          <p className="mb-1.5 font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Conditions</p>
           <div className="flex flex-wrap gap-1.5">
             <span className="rounded-md bg-rose-100 px-2 py-0.5 font-medium text-rose-800 dark:bg-rose-500/20 dark:text-rose-100">Rating ≤ 3★</span>
             <span className="rounded-md bg-amber-100 px-2 py-0.5 font-medium text-amber-900 dark:bg-amber-500/15 dark:text-amber-100">Urgent</span>
@@ -511,14 +511,14 @@ function HubCard() {
           </div>
         </div>
         <div className="rounded-xl border border-slate-200/90 bg-slate-50/90 px-3 py-2 dark:border-slate-700/80 dark:bg-slate-950/70">
-          <p className="mb-1.5 font-semibold uppercase tracking-wide text-slate-500">Output</p>
+          <p className="mb-1.5 font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Output</p>
           <div className="flex flex-wrap gap-1.5">
             <span className="rounded-md bg-cyan-100 px-2 py-0.5 font-medium text-cyan-900 dark:bg-cyan-500/20 dark:text-cyan-50">Draft reply</span>
             <span className="rounded-md bg-indigo-100 px-2 py-0.5 font-medium text-indigo-900 dark:bg-indigo-500/25 dark:text-indigo-100">Hindi / English</span>
             <span className="rounded-md bg-emerald-100 px-2 py-0.5 font-medium text-emerald-900 dark:bg-emerald-500/20 dark:text-emerald-100">Awaiting approve</span>
           </div>
         </div>
-        <p className="text-center text-[10px] leading-relaxed text-slate-500 dark:text-slate-500">
+        <p className="text-center text-[10px] leading-relaxed text-slate-500 dark:text-slate-400">
           Nothing posts without you — we are not a faceless auto-poster.
         </p>
       </div>
