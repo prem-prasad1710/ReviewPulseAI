@@ -15,6 +15,7 @@ export interface GbpReview {
     profilePhotoUrl?: string
   }
   reviewReply?: {
+    comment?: string
     updateTime?: string
   }
 }
@@ -105,30 +106,43 @@ export async function listLocationReviews(
   accessToken: string
 ) {
   const parent = `${accountId}/locations/${locationId}`
-  const url = `https://mybusiness.googleapis.com/v4/${parent}/reviews?pageSize=100`
+  const reviews: GbpReview[] = []
+  let pageToken: string | undefined
+  let pages = 0
+  const maxPages = 10
 
-  const response = await fetch(url, {
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      'Content-Type': 'application/json',
-    },
-  })
+  do {
+    const qs = new URLSearchParams({ pageSize: '100' })
+    if (pageToken) qs.set('pageToken', pageToken)
+    const url = `https://mybusiness.googleapis.com/v4/${parent}/reviews?${qs}`
 
-  if (!response.ok) {
-    let errorDetail = `HTTP ${response.status}`
-    try {
-      const errorBody = await response.json()
-      if (errorBody.error?.message) {
-        errorDetail += ` - ${errorBody.error.message}`
+    const response = await fetch(url, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+    })
+
+    if (!response.ok) {
+      let errorDetail = `HTTP ${response.status}`
+      try {
+        const errorBody = await response.json()
+        if (errorBody.error?.message) {
+          errorDetail += ` - ${errorBody.error.message}`
+        }
+      } catch {
+        // If response body isn't JSON, just use status
       }
-    } catch {
-      // If response body isn't JSON, just use status
+      throw new Error(`Failed to fetch reviews: ${errorDetail}`)
     }
-    throw new Error(`Failed to fetch reviews: ${errorDetail}`)
-  }
 
-  const data = (await response.json()) as { reviews?: GbpReview[] }
-  return data.reviews || []
+    const data = (await response.json()) as { reviews?: GbpReview[]; nextPageToken?: string }
+    reviews.push(...(data.reviews || []))
+    pageToken = data.nextPageToken || undefined
+    pages += 1
+  } while (pageToken && pages < maxPages)
+
+  return reviews
 }
 
 export async function publishReviewReply(params: {
@@ -152,7 +166,14 @@ export async function publishReviewReply(params: {
   })
 
   if (!response.ok) {
-    throw new Error(`Failed to publish reply: ${response.status}`)
+    let detail = `HTTP ${response.status}`
+    try {
+      const body = await response.json()
+      if (body.error?.message) detail += ` - ${body.error.message}`
+    } catch {
+      /* ignore */
+    }
+    throw new Error(`Failed to publish reply: ${detail}`)
   }
 }
 

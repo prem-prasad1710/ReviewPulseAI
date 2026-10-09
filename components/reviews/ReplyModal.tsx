@@ -46,13 +46,16 @@ export default function ReplyModal({
   reviewId,
   open,
   onClose,
+  onPublished,
 }: {
   reviewId: string | null
   open: boolean
   onClose: () => void
+  onPublished?: () => void
 }) {
   const [reply, setReply] = useState('')
   const [loading, setLoading] = useState(false)
+  const [publishing, setPublishing] = useState(false)
   const [language, setLanguage] = useState<'hindi' | 'english' | 'hinglish'>('english')
   const [tone, setTone] = useState<
     'professional' | 'friendly' | 'formal' | 'grateful' | 'concise' | 'apologetic'
@@ -158,16 +161,33 @@ export default function ReplyModal({
   }
 
   const publish = async () => {
-    setLoading(true)
+    if (!reviewId || reply.trim().length < 20) return
+    setPublishing(true)
     try {
-      await fetch(`/api/reviews/${reviewId}/reply`, {
+      const res = await fetch(`/api/reviews/${reviewId}/reply`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ replyText: reply }),
       })
+      const json = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        const apiMsg = (json?.error as string) || ''
+        toast.error(
+          res.status === 401
+            ? 'Session expired. Please sign in again.'
+            : res.status === 400
+              ? apiMsg || 'Google did not accept this reply. Check the text and try again.'
+              : apiMsg || 'Could not publish this reply. Please try again.'
+        )
+        return
+      }
+      toast.success('Reply published to Google')
+      onPublished?.()
       onClose()
+    } catch {
+      toast.error('Network error — could not publish. Check your connection.')
     } finally {
-      setLoading(false)
+      setPublishing(false)
     }
   }
 
@@ -420,7 +440,7 @@ export default function ReplyModal({
             ) : null}
 
             <div className="flex flex-wrap gap-2">
-              <Button onClick={generate} disabled={loading} className="rounded-xl">
+              <Button onClick={generate} disabled={loading || publishing} className="rounded-xl">
                 <Sparkles className="mr-1.5 h-3.5 w-3.5" />
                 {loading ? 'Generating…' : 'Generate draft'}
               </Button>
@@ -432,8 +452,13 @@ export default function ReplyModal({
                 <BookOpen className="h-3.5 w-3.5" />
                 Browse templates
               </button>
-              <Button onClick={publish} variant="secondary" disabled={loading || reply.length < 20} className="rounded-xl">
-                Publish to Google
+              <Button
+                onClick={publish}
+                variant="secondary"
+                disabled={loading || publishing || reply.length < 20}
+                className="rounded-xl"
+              >
+                {publishing ? 'Publishing…' : 'Publish to Google'}
               </Button>
             </div>
             <p className="text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">

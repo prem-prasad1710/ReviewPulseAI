@@ -45,7 +45,9 @@ export default async function DashboardPage() {
   const dbUser = userId ? ((await User.findById(userId).lean()) as IUserLean | null) : null
   const firstName = session?.user?.name?.split(/\s+/)[0] ?? 'there'
   const serverNow = new Date()
-  const hour = serverNow.getHours()
+  const hour = Number(
+    new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Kolkata', hour: 'numeric', hour12: false }).format(serverNow)
+  )
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'
   const weekCutoffMs = serverNow.getTime() - 7 * 86400000
 

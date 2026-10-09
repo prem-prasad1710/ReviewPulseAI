@@ -57,7 +57,11 @@ export default async function AnalyticsPage() {
   const reviews: ReviewLean[] = useMocks
     ? (MOCK_REVIEWS as unknown as ReviewLean[])
     : userId
-      ? ((await Review.find({ userId }).sort({ reviewCreatedAt: -1 }).lean()) as unknown as ReviewLean[])
+      ? ((await Review.find({ userId })
+          .select('sentiment sentimentScore rating status comment reviewCreatedAt locationId emotion')
+          .sort({ reviewCreatedAt: -1 })
+          .limit(400)
+          .lean()) as unknown as ReviewLean[])
       : []
 
   let velocitySeries: { day: string; count: number; avgRating: number }[] = []

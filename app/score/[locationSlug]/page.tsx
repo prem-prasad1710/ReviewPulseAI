@@ -14,7 +14,11 @@ async function loadScoreData(locationSlug: string) {
   await connectDB()
   const location = await Location.findOne({ locationSlug }).lean()
   if (!location) return null
-  const reviews = await Review.find({ locationId: location._id }).sort({ reviewCreatedAt: -1 }).lean()
+  const reviews = await Review.find({ locationId: location._id })
+    .select('rating sentiment status comment reviewCreatedAt')
+    .sort({ reviewCreatedAt: -1 })
+    .limit(400)
+    .lean()
   const owner = await User.findById(location.userId).select('plan').lean()
   return { location, reviews, plan: (owner?.plan as string) || 'free' }
 }
