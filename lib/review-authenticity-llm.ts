@@ -59,7 +59,7 @@ Review content:
       }
       const verdict: LlmAuthenticityVerdict =
         parsed.verdict === 'likely_inauthentic' ? 'likely_inauthentic' : 'likely_genuine'
-      let confidence =
+      const confidence =
         typeof parsed.confidence === 'number' && Number.isFinite(parsed.confidence)
           ? Math.min(1, Math.max(0, parsed.confidence))
           : 0.6

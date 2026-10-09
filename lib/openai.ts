@@ -101,12 +101,12 @@ export function getOpenAI(): OpenAI {
  */
 export async function createChatCompletionWithFallback(
   params: Parameters<OpenAI['chat']['completions']['create']>[0]
-): Promise<{ response: Awaited<ReturnType<OpenAI['chat']['completions']['create']>>; modelUsed: string }> {
+): Promise<{ response: OpenAI.ChatCompletion; modelUsed: string }> {
   const openai = getOpenAI()
   const primaryModel = params.model
 
   try {
-    const response = await openai.chat.completions.create(params)
+    const response = (await openai.chat.completions.create(params)) as OpenAI.ChatCompletion
     return { response, modelUsed: primaryModel }
   } catch (error: unknown) {
     const fallbackModel = resolveLlmFallbackModel()
@@ -126,10 +126,10 @@ export async function createChatCompletionWithFallback(
       console.warn(
         `[openai] Model ${primaryModel} not found (404), retrying with fallback model ${fallbackModel}`
       )
-      const response = await openai.chat.completions.create({
+      const response = (await openai.chat.completions.create({
         ...params,
         model: fallbackModel,
-      })
+      })) as OpenAI.ChatCompletion
       return { response, modelUsed: fallbackModel }
     }
 
