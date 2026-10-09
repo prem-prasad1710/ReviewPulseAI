@@ -2,7 +2,7 @@
  * PDF spec: lightweight LLM classifier for suspicious vs genuine narratives.
  * Supplemental to heuristic fakeScore (lib/fake-score.ts) — advisory only.
  */
-import { getOpenAI, resolveLlmChatModel } from '@/lib/openai'
+import { createChatCompletionWithFallback, resolveLlmChatModel } from '@/lib/openai'
 import {
   buildAiCacheKey,
   defaultAiCacheTtlSeconds,
@@ -44,7 +44,7 @@ Review content:
     cacheKey,
     ttlSeconds: defaultAiCacheTtlSeconds(),
     produce: async () => {
-      const response = await getOpenAI().chat.completions.create({
+      const { response } = await createChatCompletionWithFallback({
         model: resolveLlmChatModel(),
         messages: [{ role: 'user', content: prompt }],
         response_format: { type: 'json_object' },

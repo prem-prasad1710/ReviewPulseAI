@@ -14,7 +14,7 @@ export function isGroqApiKey(key: string): boolean {
   return key.startsWith('gsk_')
 }
 
-/** Chat model for `chat.completions` (Groq vs OpenAI). Override with LLM_CHAT_MODEL. */
+/** Chat model for `chat.completions` (Groq vs OpenAI). Override with GROQ_MODEL or LLM_CHAT_MODEL. */
 export function resolveLlmChatModel(): string {
   const explicit = process.env.LLM_CHAT_MODEL?.trim()
   if (explicit) return explicit
@@ -28,8 +28,32 @@ export function resolveLlmChatModel(): string {
     Boolean(openAiKey && isGroqApiKey(openAiKey)) ||
     base.includes('groq.com')
 
-  /** Default aligns with Groq's popular fast model slug; tweak via LLM_CHAT_MODEL per console.groq.com. */
-  return routesToGroq ? 'llama-3.3-70b-versatile' : 'gpt-4o-mini'
+  if (routesToGroq) {
+    const groqModel = process.env.GROQ_MODEL?.trim()
+    if (groqModel) return groqModel
+    return 'openai/gpt-oss-20b'
+  }
+
+  return 'gpt-4o-mini'
+}
+
+/** Fallback model for Groq when primary model fails with model_not_found. */
+export function resolveLlmFallbackModel(): string | null {
+  const groqKey = process.env.GROQ_API_KEY?.trim()
+  const openAiKey = process.env.OPENAI_API_KEY?.trim()
+  const base = process.env.OPENAI_BASE_URL?.trim()?.toLowerCase() ?? ''
+
+  const routesToGroq =
+    Boolean(groqKey) ||
+    Boolean(openAiKey && isGroqApiKey(openAiKey)) ||
+    base.includes('groq.com')
+
+  if (!routesToGroq) return null
+
+  const primaryModel = resolveLlmChatModel()
+  if (primaryModel === 'openai/gpt-oss-120b') return null
+
+  return 'openai/gpt-oss-120b'
 }
 
 function resolveOpenAICompatibleClientConfig(): { apiKey: string; baseURL?: string } {
@@ -69,6 +93,48 @@ export function getOpenAI(): OpenAI {
     })
   }
   return cachedOpenAI
+}
+
+/**
+ * Create chat completion with automatic fallback to resolveLlmFallbackModel() on model_not_found (404).
+ * Returns the completion response along with the model actually used.
+ */
+export async function createChatCompletionWithFallback(
+  params: Parameters<OpenAI['chat']['completions']['create']>[0]
+): Promise<{ response: Awaited<ReturnType<OpenAI['chat']['completions']['create']>>; modelUsed: string }> {
+  const openai = getOpenAI()
+  const primaryModel = params.model
+
+  try {
+    const response = await openai.chat.completions.create(params)
+    return { response, modelUsed: primaryModel }
+  } catch (error: unknown) {
+    const fallbackModel = resolveLlmFallbackModel()
+
+    const isModelNotFound =
+      error &&
+      typeof error === 'object' &&
+      'status' in error &&
+      error.status === 404 &&
+      'error' in error &&
+      error.error &&
+      typeof error.error === 'object' &&
+      'code' in error.error &&
+      error.error.code === 'model_not_found'
+
+    if (isModelNotFound && fallbackModel && fallbackModel !== primaryModel) {
+      console.warn(
+        `[openai] Model ${primaryModel} not found (404), retrying with fallback model ${fallbackModel}`
+      )
+      const response = await openai.chat.completions.create({
+        ...params,
+        model: fallbackModel,
+      })
+      return { response, modelUsed: fallbackModel }
+    }
+
+    throw error
+  }
 }
 
 /** Whisper-only; Groq keys are not valid here — use OPENAI_WHISPER_API_KEY or a plain OpenAI OPENAI_API_KEY. */
@@ -223,7 +289,7 @@ INSTRUCTIONS:
     cacheKey,
     ttlSeconds: defaultAiCacheTtlSeconds(),
     produce: async () => {
-      const response = await getOpenAI().chat.completions.create({
+      const { response } = await createChatCompletionWithFallback({
         model: resolveLlmChatModel(),
         messages: [{ role: 'user', content: prompt }],
         max_tokens: 250,
@@ -242,7 +308,7 @@ export async function analyzeSentiment(reviewText: string, stars: number) {
     cacheKey,
     ttlSeconds: sentimentCacheTtlSeconds(),
     produce: async () => {
-      const response = await getOpenAI().chat.completions.create({
+      const { response } = await createChatCompletionWithFallback({
         model: resolveLlmChatModel(),
         messages: [{ role: 'user', content: prompt }],
         max_tokens: 10,
@@ -287,7 +353,7 @@ Return JSON only: {"rootCause": string, "suggestedFix": string}`
   return withCachedAiJsonAllowNull({
     cacheKey,
     produce: async () => {
-      const response = await getOpenAI().chat.completions.create({
+      const { response } = await createChatCompletionWithFallback({
         model: resolveLlmChatModel(),
         messages: [{ role: 'user', content: prompt }],
         max_tokens: 150,
@@ -326,7 +392,7 @@ If no staff names found, return [].`
   return withCachedAiJson({
     cacheKey,
     produce: async () => {
-      const response = await getOpenAI().chat.completions.create({
+      const { response } = await createChatCompletionWithFallback({
         model: resolveLlmChatModel(),
         messages: [{ role: 'user', content: prompt }],
         max_tokens: 300,
@@ -387,7 +453,7 @@ Return JSON only: {"instagram": string, "whatsapp": string, "googlePost": string
   return withCachedAiJsonAllowNull({
     cacheKey,
     produce: async () => {
-      const response = await getOpenAI().chat.completions.create({
+      const { response } = await createChatCompletionWithFallback({
         model: resolveLlmChatModel(),
         messages: [{ role: 'user', content: prompt }],
         max_tokens: 500,
@@ -433,7 +499,7 @@ Return JSON only: {"items": [{"name": string, "positiveCount": number, "negative
     cacheKey,
     ttlSeconds: defaultAiCacheTtlSeconds(),
     produce: async () => {
-      const response = await getOpenAI().chat.completions.create({
+      const { response } = await createChatCompletionWithFallback({
         model: resolveLlmChatModel(),
         messages: [{ role: 'user', content: prompt }],
         max_tokens: 2000,

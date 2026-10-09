@@ -2,7 +2,7 @@
  * PDF spec: condense recent reviews into praise / complaint bullets (English output for owner).
  * Batches up to ~12 reviews per call; trims long comments.
  */
-import { getOpenAI, resolveLlmChatModel } from '@/lib/openai'
+import { createChatCompletionWithFallback, resolveLlmChatModel } from '@/lib/openai'
 import {
   buildAiCacheKey,
   defaultAiCacheTtlSeconds,
@@ -59,7 +59,7 @@ Rules:
     cacheKey,
     ttlSeconds: defaultAiCacheTtlSeconds(),
     produce: async () => {
-      const response = await getOpenAI().chat.completions.create({
+      const { response } = await createChatCompletionWithFallback({
         model: resolveLlmChatModel(),
         messages: [{ role: 'user', content: prompt }],
         response_format: { type: 'json_object' },

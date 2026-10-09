@@ -281,7 +281,12 @@ OPENAI_API_KEY=
 # Whisper voice notes — OpenAI only (sk-…).
 OPENAI_WHISPER_API_KEY=
 
-# Override model id — default Groq: llama-3.3-70b-versatile; OpenAI: gpt-4o-mini
+# Override model id
+# Groq default: openai/gpt-oss-20b (fast, production-ready; fallback: openai/gpt-oss-120b)
+# OpenAI default: gpt-4o-mini
+# Set GROQ_MODEL to override Groq model (e.g., openai/gpt-oss-120b, qwen/qwen3.8-27b)
+# Set LLM_CHAT_MODEL to override all model selection
+# GROQ_MODEL=
 # LLM_CHAT_MODEL=
 
 # Database

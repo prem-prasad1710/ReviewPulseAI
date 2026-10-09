@@ -39,10 +39,20 @@ OAuth consent screen: app name **ReviewsPulse**, homepage `https://reviewspulse.
 | Variable | Purpose |
 |----------|---------|
 | `OPENAI_API_KEY` | OpenAI-compatible API (routing in `lib/openai.ts`) |
-| `GROQ_API_KEY` | Groq provider |
+| `GROQ_API_KEY` | Groq provider (preferred for chat completions) |
 | `OPENAI_BASE_URL` | Custom base URL override |
-| `LLM_CHAT_MODEL` | Model id override |
+| `GROQ_MODEL` | Override Groq model (default: `openai/gpt-oss-20b`; fallback: `openai/gpt-oss-120b`) |
+| `LLM_CHAT_MODEL` | Override all model selection (takes precedence over `GROQ_MODEL`) |
 | `OPENAI_WHISPER_API_KEY` | Whisper for voice transcripts (preferred over plain `OPENAI` when separating keys) |
+
+**Model selection:**
+- Groq (when `GROQ_API_KEY` is set or `OPENAI_API_KEY` starts with `gsk_`):
+  - Default: `openai/gpt-oss-20b` (fast, cost-effective for short text)
+  - Fallback: `openai/gpt-oss-120b` (automatic on 404 model_not_found)
+  - Override: set `GROQ_MODEL` or `LLM_CHAT_MODEL`
+- OpenAI (when using `sk-` key): default is `gpt-4o-mini`
+
+**Important:** Groq model `llama-3.3-70b-versatile` was deprecated on August 16, 2026. Use current production models from [console.groq.com/docs/models](https://console.groq.com/docs/models).
 
 **Do not expose** AI keys via `NEXT_PUBLIC_*` unless you intend client-side billing risk.
 
