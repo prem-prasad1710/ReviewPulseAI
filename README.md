@@ -3,9 +3,11 @@
 **ReviewsPulse** is an AI-assisted Google Business Profile review platform for Indian SMBs — unified inbox, multilingual AI replies, analytics, WhatsApp alerts, Razorpay billing, and agency white-label tooling.
 
 **Video Preview** : 
-<video src="public/brand/reviewpulse-product-video.mp4" controls width="640" height="360"></video>
 
-**Live:** [review-pulse-ai-sigma.vercel.app](https://reviewspulse.in)
+https://github.com/user-attachments/assets/57e316e4-e555-4ed3-8e78-b23b5a3698b8
+
+
+**Live:** [ReviewPulse.in](https://reviewspulse.in)
 
 ---
 
